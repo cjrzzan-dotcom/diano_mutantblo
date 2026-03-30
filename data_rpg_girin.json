@@ -1,0 +1,209 @@
+{
+  "335720453408817166": {
+    "userId": "335720453408817166",
+    "level": 2,
+    "xp": 28,
+    "nextXp": 62,
+    "statPoints": 3,
+    "maxHp": 112,
+    "hp": 98,
+    "baseAtk": 13,
+    "baseDef": 4,
+    "gold": 33,
+    "reviveTickets": 0,
+    "respawnAt": 0,
+    "stones": {
+      "화염": 0,
+      "얼음": 0,
+      "번개": 1,
+      "자연": 2,
+      "어둠": 0
+    },
+    "attributes": {},
+    "potions": {
+      "small": 4,
+      "mid": 1,
+      "big": 0,
+      "elixir": 0
+    },
+    "materials": {
+      "슬라임젤리": 1,
+      "늑대가죽": 1,
+      "고블린뼈조각": 2,
+      "오우거가죽": 0,
+      "작은 용비늘": 0,
+      "낡은장비조각": 3,
+      "드래곤 비늘": 0,
+      "드래곤 발톱": 0,
+      "번개조각": 0,
+      "얼음조각": 0,
+      "붉은화염조각": 0,
+      "푸른화염조각": 0,
+      "어둠조각": 0,
+      "좀비드래곤의 피": 0,
+      "메탈조각": 0,
+      "좀비드래곤의 가죽": 0,
+      "빛의 조각": 0
+    },
+    "inventory": [],
+    "equipment": {
+      "weapon": null,
+      "armor": null,
+      "ring": null
+    },
+    "stats": {
+      "atk": 0,
+      "critChance": 0,
+      "critDamage": 0,
+      "dodge": 0
+    },
+    "run": {
+      "dungeon": "초심자의숲",
+      "waveIndex": 0,
+      "kills": 7,
+      "target": null,
+      "nextTarget": {
+        "name": "슬라임",
+        "hp": 22,
+        "atk": 6,
+        "def": 0,
+        "gold": [
+          5,
+          10
+        ],
+        "xp": 8,
+        "currentHp": 22,
+        "element": "자연"
+      },
+      "isDown": false,
+      "lastDrops": [
+        "💰 골드 +10",
+        "✨ 경험치 +12"
+      ],
+      "dropMessageId": "1488074999423307826"
+    },
+    "selectedEnhanceIndex": null
+  },
+  "455267705402949632": {
+    "userId": "455267705402949632",
+    "level": 1,
+    "xp": 0,
+    "nextXp": 50,
+    "statPoints": 0,
+    "maxHp": 100,
+    "hp": 100,
+    "baseAtk": 12,
+    "baseDef": 3,
+    "gold": 100,
+    "reviveTickets": 0,
+    "respawnAt": 0,
+    "stones": {
+      "화염": 0,
+      "얼음": 0,
+      "번개": 0,
+      "자연": 0,
+      "어둠": 0
+    },
+    "attributes": {},
+    "potions": {
+      "small": 2,
+      "mid": 1,
+      "big": 0,
+      "elixir": 0
+    },
+    "materials": {
+      "슬라임젤리": 0,
+      "늑대가죽": 0,
+      "고블린뼈조각": 0,
+      "오우거가죽": 0,
+      "작은 용비늘": 0,
+      "낡은장비조각": 0,
+      "드래곤 비늘": 0,
+      "드래곤 발톱": 0,
+      "번개조각": 0,
+      "얼음조각": 0,
+      "붉은화염조각": 0,
+      "푸른화염조각": 0,
+      "어둠조각": 0,
+      "좀비드래곤의 피": 0,
+      "메탈조각": 0,
+      "좀비드래곤의 가죽": 0,
+      "빛의 조각": 0
+    },
+    "inventory": [],
+    "equipment": {
+      "weapon": null,
+      "armor": null,
+      "ring": null
+    },
+    "stats": {
+      "atk": 0,
+      "critChance": 0,
+      "critDamage": 0,
+      "dodge": 0
+    },
+    "run": null,
+    "selectedEnhanceIndex": null
+  },
+  "1126135011544940574": {
+    "userId": "1126135011544940574",
+    "level": 1,
+    "xp": 0,
+    "nextXp": 50,
+    "statPoints": 0,
+    "maxHp": 100,
+    "hp": 100,
+    "baseAtk": 12,
+    "baseDef": 3,
+    "gold": 100,
+    "reviveTickets": 0,
+    "respawnAt": 0,
+    "stones": {
+      "화염": 0,
+      "얼음": 0,
+      "번개": 0,
+      "자연": 0,
+      "어둠": 0
+    },
+    "attributes": {},
+    "potions": {
+      "small": 2,
+      "mid": 1,
+      "big": 0,
+      "elixir": 0
+    },
+    "materials": {
+      "슬라임젤리": 0,
+      "늑대가죽": 0,
+      "고블린뼈조각": 0,
+      "오우거가죽": 0,
+      "작은 용비늘": 0,
+      "낡은장비조각": 0,
+      "드래곤 비늘": 0,
+      "드래곤 발톱": 0,
+      "번개조각": 0,
+      "얼음조각": 0,
+      "붉은화염조각": 0,
+      "푸른화염조각": 0,
+      "어둠조각": 0,
+      "좀비드래곤의 피": 0,
+      "메탈조각": 0,
+      "좀비드래곤의 가죽": 0,
+      "빛의 조각": 0
+    },
+    "inventory": [],
+    "equipment": {
+      "weapon": null,
+      "armor": null,
+      "ring": null
+    },
+    "stats": {
+      "atk": 0,
+      "critChance": 0,
+      "critDamage": 0,
+      "dodge": 0
+    },
+    "run": null,
+    "selectedEnhanceIndex": null
+  }
+}
