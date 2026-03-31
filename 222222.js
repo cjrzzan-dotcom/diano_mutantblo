@@ -1336,6 +1336,29 @@ if(dropLines){
 }
 return;
 }
+    if(!player.run) createRunIfNeeded(player, dungeonKey);
+    const logs = ['🤖 자동사냥 시작'];
+    let dropLines = null;
+    for(let i=0;i<5;i++){
+      if(!player.run) break;
+      if(player.run.isDown) break;
+      if(!player.run.target && player.run.nextTarget){
+        player.run.target = player.run.nextTarget;
+        player.run.nextTarget = null;
+        logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
+        continue;
+      }
+      const result = performAttack(player, dungeonKey);
+      logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
+      if(player.run?.lastDrops?.length) dropLines = [...player.run.lastDrops];
+     // await maybeTownBroadcast(interaction.user.username, dungeonKey, result);
+      if(Date.now() < player.respawnAt) break;
+    }
+    saveData(db);
+    await interaction.message.edit(buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n')));
+   // if(dropLines) await sendTemporaryDropMessage(interaction.channel, player, player.run.lastDrops);
+    return;
+  }
 if(id === 'attack'){
   await interaction.deferUpdate();
   if(!player.run) createRunIfNeeded(player, dungeonKey);
@@ -1364,6 +1387,13 @@ if(id === 'attack'){
   }
   return;
 }
+    const result = performAttack(player, dungeonKey);
+    saveData(db);
+   // await maybeTownBroadcast(interaction.user.username, dungeonKey, result);
+    await interaction.message.edit(buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n')));
+    //if(player.run?.lastDrops?.length) //await sendTemporaryDropMessage(interaction.channel, player, player.run.lastDrops);
+    return;
+  }
 });
 
 require("dotenv").config();
