@@ -740,7 +740,7 @@ ipment.ring.dodgeBonus || 0}%)`
     `⚔️ 무기: ${weaponText}`,
     `🛡️ 갑옷: ${armorText}`,
     `💍 반지: ${ringText}`,
-  ].join('\\n');
+  ].join('\n');
 }
 function buildBagText(player){
   const mats = Object.entries(player.materials || {})
@@ -771,7 +771,7 @@ function buildCompactBattleText(player,target,channelId){
     lines.push(`👿 ${target.name}`);
     lines.push(`❤️ ${target.currentHp}/${target.hp}`);
     lines.push(`⚔️ ${target.atk} / 🛡️ ${target.def}`);
-    lines.push(`⚡ 속성: ${target.element}`);
+    lines.push(`✨ 속성: ${target.element}`);
     lines.push('━━━━━━━━━━');
   } else {
     lines.push('👿 몬스터 없음');
