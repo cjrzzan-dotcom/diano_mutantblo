@@ -756,7 +756,6 @@ function buildBattleButtons(player, dungeonKey){
       new ButtonBuilder().setCustomId('use_small').setLabel('💊').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_mid').setLabel('🍗 ').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('shop').setLabel('🏪 상점').setStyle(ButtonStyle.Success),
@@ -769,6 +768,7 @@ function buildBattleButtons(player, dungeonKey){
       new ButtonBuilder().setCustomId('craft_list').setLabel('🛠️ 제작').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
     ),
   ];
 }
@@ -1296,4 +1296,7 @@ if(id === 'shop'){
 require("dotenv").config();
 
 const token = process.env.DISCORD_TOKEN;
+console.log("TOKEN EXISTS:", !!token);
+console.log("TOKEN LENGTH:", token ? token.length : 0);
+
 client.login(token);
