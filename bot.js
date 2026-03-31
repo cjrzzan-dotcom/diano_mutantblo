@@ -67,7 +67,8 @@ const RARITIES = [
 const MATERIALS = [
   '슬라임젤리', '늑대가죽', '고블린뼈조각', '오우거가죽', '작은 용비늘', '낡은장비조각',
   '드래곤 비늘', '드래곤 발톱', '번개조각', '얼음조각', '붉은화염조각', '푸른화염조각', '어둠조각',
-  '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각'
+  '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각',
+  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각'
 ];
 
 const CRAFTS = [
@@ -115,43 +116,43 @@ const DUNGEONS = {
     { name: '드래곤', hp: 145, atk: 24, def: 5, gold: [50,80], xp: 45 },
   ]},
   '오색룡의둥지': { type: 'random', autoAllowed: true, monsters: [
-    { name: '번개드래곤', hp: 105, atk: 19, def: 4, gold: [35,55], xp: 35 },
-    { name: '얼음드래곤', hp: 110, atk: 20, def: 4, gold: [35,58], xp: 36 },
-    { name: '붉은화염드래곤', hp: 118, atk: 22, def: 5, gold: [40,62], xp: 38 },
-    { name: '푸른화염드래곤', hp: 124, atk: 23, def: 5, gold: [42,66], xp: 40 },
-    { name: '어둠드래곤', hp: 130, atk: 24, def: 6, gold: [45,70], xp: 42 },
-    { name: '좀비드래곤', hp: 155, atk: 27, def: 7, gold: [60,90], xp: 52 },
-    { name: '메탈드래곤', hp: 185, atk: 31, def: 8, gold: [85,120], xp: 65 },
-    { name: '대독드래곤', hp: 195, atk: 33, def: 9, gold: [90,130], xp: 70 },
-    { name: '빛의 군주 드래곤', hp: 215, atk: 36, def: 10, gold: [100,150], xp: 80 },
+    { name: '번개드래곤', hp: 350, atk:  40, def: 10, gold: [35,55], xp: 35 },
+    { name: '얼음드래곤', hp: 400, atk: 42, def: 12, gold: [35,58], xp: 36 },
+    { name: '붉은화염드래곤', hp: 450, atk: 44, def: 14, gold: [40,62], xp: 38 },
+    { name: '푸른화염드래곤', hp: 500, atk: 46, def: 14, gold: [42,66], xp: 40 },
+    { name: '어둠드래곤', hp: 550, atk: 46, def: 14, gold: [45,70], xp: 42 },
+    { name: '좀비드래곤', hp: 800, atk: 50, def: 15, gold: [60,90], xp: 52 },
+    { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [85,120], xp: 65 },
+    { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [90,130], xp: 70 },
+    { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
   ]},
   '지옥의관문': { type: 'wave', autoAllowed: false, waves: [
-    { name: '도살자', hp: 350, atk: 40, def: 6, gold: [70,100], xp: 60 },
-    { name: '레오릭 왕', hp: 400, atk: 42, def: 7, gold: [85,115], xp: 70 },
-    { name: '두리엘', hp: 450, atk: 44, def: 8, gold: [100,135], xp: 84 },
-    { name: '안다리엘', hp: 500, atk: 46, def: 8, gold: [110,145], xp: 88 },
-    { name: '벨리알', hp: 550, atk: 48, def: 9, gold: [125,165], xp: 96 },
-    { name: '아즈모단', hp: 600, atk: 50, def: 10, gold: [135,180], xp: 105 },
-    { name: '릴리트', hp: 800, atk: 55, def: 11, gold: [180,230], xp: 120 },
-    { name: '바알', hp: 1000, atk: 60, def: 12, gold: [200,250], xp: 130 },
-    { name: '메피스토', hp: 1200, atk: 65, def: 13, gold: [220,270], xp: 140 },
-    { name: '디아블로', hp: 1500, atk: 70, def: 14, gold: [250,300], xp: 150 },
-    { name: '종말의 화신 디아블로', hp: 2000, atk: 80, def: 18, gold: [400,520], xp: 220 },
+    { name: '도살자', hp: 750, atk: 48, def: 20, gold: [70,100], xp: 60 },
+    { name: '레오릭 왕', hp: 800, atk: 50, def: 22, gold: [85,115], xp: 70 },
+    { name: '두리엘', hp: 900, atk: 52, def: 24, gold: [100,135], xp: 84 },
+    { name: '안다리엘', hp: 950, atk: 54, def: 26, gold: [110,145], xp: 88 },
+    { name: '벨리알', hp: 1000, atk: 56, def: 28, gold: [125,165], xp: 96 },
+    { name: '아즈모단', hp: 1100, atk: 58, def: 30, gold: [135,180], xp: 105 },
+    { name: '릴리트', hp: 1300, atk: 60, def: 32, gold: [180,230], xp: 120 },
+    { name: '바알', hp: 1500, atk: 70, def: 35, gold: [200,250], xp: 130 },
+    { name: '메피스토', hp: 1700, atk: 90, def: 30, gold: [220,270], xp: 140 },
+    { name: '디아블로', hp: 2000, atk: 100, def: 40, gold: [250,300], xp: 150 },
+    { name: '종말의 화신 디아블로', hp: 4000, atk: 110, def: 45, gold: [400,520], xp: 220 },
   ]},
   '지옥의심장부': { type: 'wave', autoAllowed: false, waves: [
-    { name: '우버 레오릭 왕', hp: 2200, atk: 85, def: 11, gold: [180,230], xp: 120 },
-    { name: '우버 안다리엘', hp: 2300, atk: 87, def: 12, gold: [220,280], xp: 135 },
-    { name: '우버 두리엘', hp: 2400, atk: 90, def: 13, gold: [250,310], xp: 145 },
-    { name: '우버 바알', hp: 2500, atk: 92, def: 15, gold: [320,390], xp: 165 },
-    { name: '우버 디아블로', hp: 2600, atk: 94, def: 16, gold: [350,420], xp: 175 },
-    { name: '우버 메피스토', hp: 2700, atk: 96, def: 17, gold: [370,450], xp: 182 },
-    { name: '우버 릴리트', hp: 2800, atk: 98, def: 18, gold: [400,490], xp: 190 },
-    { name: '우버 종말의 화신 디아블로', hp: 3500, atk: 110, def: 21, gold: [650,800], xp: 260 },
+    { name: '우버 레오릭 왕', hp: 5000, atk: 110, def: 50, gold: [180,230], xp: 120 },
+    { name: '우버 안다리엘', hp: 5500, atk: 120, def: 55, gold: [220,280], xp: 135 },
+    { name: '우버 두리엘', hp: 6000, atk: 130, def: 60, gold: [250,310], xp: 145 },
+    { name: '우버 바알', hp: 6500, atk: 140, def: 65, gold: [320,390], xp: 165 },
+    { name: '우버 디아블로', hp: 7000, atk: 150, def: 70, gold: [350,420], xp: 175 },
+    { name: '우버 메피스토', hp: 7500, atk: 160, def: 75, gold: [370,450], xp: 182 },
+    { name: '우버 릴리트', hp: 8000, atk: 170, def: 80, gold: [400,490], xp: 190 },
+    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 180, def: 85, gold: [650,800], xp: 260 },
   ]},
   '지옥의왕좌': { type: 'wave', autoAllowed: false, waves: [
-    { name: '증오의 군주 디아블로', hp: 4000, atk: 120, def: 23, gold: [500,620], xp: 220 },
-    { name: '파괴의 군주 디아블로', hp: 6000, atk: 150, def: 25, gold: [560,700], xp: 240 },
-    { name: '만악의 군주 디아블로', hp: 8000, atk: 200, def: 27, gold: [700,900], xp: 300 },
+    { name: '증오의 군주 디아블로', hp: 15000, atk: 200, def: 90, gold: [500,620], xp: 220 },
+    { name: '파괴의 군주 디아블로', hp: 20000, atk: 250, def: 95, gold: [560,700], xp: 240 },
+    { name: '만악의 군주 디아블로', hp: 25000, atk: 300, def: 100, gold: [700,900], xp: 300 },
   ]},
 };
 
@@ -677,9 +678,9 @@ function tryEnhanceItem(player, idx, elem){
 
 function equipmentText(player){
   return [
-    `⚔️ 무기: ${player.equipment.weapon ? player.equipment.weapon.name : '없음'}`,
-    `🛡️ 갑옷: ${player.equipment.armor ? player.equipment.armor.name : '없음'}`,
-    `💍 반지: ${player.equipment.ring ? player.equipment.ring.name : '없음'}`,
+    `⚔️ 무기: ${player.equipment.weapon ? player.equipment.weapon.name + getItemStatText(player.equipment.weapon) : '없음'}`,
+    `🛡️ 갑옷: ${player.equipment.armor ? player.equipment.armor.name + getItemStatText(player.equipment.armor) : '없음'}`,
+    `💍 반지: ${player.equipment.ring ? player.equipment.ring.name + getItemStatText(player.equipment.ring) : '없음'}`
   ].join('\n');
 }
 function materialsText(player){
@@ -688,35 +689,70 @@ function materialsText(player){
 }
 function inventoryText(player){
   if(!player.inventory.length) return '비어있음';
-  return player.inventory.slice(0,15).map((it,idx)=>`${idx+1}. ${it.name} [${it.type}]`).join('\n');
+  return player.inventory
+    .slice(0,15)
+    .map((it,idx)=>`${idx+1}. ${it.name}${getItemStatText(it)} [${it.type}]`)
+    .join('\n');
 }
 
 function buildFullStatusText(player){
+  const eq = getEquippedBonuses(player);
+
+  const baseAtk = player.baseAtk + player.stats.atk * 1;
+  const totalAtk = baseAtk + eq.atk;
+
+  const baseDef = player.baseDef + Math.floor(player.level / 3);
+  const totalDef = baseDef + eq.def;
+
+  const baseCrit = player.stats.critChance;
+  const totalCrit = Math.min(STAT_CAPS.critChance, baseCrit + eq.critChance);
+
+  const baseCritDmg = player.stats.critDamage;
+  const totalCritDmg = Math.min(STAT_CAPS.critDamage, baseCritDmg + eq.critDamage);
+
+  const baseDodge = player.stats.dodge;
+  const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
+
+  const weaponText = player.equipment.weapon
+    ? `${player.equipment.weapon.name} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+    : '없음';
+
+  const armorText = player.equipment.armor
+    ? `${player.equipment.armor.name} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+    : '없음';
+
+  const ringText = player.equipment.ring
+    ? `${player.equipment.ring.name} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${
+
+ipment.ring.dodgeBonus || 0}%)`
+    : '없음';
+
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
     `❤️ HP: ${player.hp}/${player.maxHp}`,
-    `⚔️ 공격력: ${getAttackPower(player)}`,
-    `🛡️ 방어력: ${getDefensePower(player)}`,
-    `💥 크리확률: ${getCritChance(player)}%`,
-    `🔥 크리데미지: +${getCritDamage(player)}%`,
-    `💨 회피: ${getDodge(player)}%`,
-    '',
-    `⚔️ 무기: ${player.equipment.weapon ? player.equipment.weapon.name : '없음'}`,
-    `🛡️ 갑옷: ${player.equipment.armor ? player.equipment.armor.name : '없음'}`,
-    `💍 반지: ${player.equipment.ring ? player.equipment.ring.name : '없음'}`,
-  ].join('\n');
+    `⚔️ 공격력: ${totalAtk} (${baseAtk} + 장비 ${eq.atk})`,
+    `🛡️ 방어력: ${totalDef} (${baseDef} + 장비 ${eq.def})`,
+    `💥 크리확률: ${totalCrit}% (${baseCrit}% + 장비 ${eq.critChance}%)`,
+    `🔥 크리데미지: +${totalCritDmg}% (${baseCritDmg}% + 장비 ${eq.critDamage}%)`,
+    `💨 회피: ${totalDodge}% (${baseDodge}% + 장비 ${eq.dodge}%)`,
+    ``,
+    `⚔️ 무기: ${weaponText}`,
+    `🛡️ 갑옷: ${armorText}`,
+    `💍 반지: ${ringText}`,
+  ].join('\\n');
 }
-
 function buildBagText(player){
   const mats = Object.entries(player.materials || {})
     .filter(([,v]) => v > 0)
     .map(([k,v]) => `${k} ${v}`)
     .join(' / ') || '없음';
 
-  const items = player.inventory && player.inventory.length
-    ? player.inventory.slice(0,15).map((it,idx)=>`${idx+1}. ${it.name} [${it.type}]`).join('\n')
-    : '비어있음';
+const items = player.inventory && player.inventory.length
+  ? player.inventory.slice(0,15).map((it,idx)=>
+      `${idx+1}. ${it.name}${getItemStatText(it)} [${it.type}]`
+    ).join('\n')
+  : '비어있음';
 
   return [
     `💰 골드: ${player.gold}`,
@@ -747,6 +783,26 @@ function buildCompactBattleText(player,target,channelId){
   lines.push(`💊 ${player.potions.small} / 🍗 ${player.potions.mid} / 🍖 ${player.potions.big} / 🧪 ${player.potions.elixir}`);
 
   return lines.join('\n');
+}
+
+function getItemStatText(item){
+  if(!item) return '';
+
+  const atk = item.atkBonus || 0;
+  const def = item.defBonus || 0;
+  const crit = item.critChanceBonus || 0;
+  const critDmg = item.critDamageBonus || 0;
+  const dodge = item.dodgeBonus || 0;
+
+  const parts = [];
+
+  if(atk) parts.push(`공+${atk}`);
+  if(def) parts.push(`방+${def}`);
+  if(crit) parts.push(`크리+${crit}%`);
+  if(critDmg) parts.push(`크뎀+${critDmg}%`);
+  if(dodge) parts.push(`회피+${dodge}%`);
+
+  return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
 function buildBattleButtons(player, dungeonKey){
