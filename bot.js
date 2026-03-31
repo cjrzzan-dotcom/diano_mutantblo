@@ -5,6 +5,8 @@ const ALLOWED_CATEGORY_IDS = process.env.ALLOWED_CATEGORY_IDS
   ? process.env.ALLOWED_CATEGORY_IDS.split(',')
   : [];
 
+
+
 const {
   Client,
   GatewayIntentBits,
@@ -1291,4 +1293,6 @@ if(id === 'shop'){
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+
+const token = process.env.DISCORD_TOKEN;
+client.login(token);
