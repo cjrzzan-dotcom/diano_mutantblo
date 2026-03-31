@@ -213,7 +213,6 @@ function loadData(){
   }
 }
 
-let db = loadData();
 
 function saveData(data){
   const json = JSON.stringify(data, null, 2);
@@ -284,6 +283,10 @@ function getDefaultPlayer(userId){
     battleChannelId: null,
   };
 }
+
+let db = loadData();
+
+
 function getPlayer(userId){
   if(!db[userId]) db[userId] = getDefaultPlayer(userId);
   return db[userId];
@@ -1509,9 +1512,23 @@ if(id === 'attack'){
 
 require('dotenv').config();
 
+console.log('MODE =', MODE);
+console.log('DATA_FILE_PROD =', process.env.DATA_FILE_PROD);
+console.log('DATA_FILE_TEST =', process.env.DATA_FILE_TEST);
+
+
+const DATA_FILE = path.join(
+  __dirname,
+  MODE === 'prod'
+    ? (process.env.DATA_FILE_PROD || 'data_rpg_girin.json')
+    : (process.env.DATA_FILE_TEST || 'data_rpg_test.json')
+);
+
 const TOKEN = MODE === 'prod'
-  ? process.env.DISCORD_TOKEN_PROD
-  : process.env.DISCORD_TOKEN_TEST;
+  ? (process.env.DISCORD_TOKEN_PROD || process.env.DISCORD_TOKEN)
+  : (process.env.DISCORD_TOKEN_TEST || process.env.DISCORD_TOKEN);
+
+
 
 console.log("MODE:", MODE);
 console.log("TOKEN EXISTS:", !!TOKEN);
