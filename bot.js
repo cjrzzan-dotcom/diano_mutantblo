@@ -1293,6 +1293,7 @@ if(id === 'shop'){
   }
 });
 
+require("dotenv").config();
 
 const token = process.env.DISCORD_TOKEN;
 client.login(token);
