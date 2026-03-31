@@ -27,12 +27,7 @@ require('dotenv').config();
 
 const MODE = process.env.MODE || 'test';
 
-const DATA_FILE = path.join(
-  __dirname,
-  MODE === 'prod'
-    ? process.env.DATA_FILE_PROD
-    : process.env.DATA_FILE_TEST
-);
+
 const IMAGE_PATH = path.join(__dirname, 'images');
 const INTRO_DELAY_MS = 1000;
 const TEMP_DROP_DELETE_MS = 5000;
