@@ -1,3 +1,6 @@
 .env
 node_modules
 data_rpg_girin.json
+data_rpg_girin.json.bak
+*.tmp
+backup/

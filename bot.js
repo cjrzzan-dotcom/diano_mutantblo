@@ -162,15 +162,78 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 function round1(v){ return Math.round(v*10)/10; }
 
+const BACKUP_DIR = path.join(__dirname, 'backup');
+if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+
 function loadData(){
-  if(!fs.existsSync(DATA_FILE)) return {};
-  try { return JSON.parse(fs.readFileSync(DATA_FILE,'utf8')); }
-  catch(e){ console.error('데이터 로드 실패', e); return {}; }
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    }
+
+    const backupFile = DATA_FILE + '.bak';
+    if (fs.existsSync(backupFile)) {
+      console.log('본 저장파일이 없어 백업파일로 복구합니다.');
+      return JSON.parse(fs.readFileSync(backupFile, 'utf8'));
+    }
+
+    return {};
+  } catch (e) {
+    console.error('데이터 로드 실패', e);
+
+    try {
+      const backupFile = DATA_FILE + '.bak';
+      if (fs.existsSync(backupFile)) {
+        console.log('백업파일 로드 시도');
+        return JSON.parse(fs.readFileSync(backupFile, 'utf8'));
+      }
+    } catch (e2) {
+      console.error('백업 로드도 실패', e2);
+    }
+
+    return {};
+  }
 }
 function saveData(data){
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+  const json = JSON.stringify(data, null, 2);
+  const tempFile = DATA_FILE + '.tmp';
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupFile = path.join(BACKUP_DIR, `data_rpg_girin_${timestamp}.json`);
+  const latestBackup = path.join(BACKUP_DIR, 'latest_backup.json');
+
+  try {
+    fs.writeFileSync(tempFile, json, 'utf8');
+    fs.writeFileSync(latestBackup, json, 'utf8');
+    fs.writeFileSync(backupFile, json, 'utf8');
+    fs.renameSync(tempFile, DATA_FILE);
+
+    cleanupOldBackups(10);
+  } catch (e) {
+    console.error('데이터 저장 실패', e);
+    try {
+      if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+    } catch (_) {}
+  }
 }
-let db = loadData();
+
+function cleanupOldBackups(keepCount = 10){
+  try {
+    const files = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('data_rpg_girin_') && f.endsWith('.json'))
+      .map(f => ({
+        name: f,
+        time: fs.statSync(path.join(BACKUP_DIR, f)).mtimeMs
+      }))
+      .sort((a, b) => b.time - a.time);
+
+    const remove = files.slice(keepCount);
+    for (const file of remove) {
+      fs.unlinkSync(path.join(BACKUP_DIR, file.name));
+    }
+  } catch (e) {
+    console.error('백업 정리 실패', e);
+  }
+}
 
 function blankMaterials(){
   const out = {};
