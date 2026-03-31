@@ -194,9 +194,6 @@ function getDefaultPlayer(userId){
     stats:{ atk:0, critChance:0, critDamage:0, dodge:0 },
     run:null,
     selectedEnhanceIndex:null,
-
-    battleMessageId: null,
-    battleChannelId: null,
   };
 }
 function getPlayer(userId){
@@ -498,7 +495,7 @@ function grantDrops(player, monster){
 function handleNoReviveDeath(player){
   player.run = null;
   player.hp = player.maxHp;
-  player.respawnAt = Date.now() + 3*60*1000;
+  player.respawnAt = Date.now() + 30*60*1000;
 }
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
@@ -1051,131 +1048,52 @@ client.on('messageCreate', async (message)=>{
     await message.reply(`💎 ${arg} 강화 성공! 현재 ${arg}+${player.attributes[arg]}`);
     return;
   }
- if(command === '!자동'){
-  if(!dungeonKey){
-    await message.reply('이 명령어는 던전 채널에서만 가능합니다.');
-    return;
-  }
-
-  if(!DUNGEONS[dungeonKey].autoAllowed){
-    await message.reply('이 던전은 자동사냥이 불가능합니다.');
-    return;
-  }
-
-  createRunIfNeeded(player, dungeonKey);
-  saveData(db);
-
-  const introTarget = player.run?.target || player.run?.nextTarget;
-
-  const introMsg = await message.reply(
-    buildIntroPayload(dungeonKey, introTarget)
-  );
-
-  await sleep(INTRO_DELAY_MS);
-
-  const logs = ['🤖 자동사냥 시작'];
-  let dropLines = null;
-
-  for(let i=0;i<5;i++){
-    if(!player.run) break;
-    if(player.run.isDown) break;
-
-    if(player.run.target && player.run.nextTarget){
-      player.run.target = player.run.nextTarget;
-      player.run.nextTarget = null;
-      logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
-      continue;
+  if(command === '!자동'){
+    if(!dungeonKey){ await message.reply('이 명령어는 던전 채널에서만 가능합니다.'); return; }
+    if(!DUNGEONS[dungeonKey].autoAllowed){ await message.reply('이 던전은 자동사냥이 불가능합니다.'); return; }
+    createRunIfNeeded(player, dungeonKey);
+    saveData(db);
+    const introTarget = player.run?.target || player.run?.nextTarget;
+    await message.reply(buildIntroPayload(dungeonKey, introTarget));
+    await sleep(INTRO_DELAY_MS);
+    const logs = ['🤖 자동사냥 시작'];
+    let dropLines = null;
+    for(let i=0;i<5;i++){
+      if(!player.run) break;
+      if(player.run.isDown) break;
+      if(!player.run.target && player.run.nextTarget){
+        player.run.target = player.run.nextTarget;
+        player.run.nextTarget = null;
+        logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
+        continue;
+      }
+      const result = performAttack(player, dungeonKey);
+      logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
+      if(player.run?.lastDrops?.length) dropLines = [...player.run.lastDrops];
+      //await maybeTownBroadcast(message.author.username, dungeonKey, result);
+      if(Date.now() < player.respawnAt) break;
     }
-
-    const result = performAttack(player, dungeonKey);
-    logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
-
-    if(player.run?.lastDrops?.length){
-      dropLines = [...player.run.lastDrops];
-    }
-
-    if(Date.now() < player.respawnAt) break;
-  }
-
-  saveData(db);
-
-  await introMsg.edit(
-    buildBattlePayload(
-      player,
-      message.channel.id,
-      dungeonKey,
-      logs.join('\n')
-    )
-  );
-
-  if(dropLines){
-    await sendTemporaryDropMessage(
-      message.channel,
-      player,
-      player.run.lastDrops
-    );
-  }
-
-  return;
-}
-if(command === '!시작'){
-
-// 기존 전투창 삭제
-  if (player.battleMessageId && player.battleChannelId) {
-    try {
-      const ch = await client.channels.fetch(player.battleChannelId);
-      const msg = await ch.messages.fetch(player.battleMessageId);
-      await msg.delete();
-    } catch (e) {}
-  
-  player.battleMessageId = null;
-  player.battleChannelId = null;
-}
-  if(!dungeonKey){
-    await message.reply('이 명령어는 지정한 던전 채널에서만 가능합니다.');
+    saveData(db);
+    await message.reply(buildBattlePayload(player, message.channel.id, dungeonKey, logs.join('\n')));
+    if(dropLines) await sendTemporaryDropMessage(interaction.channel, player, player.run.lastDrops);
     return;
   }
-
-  createRunIfNeeded(player, dungeonKey);
-  saveData(db);
-
-  const introTarget = player.run?.target || player.run?.nextTarget;
-
-  const introMsg = await message.reply(
-    buildIntroPayload(dungeonKey, introTarget)
-  );
-
-  player.battleMessageId = introMsg.id;
-  player.battleChannelId = message.channel.id;
-  saveData(db);
-
-  await sleep(INTRO_DELAY_MS);
-
-  await introMsg.edit(
-    buildBattlePayload(player, message.channel.id, dungeonKey, '전투 시작!')
-  );
-
-  return;
-}
+  if(command === '!시작'){
+    if(!dungeonKey){ await message.reply('이 명령어는 지정한 던전 채널에서만 가능합니다.'); return; }
+    createRunIfNeeded(player, dungeonKey);
+    saveData(db);
+    const introTarget = player.run?.target || player.run?.nextTarget;
+    await message.reply(buildIntroPayload(dungeonKey, introTarget));
+    await sleep(INTRO_DELAY_MS);
+    await message.reply(buildBattlePayload(player, message.channel.id, dungeonKey, '전투 시작!'));
+    return;
+  }
 });
 
 client.on('interactionCreate', async (interaction)=>{
   if(!interaction.isButton()) return;
 
   const player = getPlayer(interaction.user.id);
-
-  // ✅ 여기 추가
-  if (
-    player.battleMessageId &&
-    interaction.message.id !== player.battleMessageId
-  ) {
-    await interaction.reply({
-      content: '이 전투창은 당신 것이 아닙니다.',
-      ephemeral: true
-    });
-    return;
-  }
-
   const dungeonKey = getDungeonByChannel(interaction.channelId);
   const id = interaction.customId;
 
