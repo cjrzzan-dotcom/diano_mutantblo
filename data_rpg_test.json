@@ -1,0 +1,91 @@
+{
+  "335720453408817166": {
+    "userId": "335720453408817166",
+    "level": 1,
+    "xp": 16,
+    "nextXp": 50,
+    "statPoints": 0,
+    "maxHp": 100,
+    "hp": 42,
+    "baseAtk": 12,
+    "baseDef": 3,
+    "gold": 123,
+    "reviveTickets": 0,
+    "respawnAt": 0,
+    "stones": {
+      "화염": 0,
+      "얼음": 0,
+      "번개": 0,
+      "자연": 0,
+      "어둠": 1
+    },
+    "attributes": {},
+    "potions": {
+      "small": 2,
+      "mid": 0,
+      "big": 0,
+      "elixir": 0
+    },
+    "materials": {
+      "슬라임젤리": 0,
+      "늑대가죽": 0,
+      "고블린뼈조각": 0,
+      "오우거가죽": 0,
+      "작은 용비늘": 0,
+      "낡은장비조각": 1,
+      "드래곤 비늘": 0,
+      "드래곤 발톱": 0,
+      "번개조각": 0,
+      "얼음조각": 0,
+      "붉은화염조각": 0,
+      "푸른화염조각": 0,
+      "어둠조각": 0,
+      "좀비드래곤의 피": 0,
+      "메탈조각": 0,
+      "좀비드래곤의 가죽": 0,
+      "빛의 조각": 0,
+      "도살자의 도끼조각": 0,
+      "레오릭왕의 뼈조각": 0,
+      "악마의 정수": 0,
+      "릴리트의 뿔": 0,
+      "디아블로의 뿔": 0,
+      "고급장비조각": 0
+    },
+    "inventory": [],
+    "equipment": {
+      "weapon": null,
+      "armor": null,
+      "ring": null
+    },
+    "stats": {
+      "atk": 0,
+      "critChance": 0,
+      "critDamage": 0,
+      "dodge": 0
+    },
+    "run": {
+      "dungeon": "초심자의숲",
+      "waveIndex": 0,
+      "kills": 1,
+      "target": {
+        "name": "오크",
+        "hp": 52,
+        "atk": 14,
+        "def": 2,
+        "gold": [
+          16,
+          24
+        ],
+        "xp": 16,
+        "currentHp": 32,
+        "element": "화염"
+      },
+      "nextTarget": null,
+      "isDown": false,
+      "lastDrops": []
+    },
+    "selectedEnhanceIndex": null,
+    "battleMessageId": null,
+    "battleChannelId": null
+  }
+}

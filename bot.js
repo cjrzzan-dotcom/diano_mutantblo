@@ -1,10 +1,10 @@
 
+
 require('dotenv').config();
 
 const ALLOWED_CATEGORY_IDS = process.env.ALLOWED_CATEGORY_IDS
   ? process.env.ALLOWED_CATEGORY_IDS.split(',')
   : [];
-
 
 
 const {
@@ -23,19 +23,36 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
-const DATA_FILE = path.join(__dirname, 'data_rpg_girin.json');
+require('dotenv').config();
+
+const MODE = process.env.MODE || 'test';
+
+const DATA_FILE = path.join(
+  __dirname,
+  MODE === 'prod'
+    ? process.env.DATA_FILE_PROD
+    : process.env.DATA_FILE_TEST
+);
 const IMAGE_PATH = path.join(__dirname, 'images');
 const INTRO_DELAY_MS = 1000;
 const TEMP_DROP_DELETE_MS = 5000;
 const TOWN_CHANNEL_ID = '1487955862940024862';
 
-const DUNGEON_CHANNELS = {
+const DUNGEON_CHANNELS_PROD = {
   '1487952892852965426': '초심자의숲',
   '1487952924092010667': '오색룡의둥지',
   '1487953115024982076': '지옥의관문',
   '1487953176677060780': '지옥의심장부',
   '1487953322160816148': '지옥의왕좌',
 };
+
+const DUNGEON_CHANNELS_TEST = {
+  '1488405763415212053': '초심자의숲',
+};
+
+const DUNGEON_CHANNELS = MODE === 'prod'
+  ? DUNGEON_CHANNELS_PROD
+  : DUNGEON_CHANNELS_TEST;
 
 const DISPLAY_NAMES = {
   '초심자의숲': '초심자의 숲',
@@ -165,12 +182,13 @@ function round1(v){ return Math.round(v*10)/10; }
 const BACKUP_DIR = path.join(__dirname, 'backup');
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
+
 function loadData(){
   try {
     if (fs.existsSync(DATA_FILE)) {
       return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
     }
-
+ 
     const backupFile = DATA_FILE + '.bak';
     if (fs.existsSync(backupFile)) {
       console.log('본 저장파일이 없어 백업파일로 복구합니다.');
@@ -194,6 +212,9 @@ function loadData(){
     return {};
   }
 }
+
+let db = loadData();
+
 function saveData(data){
   const json = JSON.stringify(data, null, 2);
   const tempFile = DATA_FILE + '.tmp';
@@ -1043,6 +1064,7 @@ client.once('ready', ()=>{
 });
 
 client.on('messageCreate', async (message)=>{
+console.log('메시지 받음:', message.content, message.channel.id);
   if(message.author.bot) return;
   if(!isAllowedCategory(message.channel)) return;
   if(!message.content.startsWith('!')) return;
@@ -1485,10 +1507,14 @@ if(id === 'attack'){
 }
 });
 
-require("dotenv").config();
+require('dotenv').config();
 
-const token = process.env.DISCORD_TOKEN;
-console.log("TOKEN EXISTS:", !!token);
-console.log("TOKEN LENGTH:", token ? token.length : 0);
+const TOKEN = MODE === 'prod'
+  ? process.env.DISCORD_TOKEN_PROD
+  : process.env.DISCORD_TOKEN_TEST;
 
-client.login(token);
+console.log("MODE:", MODE);
+console.log("TOKEN EXISTS:", !!TOKEN);
+console.log("TOKEN LENGTH:", TOKEN ? TOKEN.length : 0);
+
+client.login(TOKEN);
