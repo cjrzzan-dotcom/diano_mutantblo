@@ -12,13 +12,12 @@ const DATA_FILE = path.join(
 
 const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri);
+const mongoClient = new MongoClient(uri);
 
 let db;
-
 async function connectDB() {
-  await client.connect();
-  db = client.db("rpg_bot"); // DB 이름
+  await mongoClient.connect();   // 🔥 여기 수정
+  db = mongoClient.db("rpg_bot"); // 🔥 여기 수정
   console.log("DB 연결 완료");
 }
 
