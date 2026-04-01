@@ -2,6 +2,8 @@
 require('dotenv').config();
 const path = require('path');
 
+const MODE = process.env.MODE || 'test';
+
 const DATA_FILE = path.join(
   __dirname,
   MODE === 'prod'
@@ -64,7 +66,7 @@ const client = new Client({
 
 require('dotenv').config();
 
-const MODE = process.env.MODE || 'test';
+
 
 
 const IMAGE_PATH = path.join(__dirname, 'images');
