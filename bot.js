@@ -1092,7 +1092,7 @@ function getCraftIdByLabel(label){
 client.once('ready', ()=>{
   console.log(`${client.user.tag} 로그인 완료`);
 });
-
+gameData = await loadData();
 client.on('messageCreate', async (message)=>{
 console.log('메시지 받음:', message.content, message.channel.id);
   if(message.author.bot) return;
