@@ -14,17 +14,31 @@ const DATA_FILE = path.join(
 console.log("MONGO_URI 있음?", !!process.env.MONGO_URI);
 
 const { MongoClient } = require("mongodb");
-const uri = process.env.MONGO_URI;
-const mongoClient = new MongoClient(uri);
 
 let db;
+
 async function connectDB() {
-  await mongoClient.connect();   // 🔥 여기 수정
-  db = mongoClient.db("rpg_bot"); // 🔥 여기 수정
-  console.log("DB 연결 완료");
+  const uri = process.env.MONGO_URI;
+
+  console.log("🔥 MONGO_URI:", uri);
+
+  if (!uri) {
+    console.error("❌ MONGO_URI 없음");
+    process.exit(1);
+  }
+
+  const mongoClient = new MongoClient(uri);
+
+  await mongoClient.connect();
+
+  db = mongoClient.db("rpg_bot");
+
+  console.log("✅ DB 연결 완료");
 }
 
-connectDB();
+(async () => {
+  await connectDB();
+})();
 
 async function saveData(data) {
   console.log("저장됨!", Object.keys(data).length);
