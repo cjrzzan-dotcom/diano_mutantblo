@@ -1300,7 +1300,7 @@ if (interaction.customId.startsWith('private_start_')) {
   }
   if(id === 'status'){
     await interaction.deferReply({ ephemeral:true });
-    await saveData(game Data);
+    await saveData(gameData);
     await interaction.editReply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
     return;
   }
