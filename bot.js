@@ -1,6 +1,39 @@
 
-
 require('dotenv').config();
+
+
+const { MongoClient } = require("mongodb");
+
+const uri = process.env.MONGO_URI;
+const client = new MongoClient(uri);
+
+let db;
+
+async function connectDB() {
+  await client.connect();
+  db = client.db("rpg_bot"); // DB 이름
+  console.log("DB 연결 완료");
+}
+
+connectDB();
+
+async function saveData(data) {
+  console.log("저장됨!", Object.keys(data).length);
+  await db.collection("game").updateOne(
+    { _id: "main" },
+    { $set: data },
+    { upsert: true }
+  );
+}
+
+async function loadData() {
+  const result = await db.collection("game").findOne({ _id: "main" });
+  console.log("불러온 데이터:", result);
+  return result || {};
+}
+
+
+
 
 const ALLOWED_CATEGORY_IDS = process.env.ALLOWED_CATEGORY_IDS
   ? process.env.ALLOWED_CATEGORY_IDS.split(',')
@@ -178,35 +211,7 @@ const BACKUP_DIR = path.join(__dirname, 'backup');
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
 
-function loadData(){
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-    }
- 
-    const backupFile = DATA_FILE + '.bak';
-    if (fs.existsSync(backupFile)) {
-      console.log('본 저장파일이 없어 백업파일로 복구합니다.');
-      return JSON.parse(fs.readFileSync(backupFile, 'utf8'));
-    }
 
-    return {};
-  } catch (e) {
-    console.error('데이터 로드 실패', e);
-
-    try {
-      const backupFile = DATA_FILE + '.bak';
-      if (fs.existsSync(backupFile)) {
-        console.log('백업파일 로드 시도');
-        return JSON.parse(fs.readFileSync(backupFile, 'utf8'));
-      }
-    } catch (e2) {
-      console.error('백업 로드도 실패', e2);
-    }
-
-    return {};
-  }
-}
 
 
 function saveData(data){
@@ -279,12 +284,16 @@ function getDefaultPlayer(userId){
   };
 }
 
-let db = loadData();
+let gameData;
 
 
-function getPlayer(userId){
-  if(!db[userId]) db[userId] = getDefaultPlayer(userId);
-  return db[userId];
+function getPlayer(userId) {
+  if (!gameData[userId]) {
+    gameData[userId] = getDefaultPlayer(userId);
+  }
+  return gameData[userId];
+}
+
 }
 function getDungeonByChannel(channelId){
   return DUNGEON_CHANNELS[channelId] || null;
@@ -1022,7 +1031,7 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 
   player.run.target = player.run.nextTarget;
   player.run.nextTarget = null;
-  saveData(db);
+  await saveData(gameData);
 
   await interaction.message.edit(buildIntroPayload(dungeonKey, player.run.target));
   await sleep(INTRO_DELAY_MS);
@@ -1075,7 +1084,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
 
 
   if(command === '!가방'){
-    saveData(db);
+    await saveData(gameData);
     await message.reply({ content:buildBagText(player) });
     return;
   }
@@ -1085,8 +1094,8 @@ console.log('메시지 받음:', message.content, message.channel.id);
     return;
   }
   if(command === '!초기화'){
-    db[message.author.id] = getDefaultPlayer(message.author.id);
-    saveData(db);
+    gameData[message.author.id] = getDefaultPlayer(message.author.id);
+await saveData(gameData);
     await message.reply('초기화 완료');
     return;
   }
@@ -1096,7 +1105,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
     return;
  }
   if(command === '!상태'){
-    saveData(db);
+    await saveData(gameData);
     await message.reply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
     return;
   }
@@ -1125,7 +1134,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
       return;
     }
     const res = tryCraft(player, craftId);
-    saveData(db);
+    await saveData(gameData);
     await message.reply(res.text);
     return;
   }
@@ -1133,7 +1142,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
     const idx = Number(arg) - 1;
     if(Number.isNaN(idx)){ await message.reply('사용법: !장착 1'); return; }
     const text = equipItemByIndex(player, idx);
-    saveData(db);
+    await saveData(gameData);
     await message.reply(text);
     return;
   }
@@ -1153,7 +1162,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
     }
     player.stones[arg] -= 1;
     player.attributes[arg] = (player.attributes[arg] || 0) + 1;
-    saveData(db);
+    await saveData(gameData);
     await message.reply(`💎 ${arg} 강화 성공! 현재 ${arg}+${player.attributes[arg]}`);
     return;
   }
@@ -1169,7 +1178,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
   }
 
   createRunIfNeeded(player, dungeonKey);
-  saveData(db);
+  await saveData(gameData);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -1200,7 +1209,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
     }
     if(Date.now() < player.respawnAt) break;
   }
-  saveData(db);
+  await saveData(gameData);
 
   await introMsg.edit(
     buildBattlePayload(
@@ -1254,7 +1263,7 @@ if (interaction.customId.startsWith('private_start_')) {
   }
   createRunIfNeeded(player, dungeonKey);
   player.run.lastDrops = [];
-  saveData(db);
+  await saveData(gameData);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -1285,7 +1294,7 @@ if (interaction.customId.startsWith('private_start_')) {
   }
   if(id === 'status'){
     await interaction.deferReply({ ephemeral:true });
-    saveData(db);
+    await saveData(game Data);
     await interaction.editReply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
     return;
   }
@@ -1318,7 +1327,7 @@ if(id === 'shop'){
   if(id === 'enhance_view'){
     await interaction.deferReply({ ephemeral:true });
     player.selectedEnhanceIndex = null;
-    saveData(db);
+    await saveData(game Data);
     await interaction.editReply({ content:`강화할 아이템 선택\n${inventoryText(player)}\n\n보유 속성석: ${Object.entries(player.stones).map(([k,v])=>`${k}${v}`).join(' / ')}`, components:buildEnhanceItemButtons(player) });
     return;
   }
@@ -1326,7 +1335,7 @@ if(id === 'shop'){
     await interaction.deferReply({ ephemeral:true });
     const idx = Number(id.replace('enhance_item_',''));
     player.selectedEnhanceIndex = idx;
-    saveData(db);
+    await saveData(gameData);
     await interaction.editReply({ content:`선택 아이템: ${player.inventory[idx] ? player.inventory[idx].name : '없음'}\n속성을 선택하세요.`, components:buildEnhanceElementButtons() });
     return;
   }
@@ -1338,7 +1347,7 @@ if(id === 'shop'){
     }
     const elem = id.replace('enhance_elem_','');
     const text = tryEnhanceItem(player, player.selectedEnhanceIndex, elem);
-    saveData(db);
+    await saveData(gameData);
     await interaction.editReply({ content:text });
     return;
   }
@@ -1346,7 +1355,7 @@ if(id === 'shop'){
     await interaction.deferReply({ ephemeral:true });
     const craftId = id.replace('craft_','');
     const res = tryCraft(player, craftId);
-    saveData(db);
+   await saveData(gameData);
     await interaction.editReply({ content:res.text });
     return;
   }
@@ -1354,7 +1363,7 @@ if(id === 'shop'){
     await interaction.deferReply({ ephemeral:true });
     const idx = Number(id.replace('equip_',''));
     const text = equipItemByIndex(player, idx);
-    saveData(db);
+    await saveData(gameData);
     await interaction.editReply({ content:`${text}\n\n${equipmentText(player)}` });
     return;
   }
@@ -1362,7 +1371,7 @@ if(id === 'shop'){
     await interaction.deferReply({ ephemeral:true });
     const map = { stat_atk:'atk', stat_crit:'critChance', stat_critdmg:'critDamage', stat_dodge:'dodge' };
     const text = tryUpgradeStat(player, map[id]);
-    saveData(db);
+    await saveData(gameData);
     await interaction.editReply({ content:`${text}\n\n${buildFullStatusText(player)}`, components:buildStatusButtons(player) });
     return;
   }
@@ -1374,7 +1383,7 @@ if(id === 'shop'){
     if(player.gold < item.price){ await interaction.editReply({ content:'골드가 부족합니다.' }); return; }
     player.gold -= item.price;
     player.potions[key] += 1;
-    saveData(db);
+    await saveData(gameData);
     await interaction.editReply({ content:`구매 완료: ${item.label} 1개` });
     return;
   }
@@ -1397,7 +1406,7 @@ if(id === 'revive'){
   player.reviveTickets -= 1;
   player.hp = Math.max(1, Math.floor(player.maxHp));
   player.run.isDown = false;
-  saveData(db);
+  await saveData(gameData);
 
   await interaction.editReply(
     buildBattlePayload(
@@ -1416,7 +1425,7 @@ if(id.startsWith('use_')){
     await interaction.deferUpdate();
 
     const result = usePotionInBattle(player, key);
-    saveData(db);
+    await saveData(gameData);
 
     await interaction.editReply(
       buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
@@ -1425,7 +1434,7 @@ if(id.startsWith('use_')){
   }
   await interaction.deferReply({ ephemeral:true });
   const text = usePotionOutOfBattle(player, key);
-  saveData(db);
+  await saveData(gameData);
   await interaction.editReply({ content:text });
   return;
 }
@@ -1462,7 +1471,7 @@ if(id.startsWith('use_')){
     }
     if(Date.now() < player.respawnAt) break;
   }
-  saveData(db);
+  await saveData(gameData);
   await interaction.editReply(
     buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
   );
@@ -1482,14 +1491,14 @@ if(id === 'attack'){
     player.run.lastDrops = [];
     player.run.target = player.run.nextTarget;
     player.run.nextTarget = null;
-    saveData(db);
+    await saveData(gameData);
     await interaction.editReply(
       buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
     );
     return;
   }
   const result = performAttack(player, dungeonKey);
-  saveData(db);
+  await saveData(gameData);
 
   await interaction.editReply(
     buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
