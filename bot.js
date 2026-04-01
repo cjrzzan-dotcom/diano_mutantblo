@@ -1,9 +1,16 @@
 
 require('dotenv').config();
+const path = require('path');
+
+const DATA_FILE = path.join(
+  __dirname,
+  MODE === 'prod'
+    ? (process.env.DATA_FILE_PROD || 'data_rpg_girin.json')
+    : (process.env.DATA_FILE_TEST || 'data_rpg_test.json')
+);
 
 
 const { MongoClient } = require("mongodb");
-
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri);
 
@@ -25,15 +32,6 @@ async function saveData(data) {
     { upsert: true }
   );
 }
-
-const DATA_FILE = path.join(
-  __dirname,
-  MODE === 'prod'
-    ? (process.env.DATA_FILE_PROD || 'data_rpg_girin.json')
-    : (process.env.DATA_FILE_TEST || 'data_rpg_test.json')
-);
-
-
 
 async function loadData() {
   const result = await db.collection("game").findOne({ _id: "main" });
@@ -59,7 +57,7 @@ const {
   AttachmentBuilder,
 } = require('discord.js');
 const fs = require('fs');
-const path = require('path');
+
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
