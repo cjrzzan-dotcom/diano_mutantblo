@@ -300,7 +300,7 @@ function getPlayer(userId) {
   return gameData[userId];
 }
 
-}
+
 function getDungeonByChannel(channelId){
   return DUNGEON_CHANNELS[channelId] || null;
 }
