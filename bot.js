@@ -11,6 +11,7 @@ const DATA_FILE = path.join(
     : (process.env.DATA_FILE_TEST || 'data_rpg_test.json')
 );
 
+console.log("MONGO_URI 있음?", !!process.env.MONGO_URI);
 
 const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI;
