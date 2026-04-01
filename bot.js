@@ -1333,7 +1333,7 @@ if(id === 'shop'){
   if(id === 'enhance_view'){
     await interaction.deferReply({ ephemeral:true });
     player.selectedEnhanceIndex = null;
-    await saveData(game Data);
+    await saveData(gameData);
     await interaction.editReply({ content:`강화할 아이템 선택\n${inventoryText(player)}\n\n보유 속성석: ${Object.entries(player.stones).map(([k,v])=>`${k}${v}`).join(' / ')}`, components:buildEnhanceItemButtons(player) });
     return;
   }
