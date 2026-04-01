@@ -26,6 +26,15 @@ async function saveData(data) {
   );
 }
 
+const DATA_FILE = path.join(
+  __dirname,
+  MODE === 'prod'
+    ? (process.env.DATA_FILE_PROD || 'data_rpg_girin.json')
+    : (process.env.DATA_FILE_TEST || 'data_rpg_test.json')
+);
+
+
+
 async function loadData() {
   const result = await db.collection("game").findOne({ _id: "main" });
   console.log("불러온 데이터:", result);
@@ -1521,12 +1530,6 @@ console.log('DATA_FILE_PROD =', process.env.DATA_FILE_PROD);
 console.log('DATA_FILE_TEST =', process.env.DATA_FILE_TEST);
 
 
-const DATA_FILE = path.join(
-  __dirname,
-  MODE === 'prod'
-    ? (process.env.DATA_FILE_PROD || 'data_rpg_girin.json')
-    : (process.env.DATA_FILE_TEST || 'data_rpg_test.json')
-);
 
 const TOKEN = MODE === 'prod'
   ? (process.env.DISCORD_TOKEN_PROD || process.env.DISCORD_TOKEN)
