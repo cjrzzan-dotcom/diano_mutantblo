@@ -42,15 +42,17 @@ async function connectDB() {
 
 async function saveData(data) {
   console.log("🔥 saveData 호출됨");
-  console.log("저장될 키 수:", Object.keys(data).length);
+  console.log("db 있음?", !!db);
+  console.log("저장될 키 수:", Object.keys(data || {}).length);
 
   await db.collection("game").updateOne(
     { _id: "main" },
     { $set: data },
     { upsert: true }
   );
-}
 
+  console.log("✅ 저장 완료");
+}
 async function loadData() {
   const result = await db.collection("game").findOne({ _id: "main" });
   console.log("불러온 데이터:", result);
@@ -1112,11 +1114,12 @@ console.log('메시지 받음:', message.content, message.channel.id);
   const dungeonKey = getDungeonByChannel(message.channel.id);
 
 
-  if(command === '!가방'){
+if(command === '!가방'){
+    console.log("📦 !가방 분기 들어옴");
     await saveData(gameData);
-    await message.reply({ content:buildBagText(player) });
+    await message.reply({ content: buildBagText(player) });
     return;
-  }
+}
 
   if(command === '!도움말'){
     await message.reply(formatHelp());
