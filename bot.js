@@ -85,6 +85,37 @@ const client = new Client({
 
 require('dotenv').config();
 
+const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 5분
+const AUTO_HUNT_MAX_CHARGES = 10;
+
+function refreshAutoHuntCharges(player) {
+  if (player.autoHuntCharges == null) player.autoHuntCharges = 0;
+  if (!player.autoHuntLastChargeAt) player.autoHuntLastChargeAt = Date.now();
+
+  const now = Date.now();
+  const elapsed = now - player.autoHuntLastChargeAt;
+
+  const gained = Math.floor(elapsed / AUTO_HUNT_CHARGE_MS);
+  if (gained > 0) {
+    player.autoHuntCharges = Math.min(
+      AUTO_HUNT_MAX_CHARGES,
+      player.autoHuntCharges + gained
+    );
+
+    player.autoHuntLastChargeAt += gained * AUTO_HUNT_CHARGE_MS;
+  }
+}
+
+function getNextAutoHuntChargeRemain(player) {
+  refreshAutoHuntCharges(player);
+
+  if (player.autoHuntCharges >= AUTO_HUNT_MAX_CHARGES) return 0;
+
+  const now = Date.now();
+  const remain = AUTO_HUNT_CHARGE_MS - (now - player.autoHuntLastChargeAt);
+  return Math.max(0, remain);
+}
+
 
 
 
@@ -185,7 +216,7 @@ const DUNGEONS = {
     { name: '고블린', hp: 34, atk: 10, def: 1, gold: [10,16], xp: 12 },
     { name: '오크', hp: 52, atk: 14, def: 2, gold: [16,24], xp: 16 },
     { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 24 },
-    { name: '드래곤', hp: 145, atk: 24, def: 5, gold: [50,80], xp: 45 },
+    { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 45 },
   ]},
   '오색룡의둥지': { type: 'random', autoAllowed: true, monsters: [
     { name: '번개드래곤', hp: 350, atk:  40, def: 10, gold: [35,55], xp: 35 },
@@ -279,6 +310,9 @@ function getDefaultPlayer(userId){
     stats:{ atk:0, critChance:0, critDamage:0, dodge:0 },
     run:null,
     selectedEnhanceIndex:null,
+
+autoHuntCharges: 10,
+autoHuntLastChargeAt: Date.now(),
 
     battleMessageId: null,
     battleChannelId: null,
@@ -507,39 +541,39 @@ function getMaterialDrops(monsterName){
   const drops = [];
   if(chance(40)) drops.push(['낡은장비조각',1]);
   switch(monsterName){
-    case '슬라임': if(chance(70)) drops.push(['슬라임젤리',1]); break;
-    case '늑대': if(chance(60)) drops.push(['늑대가죽',1]); break;
-    case '고블린': if(chance(60)) drops.push(['고블린뼈조각',1]); break;
-    case '오우거': if(chance(50)) drops.push(['오우거가죽',1]); break;
+    case '슬라임': if(chance(45)) drops.push(['슬라임젤리',1]); break;
+    case '늑대': if(chance(40)) drops.push(['늑대가죽',1]); break;
+    case '고블린': if(chance(35)) drops.push(['고블린뼈조각',1]); break;
+    case '오우거': if(chance(30)) drops.push(['오우거가죽',1]); break;
     case '드래곤': if(chance(30)) drops.push(['작은 용비늘',1]); break;
   }
 
   const dragonSet = ['번개드래곤','얼음드래곤','붉은화염드래곤','푸른화염드래곤','어둠드래곤','좀비드래곤','메탈드래곤','대독드래곤','빛의 군주 드래곤'];
   if(dragonSet.includes(monsterName)){
-    if(chance(60)) drops.push(['드래곤 비늘',1]);
-    if(chance(60)) drops.push(['드래곤 발톱',1]);
-    if(chance(40)) drops.push(['낡은장비조각',1]);
+    if(chance(35)) drops.push(['드래곤 비늘',1]);
+    if(chance(35)) drops.push(['드래곤 발톱',1]);
+    if(chance(35)) drops.push(['낡은장비조각',1]);
   }
 
   switch(monsterName){
-    case '번개드래곤': drops.push(['번개조각',1]); break;
-    case '얼음드래곤': drops.push(['얼음조각',1]); break;
-    case '붉은화염드래곤': drops.push(['붉은화염조각',1]); break;
-    case '푸른화염드래곤': drops.push(['푸른화염조각',1]); break;
-    case '어둠드래곤': drops.push(['어둠조각',1]); break;
-    case '좀비드래곤': if(chance(50)) drops.push(['좀비드래곤의 피',1]); break;
-    case '메탈드래곤': if(chance(40)) drops.push(['메탈조각',1]); break;
-    case '대독드래곤': if(chance(40)) drops.push(['좀비드래곤의 가죽',1]); break;
-    case '빛의 군주 드래곤': if(chance(40)) drops.push(['빛의 조각',1]); break;
+    case '번개드래곤': if(chance(40)) drops.push(['번개조각',1]); break;
+    case '얼음드래곤': if(chance(40)) drops.push(['얼음조각',1]); break;
+    case '붉은화염드래곤': if(chance(40)) drops.push(['붉은화염조각',1]); break;
+    case '푸른화염드래곤': if(chance(40)) drops.push(['푸른화염조각',1]); break;
+    case '어둠드래곤': if(chance(40)) drops.push(['어둠조각',1]); break;
+    case '좀비드래곤': if(chance(40)) drops.push(['좀비드래곤의 피',1]); break;
+    case '메탈드래곤': if(chance(30)) drops.push(['메탈조각',1]); break;
+    case '대독드래곤': if(chance(30)) drops.push(['좀비드래곤의 가죽',1]); break;
+    case '빛의 군주 드래곤': if(chance(30)) drops.push(['빛의 조각',1]); break;
   }
 
  const hellGate = ['도살자','레오릭 왕','두리엘','안다리엘','벨리알','아즈모단','릴리트','바알','메피스토','디아블로','종말의 화신 디아블로'];
   if(hellGate.includes(monsterName) && chance(40)) drops.push(['고급장비조각',1]);
 
-  if(monsterName === '도살자' && chance(60)) drops.push(['도살자의 도끼조각',1]);
-  if(monsterName === '레오릭 왕' && chance(60)) drops.push(['레오릭왕의 뼈조각',1]);
-  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(50)) drops.push(['악마의 살점',1]);
-  if(monsterName === '릴리트' && chance(40)) drops.push(['릴리트의 뿔',1]);
+  if(monsterName === '도살자' && chance(40)) drops.push(['도살자의 도끼조각',1]);
+  if(monsterName === '레오릭 왕' && chance(40)) drops.push(['레오릭왕의 뼈조각',1]);
+  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 살점',1]);
+  if(monsterName === '릴리트' && chance(35)) drops.push(['릴리트의 뿔',1]);
   if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) drops.push(['악마의 정수',1]);
   if(monsterName === '종말의 화신 디아블로' && chance(40)) drops.push(['디아블로의 뿔',1]);
 
@@ -615,6 +649,31 @@ function enemyAttack(player, target, logs){
     }
   }
 }
+
+function applyAutoHuntPenalty(result) {
+  if (!result) return result;
+
+  // 경험치
+  if (typeof result.exp === 'number') {
+    result.exp = Math.max(1, Math.floor(result.exp / 5));
+  }
+
+  // 골드
+  if (typeof result.gold === 'number') {
+    result.gold = Math.max(1, Math.floor(result.gold / 5));
+  }
+
+  // 드랍 아이템 수량
+  if (Array.isArray(result.drops)) {
+    result.drops = result.drops.map(drop => ({
+      ...drop,
+      amount: Math.max(1, Math.floor((drop.amount || 1) / 5))
+    }));
+  }
+
+  return result;
+}
+
 function usePotionOutOfBattle(player, key){
   const item = SHOP[key];
   if(!item) return '잘못된 물약입니다.';
@@ -755,26 +814,101 @@ function equipItemByIndex(player, idx){
   player.inventory.splice(idx,1);
   return `✅ ${item.name} 장착 완료!`;
 }
-function tryEnhanceItem(player, idx, elem){
+function tryEnhanceItem(player, idx, elem) {
   const item = player.inventory[idx];
-  if(!item) return '없는 아이템입니다.';
-  if((player.stones[elem]||0) < 1) return `${elem}석이 부족합니다.`;
-  player.stones[elem] -= 1;
-  item.elementEnhance[elem] = (item.elementEnhance[elem] || 0) + 1;
-  if(item.type === 'weapon') item.atkBonus += 2;
-  if(item.type === 'armor') item.defBonus += 2;
-  if(item.type === 'ring'){
-    const p = pick(['critChanceBonus','critDamageBonus','dodgeBonus']);
-    item[p] += 1;
+  if (!item) return '없는 아이템입니다.';
+
+  if (!player.stones) player.stones = {};
+  if (!item.elementEnhance) item.elementEnhance = {};
+
+  const current = item.elementEnhance[elem] || 0;
+
+  if (current >= 5) {
+    return `❌ ${item.name}의 ${elem} 강화는 이미 최대(5강)입니다.`;
   }
-  return `🔨 ${item.name} ${elem} 강화 성공!`;
+
+  const costTable = {
+    0: { stone: 1, gold: 100, rate: 100 },
+    1: { stone: 2, gold: 150, rate: 75 },
+    2: { stone: 4, gold: 200, rate: 50 },
+    3: { stone: 8, gold: 300, rate: 35 },
+    4: { stone: 10, gold: 500, rate: 15 }
+  };
+
+  const rule = costTable[current];
+  const haveStone = player.stones[elem] || 0;
+  const haveGold = player.gold || 0;
+
+  if (haveStone < rule.stone) {
+    return `❌ ${elem}석 부족 (${rule.stone}개 필요 / 현재 ${haveStone})`;
+  }
+
+  if (haveGold < rule.gold) {
+    return `❌ 골드 부족 (${rule.gold} 필요 / 현재 ${haveGold})`;
+  }
+
+  // 비용 차감
+  player.stones[elem] -= rule.stone;
+  player.gold -= rule.gold;
+
+  const roll = Math.random() * 100;
+  const success = roll < rule.rate;
+
+  if (!success) {
+    return `💥 ${item.name} 강화 실패... (${current}강 유지)`;
+  }
+
+  // 성공
+  item.elementEnhance[elem] = current + 1;
+
+  if (item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
+  if (item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
+  if (item.type === 'ring') {
+    const p = pick(['critChanceBonus','critDamageBonus','dodgeBonus']);
+    item[p] = (item[p] || 0) + 1;
+  }
+
+  return `🔨 ${item.name} ${elem} 강화 성공! (+${current} → +${current+1})\n💸 골드 ${rule.gold}, ${elem}석 ${rule.stone}개 소모`;
+}
+
+  // 성공 처리
+  item.elementEnhance[elem] = current + 1;
+
+  if (item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
+  if (item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
+  if (item.type === 'ring') {
+    const p = pick(['critChanceBonus', 'critDamageBonus', 'dodgeBonus']);
+    item[p] = (item[p] || 0) + 1;
+  }
+
+  return `🔨 ${item.name} ${elem} 강화 성공! (${current}강 → ${current + 1}강, ${elem}석 ${need}개 소모)`;
+}
+
+function getElementEnhanceText(item) {
+  if (!item || !item.elementEnhance) return '';
+
+  const elementNames = {
+    fire: '화염',
+    water: '물',
+    ice: '얼음',
+    wind: '바람',
+    earth: '대지',
+    light: '빛',
+    dark: '어둠'
+  };
+
+  const parts = Object.entries(item.elementEnhance)
+    .filter(([, lv]) => (lv || 0) > 0)
+    .map(([elem, lv]) => `+${lv}${elementNames[elem] || elem}`);
+
+  return parts.length ? ` ${parts.join(' ')}` : '';
 }
 
 function equipmentText(player){
   return [
-    `⚔️ 무기: ${player.equipment.weapon ? player.equipment.weapon.name + getItemStatText(player.equipment.weapon) : '없음'}`,
-    `🛡️ 갑옷: ${player.equipment.armor ? player.equipment.armor.name + getItemStatText(player.equipment.armor) : '없음'}`,
-    `💍 반지: ${player.equipment.ring ? player.equipment.ring.name + getItemStatText(player.equipment.ring) : '없음'}`
+    `⚔️ 무기: ${player.equipment.weapon ? player.equipment.weapon.name + getElementEnhanceText(player.equipment.weapon) + getItemStatText(player.equipment.weapon) : '없음'}`,
+    `🛡️ 갑옷: ${player.equipment.armor ? player.equipment.armor.name + getElementEnhanceText(player.equipment.armor) + getItemStatText(player.equipment.armor) : '없음'}`,
+    `💍 반지: ${player.equipment.ring ? player.equipment.ring.name + getElementEnhanceText(player.equipment.ring) + getItemStatText(player.equipment.ring) : '없음'}`
   ].join('\n');
 }
 function materialsText(player){
@@ -807,19 +941,17 @@ function buildFullStatusText(player){
   const baseDodge = player.stats.dodge;
   const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
 
-  const weaponText = player.equipment.weapon
-    ? `${player.equipment.weapon.name} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
-    : '없음';
+const weaponText = player.equipment.weapon
+  ? `${player.equipment.weapon.name}${getElementEnhanceText(player.equipment.weapon)} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+  : '없음';
 
-  const armorText = player.equipment.armor
-    ? `${player.equipment.armor.name} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
-    : '없음';
+const armorText = player.equipment.armor
+  ? `${player.equipment.armor.name}${getElementEnhanceText(player.equipment.armor)} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+  : '없음';
 
-  const ringText = player.equipment.ring
-    ? `${player.equipment.ring.name} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${
-
-ipment.ring.dodgeBonus || 0}%)`
-    : '없음';
+const ringText = player.equipment.ring
+  ? `${player.equipment.ring.name}${getElementEnhanceText(player.equipment.ring)} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
+  : '없음';
 
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
@@ -1173,6 +1305,23 @@ await saveData(gameData);
     return;
   }
  if(command === '!자동'){
+refreshAutoHuntCharges(player);
+
+if (player.autoHuntCharges <= 0) {
+  const remainMs = getNextAutoHuntChargeRemain(player);
+  const remainMin = Math.floor(remainMs / 60000);
+  const remainSec = Math.floor((remainMs % 60000) / 1000);
+
+  await message.reply(
+    `자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`
+  );
+  return;
+}
+
+player.autoHuntCharges -= 1;
+
+await saveData(gameData);
+
   if(!dungeonKey){
     await message.reply('이 명령어는 던전 채널에서만 가능합니다.');
     return;
@@ -1207,7 +1356,8 @@ await saveData(gameData);
       logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
       continue;
     }
-    const result = performAttack(player, dungeonKey);
+    let result = performAttack(player, dungeonKey);
+result = applyAutoHuntPenalty(result);
     logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
 
     if(player.run?.lastDrops?.length){
@@ -1448,48 +1598,82 @@ if(id.startsWith('use_')){
     await interaction.reply({ content:'이 버튼은 던전 채널에서만 사용할 수 있습니다.', ephemeral:true });
     return;
   }
- if(id === 'auto'){
-  await interaction.deferUpdate();
-  if(!DUNGEONS[dungeonKey].autoAllowed){
-    await interaction.followUp({
-      content:'이 던전은 자동사냥이 불가능합니다.',
-      ephemeral:true
-    });
-    return;
-  }
-  if(!player.run) createRunIfNeeded(player, dungeonKey);
-  const logs = ['🤖 자동사냥 시작'];
-  let dropLines = null;
-  for(let i=0;i<5;i++){
-    if(!player.run) break;
-    if(player.run.isDown) break;
-    if(!player.run.target && player.run.nextTarget){
-      player.run.lastDrops = [];
-      player.run.target = player.run.nextTarget;
-      player.run.nextTarget = null;
-      logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
-      continue;
-    }
-    const result = performAttack(player, dungeonKey);
-    logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
-    if(player.run?.lastDrops?.length){
-      dropLines = [...player.run.lastDrops];
-    }
-    if(Date.now() < player.respawnAt) break;
-  }
-  await saveData(gameData);
-  await interaction.editReply(
-    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
-  );
 
-if(dropLines){
+if(!DUNGEONS[dungeonKey].autoAllowed){
   await interaction.followUp({
-    content: `🎁 드랍템\n${dropLines.join('\n')}`,
-    ephemeral: true
+    content:'이 던전은 자동사냥이 불가능합니다.',
+    ephemeral:true
   });
+  return;
 }
-return;
+
+refreshAutoHuntCharges(player);
+
+if (player.autoHuntCharges <= 0) {
+  const remainMs = getNextAutoHuntChargeRemain(player);
+  const remainMin = Math.floor(remainMs / 60000);
+  const remainSec = Math.floor((remainMs % 60000) / 1000);
+
+  await interaction.followUp({
+    content:`❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
+    ephemeral:true
+  });
+  return;
 }
+
+player.autoHuntCharges -= 1;
+
+if(!player.run) createRunIfNeeded(player, dungeonKey);
+await saveData(gameData);
+
+const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
+let dropLines = null;
+
+for(let i=0;i<5;i++){
+  if(!player.run) break;
+  if(player.run.isDown) break;
+
+  if(player.run.target && player.run.nextTarget){
+    player.run.lastDrops = [];
+    player.run.target = player.run.nextTarget;
+    player.run.nextTarget = null;
+    logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
+    continue;
+  }
+
+  let beforeGold = player.gold;
+  let beforeXp = player.xp;
+  let beforeDrops = player.run?.lastDrops ? [...player.run.lastDrops] : [];
+
+  let result = performAttack(player, dungeonKey);
+
+  let gainedGold = Math.max(0, player.gold - beforeGold);
+  let gainedXp = Math.max(0, player.xp - beforeXp);
+
+  let reducedGold = Math.floor(gainedGold / 5);
+  let reducedXp = Math.floor(gainedXp / 5);
+
+  player.gold = beforeGold + reducedGold;
+  player.xp = beforeXp + reducedXp;
+
+  if(player.run?.lastDrops){
+    player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.2);
+  }
+
+  logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
+  logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
+
+  if(player.run?.lastDrops?.length){
+    dropLines = [...player.run.lastDrops];
+  }
+
+  if(Date.now() < player.respawnAt) break;
+}
+
+await saveData(gameData);
+
+
+
 if(id === 'attack'){
   await interaction.deferUpdate();
   if(!player.run) createRunIfNeeded(player, dungeonKey);
