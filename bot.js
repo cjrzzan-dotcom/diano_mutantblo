@@ -41,7 +41,9 @@ async function connectDB() {
 })();
 
 async function saveData(data) {
-  console.log("저장됨!", Object.keys(data).length);
+  console.log("🔥 saveData 호출됨");
+  console.log("저장될 키 수:", Object.keys(data).length);
+
   await db.collection("game").updateOne(
     { _id: "main" },
     { $set: data },
