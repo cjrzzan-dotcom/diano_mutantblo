@@ -1596,78 +1596,102 @@ if(id.startsWith('use_')){
     return;
   }
 
-if(!DUNGEONS[dungeonKey].autoAllowed){
+if (id === 'auto') {
+  await interaction.deferUpdate();
+
+  if (!dungeonKey || !DUNGEONS[dungeonKey]) {
+    await interaction.followUp({
+      content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (!DUNGEONS[dungeonKey].autoAllowed) {
+    await interaction.followUp({
+      content: '이 던전은 자동사냥이 불가능합니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  refreshAutoHuntCharges(player);
+
+  if (player.autoHuntCharges <= 0) {
+    const remainMs = getNextAutoHuntChargeRemain(player);
+    const remainMin = Math.floor(remainMs / 60000);
+    const remainSec = Math.floor((remainMs % 60000) / 1000);
+
+    await interaction.followUp({
+      content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.autoHuntCharges -= 1;
+
+  createRunIfNeeded(player, dungeonKey);
+  await saveData(gameData);
+
+  const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
+  let dropLines = null;
+
+  for (let i = 0; i < AUTO_HUNT_TURNS; i++) {
+    if (!player.run) break;
+    if (player.run.isDown) break;
+
+    if (player.run.target && player.run.nextTarget) {
+      player.run.lastDrops = [];
+      player.run.target = player.run.nextTarget;
+      player.run.nextTarget = null;
+      logs.push(`\n[${i + 1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
+      continue;
+    }
+
+    const beforeGold = player.gold;
+    const beforeXp = player.xp;
+    const beforeDrops = player.run?.lastDrops ? [...player.run.lastDrops] : [];
+
+    const result = performAttack(player, dungeonKey);
+
+    const gainedGold = Math.max(0, player.gold - beforeGold);
+    const gainedXp = Math.max(0, player.xp - beforeXp);
+
+    const reducedGold = Math.floor(gainedGold / 5);
+    const reducedXp = Math.floor(gainedXp / 5);
+
+    player.gold = beforeGold + reducedGold;
+    player.xp = beforeXp + reducedXp;
+
+    if (player.run?.lastDrops) {
+      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.2);
+    }
+
+    logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
+    logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
+
+    if (beforeDrops.length || player.run?.lastDrops?.length) {
+      dropLines = [...(player.run?.lastDrops || [])];
+    }
+
+    if (Date.now() < player.respawnAt) break;
+  }
+
+  await saveData(gameData);
+
+  const text = [
+    ...logs,
+    dropLines?.length ? `\n🎁 드랍\n${dropLines.join('\n')}` : ''
+  ].join('\n');
+
   await interaction.followUp({
-    content:'이 던전은 자동사냥이 불가능합니다.',
-    ephemeral:true
+    content: text,
+    ephemeral: true
   });
+
   return;
 }
-
-refreshAutoHuntCharges(player);
-
-if (player.autoHuntCharges <= 0) {
-  const remainMs = getNextAutoHuntChargeRemain(player);
-  const remainMin = Math.floor(remainMs / 60000);
-  const remainSec = Math.floor((remainMs % 60000) / 1000);
-
-  await interaction.followUp({
-    content:`❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
-    ephemeral:true
-  });
-  return;
-}
-
-player.autoHuntCharges -= 1;
-
-if(!player.run) createRunIfNeeded(player, dungeonKey);
-await saveData(gameData);
-
-const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
-let dropLines = null;
-
-for(let i=0;i<5;i++){
-  if(!player.run) break;
-  if(player.run.isDown) break;
-
-  if(player.run.target && player.run.nextTarget){
-    player.run.lastDrops = [];
-    player.run.target = player.run.nextTarget;
-    player.run.nextTarget = null;
-    logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
-    continue;
-  }
-
-  let beforeGold = player.gold;
-  let beforeXp = player.xp;
-  let beforeDrops = player.run?.lastDrops ? [...player.run.lastDrops] : [];
-
-  let result = performAttack(player, dungeonKey);
-
-  let gainedGold = Math.max(0, player.gold - beforeGold);
-  let gainedXp = Math.max(0, player.xp - beforeXp);
-
-  let reducedGold = Math.floor(gainedGold / 5);
-  let reducedXp = Math.floor(gainedXp / 5);
-
-  player.gold = beforeGold + reducedGold;
-  player.xp = beforeXp + reducedXp;
-
-  if(player.run?.lastDrops){
-    player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.2);
-  }
-
-  logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
-  logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
-
-  if(player.run?.lastDrops?.length){
-    dropLines = [...player.run.lastDrops];
-  }
-
-  if(Date.now() < player.respawnAt) break;
-}
-
-await saveData(gameData);
 
 
 
