@@ -1477,34 +1477,6 @@ if (interaction.customId.startsWith('private_start_')) {
 }
 
 
-if (interaction.customId.startsWith('private_start_')) {
-  const [, , ownerId, dungeonKey] = interaction.customId.split('_');
-
-  if (interaction.user.id !== ownerId) {
-    await interaction.reply({
-      content: '이 버튼은 만든 사람만 사용할 수 있습니다.',
-      ephemeral: true
-    });
-    return;
-  }
-  createRunIfNeeded(player, dungeonKey);
-  player.run.lastDrops = [];
-  await saveData(gameData);
-
-  const introTarget = player.run?.target || player.run?.nextTarget;
-
-  await interaction.reply({
-    ...buildIntroPayload(dungeonKey, introTarget),
-    ephemeral: true
-  });
-  await sleep(INTRO_DELAY_MS);
-
-  await interaction.editReply(
-    buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
-  );
-  return;
-}
-
   const channeldungeonKey = getDungeonByChannel(interaction.channelId);
   const id = interaction.customId;
 
