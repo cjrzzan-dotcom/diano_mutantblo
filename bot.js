@@ -97,6 +97,7 @@ require('dotenv').config();
 
 const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 5분
 const AUTO_HUNT_MAX_CHARGES = 10;
+const AUTO_HUNT_TURNS = 5;
 
 function refreshAutoHuntCharges(player) {
   if (player.autoHuntCharges == null) player.autoHuntCharges = 0;
