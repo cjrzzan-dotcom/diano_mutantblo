@@ -1089,9 +1089,9 @@ function getCraftIdByLabel(label){
   return f ? f.id : null;
 }
 
-client.once('ready', ()=>{
+client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
-gameData = await loadData();
+  gameData = await loadData();
 });
 
 client.on('messageCreate', async (message)=>{
