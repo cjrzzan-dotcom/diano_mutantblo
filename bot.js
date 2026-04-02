@@ -1411,6 +1411,8 @@ if(dropLines){
   return;
 }
 
+const dungeonKey = getDungeonByChannel(message.channel.id);
+
 if (command === '!시작') {
   const isTown = message.channel.id === TOWN_CHANNEL_ID;
 
