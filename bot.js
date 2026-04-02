@@ -41,6 +41,12 @@ async function connectDB() {
 })();
 
 async function saveData(data) {
+  if (!db) await connectDB();   // 추가
+  if (!db) {
+    console.log("❌ db 연결 안됨");
+    return;
+  }
+
   console.log("🔥 saveData 호출됨");
   console.log("db 있음?", !!db);
   console.log("저장될 키 수:", Object.keys(data || {}).length);
@@ -53,7 +59,11 @@ async function saveData(data) {
 
   console.log("✅ 저장 완료");
 }
+
 async function loadData() {
+  if (!db) await connectDB();   // 추가
+  if (!db) return {};           // 추가
+
   const result = await db.collection("game").findOne({ _id: "main" });
   console.log("불러온 데이터:", result);
   return result || {};
