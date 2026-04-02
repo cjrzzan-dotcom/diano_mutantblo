@@ -1506,7 +1506,7 @@ if (interaction.customId.startsWith('private_start_')) {
   return;
 }
 
-  const dungeonKey = getDungeonByChannel(interaction.channelId);
+  const channeldungeonKey = getDungeonByChannel(interaction.channelId);
   const id = interaction.customId;
 
 const blockedDuringBattle = ['shop', 'craft_list', 'equipment_view', 'enhance_view', 'bag_view'];
