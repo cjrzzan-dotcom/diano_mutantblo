@@ -134,6 +134,7 @@ const IMAGE_PATH = path.join(__dirname, 'images');
 const INTRO_DELAY_MS = 1000;
 const TEMP_DROP_DELETE_MS = 5000;
 const TOWN_CHANNEL_ID = '1487955862940024862';
+const TOWN_CHANNEL_ID = '1487955862940024862';
 
 const DUNGEON_CHANNELS_PROD = {
   '1487952892852965426': '초심자의숲',
@@ -1029,6 +1030,42 @@ function getItemStatText(item){
   return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
+function buildTownButtons(player){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('shop').setLabel('🏪 상점').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('craft_list').setLabel('🛠️ 제작').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
+    ),
+  ];
+}
+
+
+function buildTownPayload(player, extraText=''){
+  const embed = new EmbedBuilder()
+    .setTitle('🏘️ 마을')
+    .setDescription(
+      [
+        extraText,
+        `💰 골드: ${player.gold}`,
+        `🎟️ 부활권: ${player.reviveTickets}`,
+        `🎒 인벤토리 확인 / 장비 / 제작 / 강화 / 상점을 이용할 수 있습니다.`,
+      ].filter(Boolean).join('\n')
+    )
+    .setColor(0x2ecc71);
+
+  return {
+    embeds: [embed],
+    components: buildTownButtons(player)
+  };
+}
+
+
 function buildBattleButtons(player, dungeonKey){
   const canAuto = DUNGEONS[dungeonKey]?.autoAllowed || false;
   const down = player.run?.isDown;
@@ -1037,21 +1074,14 @@ function buildBattleButtons(player, dungeonKey){
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('attack').setLabel('⚔️ 공격').setStyle(ButtonStyle.Danger).setDisabled(down),
       new ButtonBuilder().setCustomId('use_small').setLabel('💊').setStyle(ButtonStyle.Secondary).setDisabled(down),
-      new ButtonBuilder().setCustomId('use_mid').setLabel('🍗 ').setStyle(ButtonStyle.Secondary).setDisabled(down),
+      new ButtonBuilder().setCustomId('use_mid').setLabel('🍗').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
     ),
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('shop').setLabel('🏪 상점').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('use_big').setLabel('🍖 ').setStyle(ButtonStyle.Secondary).setDisabled(down),
+      new ButtonBuilder().setCustomId('use_big').setLabel('🍖').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_elixir').setLabel('🧪').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('auto').setLabel(canAuto ? '🤖 자동' : '자동불가').setStyle(canAuto ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canAuto || down),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets<=0),
-      new ButtonBuilder().setCustomId('craft_list').setLabel('🛠️ 제작').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),
     ),
   ];
 }
@@ -1435,6 +1465,16 @@ if (interaction.customId.startsWith('private_start_')) {
 
   const dungeonKey = getDungeonByChannel(interaction.channelId);
   const id = interaction.customId;
+
+const blockedDuringBattle = ['shop', 'craft_list', 'equipment_view', 'enhance_view', 'bag_view'];
+
+if (blockedDuringBattle.includes(id) && player.run && !player.run.isDown) {
+  await interaction.reply({
+    content: '⚔️ 전투 중에는 이 기능을 사용할 수 없습니다. 마을에서 이용해주세요.',
+    ephemeral: true
+  });
+  return;
+}
 
    if(id === 'bag_view'){
     await interaction.deferReply({ ephemeral:true });
