@@ -1447,6 +1447,16 @@ client.on('interactionCreate', async (interaction) => {
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
+const blockedDuringBattle = ['shop', 'craft_list', 'equipment_view', 'enhance_view', 'bag_view'];
+
+if (blockedDuringBattle.includes(id) && player.run && !player.run.isDown) {
+  await interaction.reply({
+    content: '⚔️ 전투 중에는 이 기능을 사용할 수 없습니다. 마을에서 이용해주세요.',
+    ephemeral: true
+  });
+  return;
+}
+
   if (interaction.customId.startsWith('private_start_')) {
     const parts = interaction.customId.split('_');
     const ownerId = parts[2];
