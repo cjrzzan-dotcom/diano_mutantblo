@@ -60,7 +60,7 @@ async function loadData() {
 }
 
 
-
+console.log("버전2");
 
 const ALLOWED_CATEGORY_IDS = process.env.ALLOWED_CATEGORY_IDS
   ? process.env.ALLOWED_CATEGORY_IDS.split(',')
