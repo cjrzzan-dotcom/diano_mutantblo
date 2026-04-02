@@ -1246,8 +1246,6 @@ console.log('메시지 받음:', message.content, message.channel.id);
   const command = parts[0];
   const arg = parts[1];
   const player = getPlayer(message.author.id);
-  const channeldungeonKey = getDungeonByChannel(interaction.channel.id);
-
 
 if(command === '!가방'){
     console.log("📦 !가방 분기 들어옴");
