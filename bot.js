@@ -1434,6 +1434,8 @@ if (command === '!시작') {
   });
   return;
 }
+});
+
 
 
 client.on('interactionCreate', async (interaction) => {
