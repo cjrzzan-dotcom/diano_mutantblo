@@ -237,32 +237,6 @@ function round1(v){ return Math.round(v*10)/10; }
 const BACKUP_DIR = path.join(__dirname, 'backup');
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
-
-
-
-
-function saveData(data){
-  const json = JSON.stringify(data, null, 2);
-  const tempFile = DATA_FILE + '.tmp';
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const backupFile = path.join(BACKUP_DIR, `data_rpg_girin_${timestamp}.json`);
-  const latestBackup = path.join(BACKUP_DIR, 'latest_backup.json');
-
-  try {
-    fs.writeFileSync(tempFile, json, 'utf8');
-    fs.writeFileSync(latestBackup, json, 'utf8');
-    fs.writeFileSync(backupFile, json, 'utf8');
-    fs.renameSync(tempFile, DATA_FILE);
-
-    cleanupOldBackups(10);
-  } catch (e) {
-    console.error('데이터 저장 실패', e);
-    try {
-      if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
-    } catch (_) {}
-  }
-}
-
 function cleanupOldBackups(keepCount = 10){
   try {
     const files = fs.readdirSync(BACKUP_DIR)
