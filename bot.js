@@ -1411,31 +1411,34 @@ if(dropLines){
   return;
 }
 
-if(command === '!시작'){
+if (command === '!시작') {
+  const isTown = message.channel.id === TOWN_CHANNEL_ID;
 
-  // ❌ 던전도 아니고 마을도 아니면 막기
-  if(!dungeonKey && message.channel.id !== TOWN_CHANNEL_ID){
-    await message.reply('이 명령어는 던전 또는 마을에서만 가능합니다.');
+  if (!dungeonKey && !isTown) {
+    await message.reply('이 명령어는 마을 또는 지정한 던전 채널에서만 가능합니다.');
     return;
   }
 
+  const startKey = isTown ? 'town' : dungeonKey;
+
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`private_start_${message.author.id}_${dungeonKey || 'town'}`)
-      .setLabel('🎮 개인 전투 시작')
+      .setCustomId(`private_start_${message.author.id}_${startKey}`)
+      .setLabel('🎮 개인 시작')
       .setStyle(ButtonStyle.Primary)
   );
 
   await message.reply({
-    content: `<@${message.author.id}> 전용 전투 시작 버튼입니다.`,
+    content: `<@${message.author.id}> 전용 시작 버튼입니다.`,
     components: [row]
   });
-
   return;
 }
 
 if (interaction.customId.startsWith('private_start_')) {
-  const [ , ownerId, dungeonKey] = interaction.customId.split('_');
+  const parts = interaction.customId.split('_');
+  const ownerId = parts[2];
+  const startKey = parts.slice(3).join('_'); // town 또는 던전키
 
   if (interaction.user.id !== ownerId) {
     await interaction.reply({
@@ -1445,36 +1448,34 @@ if (interaction.customId.startsWith('private_start_')) {
     return;
   }
 
-  // ✅ ⭐ 여기 추가 (전투 시작 전에!)
-  if (dungeonKey === 'town') {
+  if (startKey === 'town') {
     await interaction.reply({
       content: '🏘️ 마을입니다! 원하는 기능을 선택하세요.',
       ephemeral: true,
-      components: buildTownButtons()
+      components: buildTownButtons(player)
     });
     return;
   }
 
-  // ✅ 기존 전투 코드
-  createRunIfNeeded(player, dungeonKey);
+  createRunIfNeeded(player, startKey);
   player.run.lastDrops = [];
   await saveData(gameData);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
   await interaction.reply({
-    ...buildIntroPayload(dungeonKey, introTarget),
+    ...buildIntroPayload(startKey, introTarget),
     ephemeral: true
   });
 
   await sleep(INTRO_DELAY_MS);
 
   await interaction.editReply(
-    buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
+    buildBattlePayload(player, interaction.channelId, startKey, '전투 시작!')
   );
-
   return;
 }
+
 
 if (interaction.customId.startsWith('private_start_')) {
   const [, , ownerId, dungeonKey] = interaction.customId.split('_');
