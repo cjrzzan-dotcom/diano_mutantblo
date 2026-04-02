@@ -311,6 +311,8 @@ let gameData;
 
 
 function getPlayer(userId) {
+  if (!gameData) gameData = {}; // ⭐ 이 줄 추가
+
   if (!gameData[userId]) {
     gameData[userId] = getDefaultPlayer(userId);
   }
@@ -1092,6 +1094,7 @@ function getCraftIdByLabel(label){
 client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
   gameData = await loadData();
+if (!gameData) gameData = {};
 });
 
 client.on('messageCreate', async (message)=>{
