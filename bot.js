@@ -871,19 +871,6 @@ function tryEnhanceItem(player, idx, elem) {
   return `🔨 ${item.name} ${elem} 강화 성공! (+${current} → +${current+1})\n💸 골드 ${rule.gold}, ${elem}석 ${rule.stone}개 소모`;
 }
 
-  // 성공 처리
-  item.elementEnhance[elem] = current + 1;
-
-  if (item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
-  if (item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
-  if (item.type === 'ring') {
-    const p = pick(['critChanceBonus', 'critDamageBonus', 'dodgeBonus']);
-    item[p] = (item[p] || 0) + 1;
-  }
-
-  return `🔨 ${item.name} ${elem} 강화 성공! (${current}강 → ${current + 1}강, ${elem}석 ${need}개 소모)`;
-}
-
 function getElementEnhanceText(item) {
   if (!item || !item.elementEnhance) return '';
 
