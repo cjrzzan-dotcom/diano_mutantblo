@@ -1078,10 +1078,11 @@ function buildBattleButtons(player, dungeonKey){
       new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
     ),
     new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),     
       new ButtonBuilder().setCustomId('use_big').setLabel('🍖').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_elixir').setLabel('🧪').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('auto').setLabel(canAuto ? '🤖 자동' : '자동불가').setStyle(canAuto ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canAuto || down),
-      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),
+      
     ),
   ];
 }
@@ -1245,7 +1246,7 @@ console.log('메시지 받음:', message.content, message.channel.id);
   const command = parts[0];
   const arg = parts[1];
   const player = getPlayer(message.author.id);
-  const dungeonKey = getDungeonByChannel(message.channel.id);
+  const dungeonKey = getDungeonByChannel(interaction.channel.id);
 
 
 if(command === '!가방'){
