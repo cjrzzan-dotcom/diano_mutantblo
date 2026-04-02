@@ -1411,29 +1411,71 @@ if(dropLines){
 }
   return;
 }
+
 if(command === '!시작'){
-  if(!dungeonKey){
-    await message.reply('이 명령어는 지정한 던전 채널에서만 가능합니다.');
+
+  // ❌ 던전도 아니고 마을도 아니면 막기
+  if(!dungeonKey && message.channel.id !== TOWN_CHANNEL_ID){
+    await message.reply('이 명령어는 던전 또는 마을에서만 가능합니다.');
     return;
   }
+
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`private_start_${message.author.id}_${dungeonKey}`)
+      .setCustomId(`private_start_${message.author.id}_${dungeonKey || 'town'}`)
       .setLabel('🎮 개인 전투 시작')
       .setStyle(ButtonStyle.Primary)
   );
+
   await message.reply({
     content: `<@${message.author.id}> 전용 전투 시작 버튼입니다.`,
     components: [row]
   });
+
   return;
 }
-});
 
-client.on('interactionCreate', async (interaction)=>{
-  if(!interaction.isButton()) return;
+if (interaction.customId.startsWith('private_start_')) {
+  const [ , ownerId, dungeonKey] = interaction.customId.split('_');
 
-  const player = getPlayer(interaction.user.id);
+  if (interaction.user.id !== ownerId) {
+    await interaction.reply({
+      content: '이 버튼은 만든 사람만 사용할 수 있습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  // ✅ ⭐ 여기 추가 (전투 시작 전에!)
+  if (dungeonKey === 'town') {
+    await interaction.reply({
+      content: '🏘️ 마을입니다! 원하는 기능을 선택하세요.',
+      ephemeral: true,
+      components: buildTownButtons()
+    });
+    return;
+  }
+
+  // ✅ 기존 전투 코드
+  createRunIfNeeded(player, dungeonKey);
+  player.run.lastDrops = [];
+  await saveData(gameData);
+
+  const introTarget = player.run?.target || player.run?.nextTarget;
+
+  await interaction.reply({
+    ...buildIntroPayload(dungeonKey, introTarget),
+    ephemeral: true
+  });
+
+  await sleep(INTRO_DELAY_MS);
+
+  await interaction.editReply(
+    buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
+  );
+
+  return;
+}
 
 if (interaction.customId.startsWith('private_start_')) {
   const [, , ownerId, dungeonKey] = interaction.customId.split('_');
