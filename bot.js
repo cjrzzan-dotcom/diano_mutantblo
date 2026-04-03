@@ -1417,26 +1417,34 @@ function buildEquipmentButtons(player){
   if(!player.inventory.length) return [];
 
   const rows = [];
+  let currentRow = new ActionRowBuilder();
 
-  for(let i = 0; i < player.inventory.length; i++){
-    const item = player.inventory[i];
+  player.inventory.forEach((item, i) => {
 
-    rows.push(
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`equip_${i}`)
-          .setLabel(`${i+1}. ${item.type || '장비'}`)
-          .setStyle(ButtonStyle.Primary),
+    currentRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`equip_${i}`)
+        .setLabel(`${i+1}. ${item.name || '장비'}`)
+        .setStyle(ButtonStyle.Primary),
 
-        new ButtonBuilder()
-          .setCustomId(`sell_${i}`)
-          .setLabel('💰 판매')
-          .setStyle(ButtonStyle.Success)
-      )
+      new ButtonBuilder()
+        .setCustomId(`sell_${i}`)
+        .setLabel('💰 판매')
+        .setStyle(ButtonStyle.Success)
     );
+
+    // 버튼 5개 제한
+    if(currentRow.components.length >= 5){
+      rows.push(currentRow);
+      currentRow = new ActionRowBuilder();
+    }
+  });
+
+  if(currentRow.components.length > 0){
+    rows.push(currentRow);
   }
 
-  return rows;
+  return rows.slice(0,5);
 }
 function buildEnhanceItemButtons(player){
   const rows = [];
