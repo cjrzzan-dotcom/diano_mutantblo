@@ -1590,7 +1590,7 @@ function getCraftIdByLabel(label){
 
 client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
-  gameData = await loadData();
+
 if (!gameData) gameData = {};
 });
 
