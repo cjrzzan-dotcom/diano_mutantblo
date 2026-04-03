@@ -41,7 +41,7 @@ async function connectDB(){
   playersCol = db.collection('players');
   legacyGameCol = db.collection('game');
 
-  await playersCol.createIndex({ _id: 1 }, { unique: true });
+ 
 
   console.log('✅ DB 연결 완료');
 }
