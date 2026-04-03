@@ -567,7 +567,7 @@ function getDefaultPlayer(userId){
   };
 }
 
-let gameData;
+
 
 
 function getPlayer(userId) {
