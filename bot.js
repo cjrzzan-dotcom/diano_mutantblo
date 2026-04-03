@@ -2076,18 +2076,6 @@ if (id === 'attack') {
   await safeDeleteReply(interaction, 8000);
   return;
 }
-
-  const result = performAttack(player, dungeonKey);
-  await saveData(gameData);
-
-  await sendOrUpdateBattleMessage(
-    interaction,
-    player,
-    buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
-  );
-
-  return;
-}
 });
 
 
