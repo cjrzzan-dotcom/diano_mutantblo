@@ -133,7 +133,41 @@ function getNextAutoHuntChargeRemain(player) {
   return Math.max(0, remain);
 }
 
+const GRADE_SELL_PRICE = {
+  common: 50,
+  uncommon: 100,
+  rare: 300,
+  epic: 800,
+  legendary: 2000
+};
 
+function getItemSellPrice(item){
+  if(!item) return 0;
+
+  const base = GRADE_SELL_PRICE[item.grade || 'common'] || 50;
+
+  const atk = item.atkBonus || 0;
+  const def = item.defBonus || 0;
+  const crit = item.critChanceBonus || 0;
+  const critDmg = item.critDamageBonus || 0;
+  const dodge = item.dodgeBonus || 0;
+
+  const enhanceMap = item.elementEnhance || {};
+  const enhanceTotal = Object.values(enhanceMap).reduce((a, b) => a + (b || 0), 0);
+
+  const statValue =
+    atk * 8 +
+    def * 8 +
+    crit * 12 +
+    critDmg * 10 +
+    dodge * 12;
+
+  const enhanceValue = enhanceTotal * 25;
+
+  const price = base + statValue + enhanceValue;
+
+  return Math.max(10, Math.floor(price));
+}
 
 
 const IMAGE_PATH = path.join(__dirname, 'images');
@@ -285,6 +319,16 @@ function round1(v){ return Math.round(v*10)/10; }
 
 const BACKUP_DIR = path.join(__dirname, 'backup');
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+
+
+function isEquippedItem(player, item){
+  return (
+    player.equipment.weapon === item ||
+    player.equipment.armor === item ||
+    player.equipment.ring === item
+  );
+}
+
 
 function cleanupOldBackups(keepCount = 10){
   try {
@@ -1121,12 +1165,27 @@ function buildCraftButtons(){
 }
 function buildEquipmentButtons(player){
   if(!player.inventory.length) return [];
+
   const rows = [];
-  for(let i=0;i<Math.min(12, player.inventory.length);i+=4){
-    rows.push(new ActionRowBuilder().addComponents(
-      ...player.inventory.slice(i,i+4).map((it,idx)=> new ButtonBuilder().setCustomId(`equip_${i+idx}`).setLabel(`${i+idx+1}.${it.type}`).setStyle(ButtonStyle.Primary))
-    ));
+
+  for(let i = 0; i < player.inventory.length; i++){
+    const item = player.inventory[i];
+
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`equip_${i}`)
+          .setLabel(`${i+1}. ${item.type || '장비'}`)
+          .setStyle(ButtonStyle.Primary),
+
+        new ButtonBuilder()
+          .setCustomId(`sell_${i}`)
+          .setLabel('💰 판매')
+          .setStyle(ButtonStyle.Success)
+      )
+    );
   }
+
   return rows;
 }
 function buildEnhanceItemButtons(player){
@@ -1452,6 +1511,42 @@ client.on('interactionCreate', async (interaction) => {
   const player = getPlayer(interaction.user.id);
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
+
+
+if(id.startsWith('sell_')){
+  const index = Number(id.replace('sell_', ''));
+  const item = player.inventory[index];
+
+  if(!item){
+    await interaction.reply({
+      content: '❌ 해당 아이템이 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if(isEquippedItem(player, item)){
+    await interaction.reply({
+      content: '❌ 장착 중인 아이템은 판매할 수 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const price = getItemSellPrice(item);
+  const itemName = item.name;
+
+  player.inventory.splice(index, 1);
+  player.gold += price;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: `💰 ${itemName} 판매 완료! (+${price} 골드)`,
+    ephemeral: true
+  });
+  return;
+}
 
 
 
