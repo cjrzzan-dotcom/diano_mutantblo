@@ -1073,7 +1073,7 @@ function buildTownPayload(player, extraText=''){
 
 function buildBattleButtons(player, dungeonKey){
   const canAuto = DUNGEONS[dungeonKey]?.autoAllowed || false;
-  const down = player.run?.isDown;
+  const down = !!player.run?.isDown;
 
   return [
     new ActionRowBuilder().addComponents(
@@ -1094,7 +1094,7 @@ function buildBattleButtons(player, dungeonKey){
   .setCustomId('go_town')
   .setLabel('🏘️ 마을가기')
   .setStyle(ButtonStyle.Success)
-  .setDisabled(player.run && !player.run.isDown) // 살아있으면 비활성
+  .setDisabled(!!(player.run && !player.run.isDown))
     ),
   ];
 }
@@ -1526,15 +1526,6 @@ if(id === 'go_town'){
     return;
   }
 
-  const blockedDuringBattle = ['shop', 'craft_list', 'equipment_view', 'enhance_view', 'bag_view'];
-
-  if (blockedDuringBattle.includes(id) && player.run && !player.run.isDown) {
-    await interaction.reply({
-      content: '⚔️ 전투 중에는 이 기능을 사용할 수 없습니다. 마을에서 이용해주세요.',
-      ephemeral: true
-    });
-    return;
-  }
 
   if (id === 'bag_view') {
     await interaction.reply({
