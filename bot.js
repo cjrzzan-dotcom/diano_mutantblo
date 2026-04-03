@@ -361,7 +361,30 @@ function isEquippedItem(player, item){
     player.equipment.ring === item
   );
 }
+function makeDamageLine(attackerName, targetName, damage, crit = false) {
+  const fx = crit ? '⚡💥 치명타!' : '💥';
+  return `${attackerName} ${fx} ${targetName}에게 **${damage}** 피해!`;
+}
 
+function makeEnemyDamageLine(enemyName, damage) {
+  return `👿 ${enemyName}의 반격! → **${damage}** 피해!`;
+}
+
+function makeDodgeLine() {
+  return `💨 회피 성공!`;
+}
+
+function makeKillLine(name) {
+  return `☠️ **${name} 처치!**`;
+}
+
+async function safeDeleteReply(interaction, delay = 8000){
+  setTimeout(async () => {
+    try {
+      await interaction.deleteReply();
+    } catch (e) {}
+  }, delay);
+}
 
 function cleanupOldBackups(keepCount = 10){
   try {
@@ -792,27 +815,28 @@ function getEnhancePreviewText(player, item){
 
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
+
   if(chance(getDodge(player))){
-    logs.push('💨 회피 성공!');
+    logs.push(makeDodgeLine());
     return;
   }
+
   const dmg = Math.max(1, target.atk - getDefensePower(player));
   player.hp -= dmg;
-  logs.push(`👿 ${target.name} → ${dmg} 피해!`);
- if(player.hp <= 0){
-  player.hp = 0;
+  logs.push(makeEnemyDamageLine(target.name, dmg));
 
-  // 👉 공통: 무조건 부활 타이머 설정
-  player.respawnAt = Date.now() + 15 * 60 * 1000; 
+  if(player.hp <= 0){
+    player.hp = 0;
+    player.respawnAt = Date.now() + 15 * 60 * 1000;
 
-  if(player.reviveTickets > 0){
-    player.run.isDown = true;
-    logs.push('💀 쓰러졌습니다! [부활권]으로 즉시 부활하거나 15분 후 자동 부활합니다.');
-  } else {
-    logs.push('💀 사망! 부활권이 없어 15분 후 자동 부활합니다.');
-    player.run.isDown = true; // ← 이것도 추가해주는게 안전
+    if(player.reviveTickets > 0){
+      player.run.isDown = true;
+      logs.push('💀 쓰러졌습니다! [부활권]으로 즉시 부활하거나 15분 후 자동 부활합니다.');
+    } else {
+      player.run.isDown = true;
+      logs.push('💀 사망! 부활권이 없어 15분 후 자동 부활합니다.');
+    }
   }
-}
 }
 
 function applyAutoHuntPenalty(result) {
@@ -859,14 +883,16 @@ function usePotionInBattle(player, key){
   enemyAttack(player, player.run.target, logs);
   return { logs };
 }
-
 function performAttack(player, dungeonKey){
   const result = { logs:[], killedTarget:null, levelUps:[], clearedDungeon:false };
+
   if(!player.run) createRunIfNeeded(player, dungeonKey);
+
   if(player.run.isDown){
-    result.logs.push('쓰러진 상태입니다. 먼저 부활권을 사용하세요.');
+    result.logs.push('쓰러진 상태입니다. 먼저 부활권을 사용하거나 부활 시간을 기다리세요.');
     return result;
   }
+
   if(!player.run.target){
     if(player.run.nextTarget){
       player.run.target = player.run.nextTarget;
@@ -881,20 +907,25 @@ function performAttack(player, dungeonKey){
   const target = player.run.target;
   const mult = getElementMultiplier(player.attributes, target.element);
   const attrBonus = getAttributeBonus(player.attributes);
+
   let damage = (getAttackPower(player) + attrBonus - target.def) * mult;
-  let critText = '';
+  let isCrit = false;
+
   if(chance(getCritChance(player))){
     damage *= 1.5 + (getCritDamage(player)/100);
-    critText = ' 💥치명타!';
+    isCrit = true;
   }
+
   damage = Math.max(1, Math.floor(damage));
   target.currentHp -= damage;
-  result.logs.push(`👤 ${target.name}에게 ${damage} 피해!${critText}`);
+
+  result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
   if(target.currentHp <= 0){
     target.currentHp = 0;
     result.killedTarget = { ...target };
-    result.logs.push(`✅ ${target.name} 처치!`);
+    result.logs.push(makeKillLine(target.name));
+
     const drops = grantDrops(player, target);
     result.levelUps = drops.levelUps;
     player.run.lastDrops = drops.lines;
@@ -902,6 +933,7 @@ function performAttack(player, dungeonKey){
     player.run.kills += 1;
 
     const dungeon = DUNGEONS[dungeonKey];
+
     if(dungeon.type === 'random'){
       endBattle(player);
       result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
@@ -910,6 +942,7 @@ function performAttack(player, dungeonKey){
 
     player.run.waveIndex += 1;
     const next = getWaveMonster(dungeonKey, player.run.waveIndex);
+
     if(!next){
       player.run.target = null;
       player.run.nextTarget = null;
@@ -918,6 +951,7 @@ function performAttack(player, dungeonKey){
       result.logs.push(`🏆 ${DISPLAY_NAMES[dungeonKey]} 클리어!`);
       return result;
     }
+
     player.run.target = null;
     player.run.nextTarget = next;
     result.logs.push('다음 웨이브는 [공격] 버튼을 눌러 매칭하세요.');
@@ -1689,39 +1723,37 @@ if (id.startsWith('private_start_')) {
     return;
   }
 
-  await interaction.deferUpdate();
-
   createRunIfNeeded(player, startKey);
   player.run.lastDrops = [];
-  clearBattleMessage(player);
   await saveData(gameData);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
-  await sendOrUpdateBattleMessage(
-    interaction,
-    player,
-    buildBattlePayload(
+  await interaction.reply({
+    ...buildBattlePayload(
       player,
       interaction.channelId,
       startKey,
       `전투 시작!\n\n${introTarget ? `${introTarget.name} 등장!` : ''}`
-    )
-  );
+    ),
+    ephemeral: true
+  });
 
   return;
 }
 
   // 마을/던전 공통으로 열려야 하는 버튼들
-  if (id === 'status') {
-    await saveData(gameData);
-    await interaction.reply({
-      content: buildFullStatusText(player),
-      components: buildStatusButtons(player),
-      ephemeral: true
-    });
-    return;
-  }
+if (id === 'status') {
+  await saveData(gameData);
+  await interaction.reply({
+    content: buildFullStatusText(player),
+    components: buildStatusButtons(player),
+    ephemeral: true
+  });
+
+  await safeDeleteReply(interaction, 8000);
+  return;
+}
 
   if (id === 'bag_view') {
     await interaction.reply({
@@ -1906,21 +1938,21 @@ if (id.startsWith('private_start_')) {
   }
 
 if (id === 'revive') {
-  await interaction.deferUpdate();
-
   if (!player.run?.isDown) {
-    await interaction.followUp({
+    await interaction.reply({
       content: '지금은 부활권을 사용할 수 없습니다.',
       ephemeral: true
     });
+    await safeDeleteReply(interaction, 3000);
     return;
   }
 
   if (player.reviveTickets <= 0) {
-    await interaction.followUp({
+    await interaction.reply({
       content: '부활권이 없습니다.',
       ephemeral: true
     });
+    await safeDeleteReply(interaction, 3000);
     return;
   }
 
@@ -1929,12 +1961,9 @@ if (id === 'revive') {
   player.run.isDown = false;
   await saveData(gameData);
 
-  await sendOrUpdateBattleMessage(
-    interaction,
-    player,
+  await interaction.update(
     buildBattlePayload(player, interaction.channelId, player.run.dungeon, '💖 부활권 사용! 부활했습니다.')
   );
-
   return;
 }
 
@@ -1942,14 +1971,10 @@ if (id.startsWith('use_')) {
   const key = id.replace('use_', '');
 
   if (player.run?.target && dungeonKey) {
-    await interaction.deferUpdate();
-
     const result = usePotionInBattle(player, key);
     await saveData(gameData);
 
-    await sendOrUpdateBattleMessage(
-      interaction,
-      player,
+    await interaction.update(
       buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
     );
     return;
@@ -1962,17 +1987,17 @@ if (id.startsWith('use_')) {
     content: text,
     ephemeral: true
   });
+  await safeDeleteReply(interaction, 3000);
   return;
 }
 
 if (id === 'auto') {
-  await interaction.deferUpdate();
-
   if (!DUNGEONS[dungeonKey]?.autoAllowed) {
-    await interaction.followUp({
+    await interaction.reply({
       content: '이 던전은 자동사냥이 불가능합니다.',
       ephemeral: true
     });
+    await safeDeleteReply(interaction, 3000);
     return;
   }
 
@@ -1983,10 +2008,11 @@ if (id === 'auto') {
     const remainMin = Math.floor(remainMs / 60000);
     const remainSec = Math.floor((remainMs % 60000) / 1000);
 
-    await interaction.followUp({
+    await interaction.reply({
       content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
       ephemeral: true
     });
+    await safeDeleteReply(interaction, 4000);
     return;
   }
 
@@ -2034,18 +2060,13 @@ if (id === 'auto') {
 
   await saveData(gameData);
 
-  await sendOrUpdateBattleMessage(
-    interaction,
-    player,
+  await interaction.update(
     buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
   );
-
   return;
 }
 
 if (id === 'attack') {
-  await interaction.deferUpdate();
-
   if (!player.run) createRunIfNeeded(player, dungeonKey);
 
   if (!player.run.target && player.run.nextTarget) {
@@ -2054,9 +2075,7 @@ if (id === 'attack') {
     player.run.nextTarget = null;
     await saveData(gameData);
 
-    await sendOrUpdateBattleMessage(
-      interaction,
-      player,
+    await interaction.update(
       buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
     );
     return;
@@ -2065,12 +2084,9 @@ if (id === 'attack') {
   const result = performAttack(player, dungeonKey);
   await saveData(gameData);
 
-  await sendOrUpdateBattleMessage(
-    interaction,
-    player,
+  await interaction.update(
     buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
   );
-
   return;
 }
 });
