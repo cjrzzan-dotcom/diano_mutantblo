@@ -563,6 +563,22 @@ function getAttackPower(player){
   const eq = getEquippedBonuses(player);
   return player.baseAtk + player.stats.atk * 1 + eq.atk;
 }
+function getElementEnhanceText(item){
+  if(!item || !item.elementEnhance) return '';
+
+  const map = item.elementEnhance;
+
+  const parts = [];
+
+  if(map.fire) parts.push(`🔥${map.fire}`);
+  if(map.water) parts.push(`💧${map.water}`);
+  if(map.wind) parts.push(`🌪️${map.wind}`);
+  if(map.light) parts.push(`⚡${map.light}`);
+  if(map.dark) parts.push(`🌑${map.dark}`);
+
+  return parts.length ? ` [${parts.join(' ')}]` : '';
+}
+
 function getDefensePower(player){
   const eq = getEquippedBonuses(player);
   return player.baseDef + Math.floor(player.level / 3) + eq.def;
