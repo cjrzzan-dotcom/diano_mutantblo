@@ -102,7 +102,6 @@ const AUTO_HUNT_TURNS = 5;
 
 function endBattle(player) {
   player.run = null;
-  clearBattleMessage(player);
 }
 
 async function safeDeleteReply(interaction, delay = 5000){
@@ -123,7 +122,7 @@ async function sendOrUpdateBattleMessage(interaction, player, payload){
       return oldMsg;
     }
   } catch (e) {
-    // 기존 메시지 없으면 새로 만듦
+    // 기존 메시지 없으면 새로 생성
   }
 
   const sent = await channel.send(payload);
@@ -804,13 +803,13 @@ function enemyAttack(player, target, logs){
   player.hp = 0;
 
   // 👉 공통: 무조건 부활 타이머 설정
-  player.respawnAt = Date.now() + 3 * 60 * 1000; // 3분
+  player.respawnAt = Date.now() + 15 * 60 * 1000; 
 
   if(player.reviveTickets > 0){
     player.run.isDown = true;
-    logs.push('💀 쓰러졌습니다! [부활권]으로 즉시 부활하거나 3분 후 자동 부활합니다.');
+    logs.push('💀 쓰러졌습니다! [부활권]으로 즉시 부활하거나 15분 후 자동 부활합니다.');
   } else {
-    logs.push('💀 사망! 부활권이 없어 3분 후 자동 부활합니다.');
+    logs.push('💀 사망! 부활권이 없어 15분 후 자동 부활합니다.');
     player.run.isDown = true; // ← 이것도 추가해주는게 안전
   }
 }
@@ -1690,24 +1689,26 @@ if (id.startsWith('private_start_')) {
     return;
   }
 
+  await interaction.deferUpdate();
+
   createRunIfNeeded(player, startKey);
   player.run.lastDrops = [];
+  clearBattleMessage(player);
   await saveData(gameData);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
-  await interaction.reply({
-    ...buildIntroPayload(startKey, introTarget),
-    ephemeral: true
-  });
-
-  await sleep(INTRO_DELAY_MS);
-
-  await interaction.editReply(
-    buildBattlePayload(player, interaction.channelId, startKey, '전투 시작!')
+  await sendOrUpdateBattleMessage(
+    interaction,
+    player,
+    buildBattlePayload(
+      player,
+      interaction.channelId,
+      startKey,
+      `전투 시작!\n\n${introTarget ? `${introTarget.name} 등장!` : ''}`
+    )
   );
 
-  await safeDeleteReply(interaction, 8000);
   return;
 }
 
@@ -1905,21 +1906,21 @@ if (id.startsWith('private_start_')) {
   }
 
 if (id === 'revive') {
+  await interaction.deferUpdate();
+
   if (!player.run?.isDown) {
-    await interaction.reply({
+    await interaction.followUp({
       content: '지금은 부활권을 사용할 수 없습니다.',
       ephemeral: true
     });
-    await safeDeleteReply(interaction, 3000);
     return;
   }
 
   if (player.reviveTickets <= 0) {
-    await interaction.reply({
+    await interaction.followUp({
       content: '부활권이 없습니다.',
       ephemeral: true
     });
-    await safeDeleteReply(interaction, 3000);
     return;
   }
 
@@ -1928,12 +1929,12 @@ if (id === 'revive') {
   player.run.isDown = false;
   await saveData(gameData);
 
-  await interaction.reply({
-    ...buildBattlePayload(player, interaction.channelId, player.run.dungeon, '💖 부활권 사용! 부활했습니다.'),
-    ephemeral: true
-  });
+  await sendOrUpdateBattleMessage(
+    interaction,
+    player,
+    buildBattlePayload(player, interaction.channelId, player.run.dungeon, '💖 부활권 사용! 부활했습니다.')
+  );
 
-  await safeDeleteReply(interaction, 8000);
   return;
 }
 
@@ -1941,15 +1942,16 @@ if (id.startsWith('use_')) {
   const key = id.replace('use_', '');
 
   if (player.run?.target && dungeonKey) {
+    await interaction.deferUpdate();
+
     const result = usePotionInBattle(player, key);
     await saveData(gameData);
 
-    await interaction.reply({
-      ...buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n')),
-      ephemeral: true
-    });
-
-    await safeDeleteReply(interaction, 8000);
+    await sendOrUpdateBattleMessage(
+      interaction,
+      player,
+      buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
+    );
     return;
   }
 
@@ -1960,19 +1962,17 @@ if (id.startsWith('use_')) {
     content: text,
     ephemeral: true
   });
-
-  await safeDeleteReply(interaction, 3000);
   return;
 }
 
- if (id === 'auto') {
-  await interaction.deferReply({ ephemeral: true });
+if (id === 'auto') {
+  await interaction.deferUpdate();
 
   if (!DUNGEONS[dungeonKey]?.autoAllowed) {
-    await interaction.editReply({
-      content: '이 던전은 자동사냥이 불가능합니다.'
+    await interaction.followUp({
+      content: '이 던전은 자동사냥이 불가능합니다.',
+      ephemeral: true
     });
-    await safeDeleteReply(interaction, 3000);
     return;
   }
 
@@ -1983,20 +1983,18 @@ if (id.startsWith('use_')) {
     const remainMin = Math.floor(remainMs / 60000);
     const remainSec = Math.floor((remainMs % 60000) / 1000);
 
-    await interaction.editReply({
-      content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`
+    await interaction.followUp({
+      content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
+      ephemeral: true
     });
-    await safeDeleteReply(interaction, 4000);
     return;
   }
 
   player.autoHuntCharges -= 1;
-
   createRunIfNeeded(player, dungeonKey);
   await saveData(gameData);
 
   const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
-  let dropLines = null;
 
   for (let i = 0; i < AUTO_HUNT_TURNS; i++) {
     if (!player.run) break;
@@ -2031,27 +2029,23 @@ if (id.startsWith('use_')) {
     logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
     logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
 
-    if (player.run?.lastDrops?.length) {
-      dropLines = [...player.run.lastDrops];
-    }
-
     if (Date.now() < player.respawnAt) break;
   }
 
   await saveData(gameData);
 
-  await interaction.editReply({
-    content: [
-      ...logs,
-      dropLines?.length ? `\n🎁 드랍\n${dropLines.join('\n')}` : ''
-    ].join('\n')
-  });
+  await sendOrUpdateBattleMessage(
+    interaction,
+    player,
+    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+  );
 
-  await safeDeleteReply(interaction, 10000);
   return;
 }
 
 if (id === 'attack') {
+  await interaction.deferUpdate();
+
   if (!player.run) createRunIfNeeded(player, dungeonKey);
 
   if (!player.run.target && player.run.nextTarget) {
@@ -2060,24 +2054,23 @@ if (id === 'attack') {
     player.run.nextTarget = null;
     await saveData(gameData);
 
-    await interaction.reply({
-      ...buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!'),
-      ephemeral: true
-    });
-
-    await safeDeleteReply(interaction, 8000);
+    await sendOrUpdateBattleMessage(
+      interaction,
+      player,
+      buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
+    );
     return;
   }
 
   const result = performAttack(player, dungeonKey);
   await saveData(gameData);
 
-  await interaction.reply({
-    ...buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n')),
-    ephemeral: true
-  });
+  await sendOrUpdateBattleMessage(
+    interaction,
+    player,
+    buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
+  );
 
-  await safeDeleteReply(interaction, 8000);
   return;
 }
 });
