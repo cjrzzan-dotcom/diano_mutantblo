@@ -137,6 +137,18 @@ function clearBattleMessage(player){
   player.battleChannelId = null;
 }
 
+function reviveIfRespawnReady(player){
+  if(!player.run) return false;
+  if(!player.run.isDown) return false;
+  if(!player.respawnAt) return false;
+  if(Date.now() < player.respawnAt) return false;
+
+  player.run.isDown = false;
+  player.hp = Math.max(1, Math.floor(player.maxHp));
+  player.respawnAt = 0;
+  return true;
+}
+
 
 function refreshAutoHuntCharges(player) {
   if (player.autoHuntCharges == null) player.autoHuntCharges = 0;
@@ -884,6 +896,12 @@ function usePotionInBattle(player, key){
   return { logs };
 }
 function performAttack(player, dungeonKey){
+
+  const revived = reviveIfRespawnReady(player);
+  if(revived){
+    result.logs.push('✨ 부활 시간이 지나 자동으로 부활했습니다.');
+  }
+
   const result = { logs:[], killedTarget:null, levelUps:[], clearedDungeon:false };
 
   if(!player.run) createRunIfNeeded(player, dungeonKey);
@@ -1665,6 +1683,10 @@ client.on('interactionCreate', async (interaction) => {
   const player = getPlayer(interaction.user.id);
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
+
+const revived = reviveIfRespawnReady(player);
+if(revived) await saveData(gameData);
+
 
   if (id.startsWith('sell_')) {
     const index = Number(id.replace('sell_', ''));
