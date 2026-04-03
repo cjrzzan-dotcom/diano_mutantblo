@@ -800,16 +800,20 @@ function enemyAttack(player, target, logs){
   const dmg = Math.max(1, target.atk - getDefensePower(player));
   player.hp -= dmg;
   logs.push(`👿 ${target.name} → ${dmg} 피해!`);
-  if(player.hp <= 0){
-    player.hp = 0;
-    if(player.reviveTickets > 0){
-      player.run.isDown = true;
-      logs.push('💀 쓰러졌습니다! [부활권] 버튼으로 수동 부활하세요.');
-    } else {
-      logs.push('💀 사망! 부활권이 없어 3분 대기입니다.');
-      handleNoReviveDeath(player);
-    }
+ if(player.hp <= 0){
+  player.hp = 0;
+
+  // 👉 공통: 무조건 부활 타이머 설정
+  player.respawnAt = Date.now() + 3 * 60 * 1000; // 3분
+
+  if(player.reviveTickets > 0){
+    player.run.isDown = true;
+    logs.push('💀 쓰러졌습니다! [부활권]으로 즉시 부활하거나 3분 후 자동 부활합니다.');
+  } else {
+    logs.push('💀 사망! 부활권이 없어 3분 후 자동 부활합니다.');
+    player.run.isDown = true; // ← 이것도 추가해주는게 안전
   }
+}
 }
 
 function applyAutoHuntPenalty(result) {
