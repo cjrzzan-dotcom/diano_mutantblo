@@ -1084,6 +1084,13 @@ function buildBattleButtons(player, dungeonKey){
       new ButtonBuilder().setCustomId('auto').setLabel(canAuto ? '🤖 자동' : '자동불가').setStyle(canAuto ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canAuto || down),
       
     ),
+  new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+  .setCustomId('go_town')
+  .setLabel('🏘️ 마을가기')
+  .setStyle(ButtonStyle.Success)
+  .setDisabled(player.run && !player.run.isDown) // 살아있으면 비활성
+    ),
   ];
 }
 
@@ -1447,20 +1454,35 @@ client.on('interactionCreate', async (interaction) => {
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
-const blockedDuringBattle = ['shop', 'craft_list', 'equipment_view', 'enhance_view', 'bag_view'];
 
-if (blockedDuringBattle.includes(id) && player.run && !player.run.isDown) {
-  await interaction.reply({
-    content: '⚔️ 전투 중에는 이 기능을 사용할 수 없습니다. 마을에서 이용해주세요.',
-    ephemeral: true
-  });
-  return;
-}
 
   if (interaction.customId.startsWith('private_start_')) {
     const parts = interaction.customId.split('_');
     const ownerId = parts[2];
     const startKey = parts.slice(3).join('_');
+
+
+if(id === 'go_town'){
+  if(player.run && !player.run.isDown){
+    await interaction.reply({
+      content: '⚔️ 전투 중에는 마을로 갈 수 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.run = null;
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: '🏘️ 마을로 돌아왔습니다.',
+    ephemeral: true
+  });
+  return;
+}
+
+
+
 
     if (interaction.user.id !== ownerId) {
       await interaction.reply({
