@@ -1679,6 +1679,15 @@ if(id.startsWith('sell_')){
     return;
   }
 
+if (id === 'status') {
+  await saveData(gameData);
+  await interaction.reply({
+    content: buildFullStatusText(player),
+    components: buildStatusButtons(player),
+    ephemeral: true
+  });
+  return;
+}
 
   if (id === 'bag_view') {
     await interaction.reply({
