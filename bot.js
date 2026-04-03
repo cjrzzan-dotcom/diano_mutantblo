@@ -642,6 +642,21 @@ function getMaterialDrops(monsterName){
   return drops;
 }
 
+function getEnhanceTargetItem(player){
+  const target = player.selectedEnhanceTarget;
+  if(!target) return null;
+
+  if(target.type === 'inventory'){
+    return player.inventory[target.index] || null;
+  }
+
+  if(target.type === 'equipped'){
+    return player.equipment[target.slot] || null;
+  }
+
+  return null;
+}
+
 function giveXp(player, amount){
   player.xp += amount;
   const msgs = [];
@@ -875,81 +890,46 @@ function equipItemByIndex(player, idx){
   player.inventory.splice(idx,1);
   return `✅ ${item.name} 장착 완료!`;
 }
-function tryEnhanceItem(player, idx, elem) {
-  const item = player.inventory[idx];
-  if (!item) return '없는 아이템입니다.';
-
-  if (!player.stones) player.stones = {};
-  if (!item.elementEnhance) item.elementEnhance = {};
+function tryEnhanceItem(player, item, elem){
+  if(!item) return '없는 아이템입니다.';
+  if(!item.elementEnhance) item.elementEnhance = {};
 
   const current = item.elementEnhance[elem] || 0;
 
-  if (current >= 5) {
-    return `❌ ${item.name}의 ${elem} 강화는 이미 최대(5강)입니다.`;
+  const stoneCosts = [1, 2, 4, 8, 10];
+  const goldCosts = [100, 150, 200, 300, 500];
+  const chances = [1.00, 0.75, 0.50, 0.35, 0.15];
+
+  if(current >= 5) return '이미 최대 강화입니다.';
+
+  const needStone = stoneCosts[current];
+  const needGold = goldCosts[current];
+  const successChance = chances[current];
+
+  if((player.stones[elem] || 0) < needStone){
+    return `${elem}석이 부족합니다. (${needStone}개 필요)`;
+  }
+  if(player.gold < needGold){
+    return `골드가 부족합니다. (${needGold}G 필요)`;
   }
 
-  const costTable = {
-    0: { stone: 1, gold: 100, rate: 100 },
-    1: { stone: 2, gold: 150, rate: 75 },
-    2: { stone: 4, gold: 200, rate: 50 },
-    3: { stone: 8, gold: 300, rate: 35 },
-    4: { stone: 10, gold: 500, rate: 15 }
-  };
+  player.stones[elem] -= needStone;
+  player.gold -= needGold;
 
-  const rule = costTable[current];
-  const haveStone = player.stones[elem] || 0;
-  const haveGold = player.gold || 0;
-
-  if (haveStone < rule.stone) {
-    return `❌ ${elem}석 부족 (${rule.stone}개 필요 / 현재 ${haveStone})`;
+  if(Math.random() > successChance){
+    return `❌ ${item.name} ${elem} 강화 실패... (소모: ${elem}석 ${needStone}개, ${needGold}G)`;
   }
 
-  if (haveGold < rule.gold) {
-    return `❌ 골드 부족 (${rule.gold} 필요 / 현재 ${haveGold})`;
-  }
-
-  // 비용 차감
-  player.stones[elem] -= rule.stone;
-  player.gold -= rule.gold;
-
-  const roll = Math.random() * 100;
-  const success = roll < rule.rate;
-
-  if (!success) {
-    return `💥 ${item.name} 강화 실패... (${current}강 유지)`;
-  }
-
-  // 성공
   item.elementEnhance[elem] = current + 1;
 
-  if (item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
-  if (item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
-  if (item.type === 'ring') {
-    const p = pick(['critChanceBonus','critDamageBonus','dodgeBonus']);
+  if(item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
+  if(item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
+  if(item.type === 'ring'){
+    const p = pick(['critChanceBonus', 'critDamageBonus', 'dodgeBonus']);
     item[p] = (item[p] || 0) + 1;
   }
 
-  return `🔨 ${item.name} ${elem} 강화 성공! (+${current} → +${current+1})\n💸 골드 ${rule.gold}, ${elem}석 ${rule.stone}개 소모`;
-}
-
-function getElementEnhanceText(item) {
-  if (!item || !item.elementEnhance) return '';
-
-  const elementNames = {
-    fire: '화염',
-    water: '물',
-    ice: '얼음',
-    wind: '바람',
-    earth: '대지',
-    light: '빛',
-    dark: '어둠'
-  };
-
-  const parts = Object.entries(item.elementEnhance)
-    .filter(([, lv]) => (lv || 0) > 0)
-    .map(([elem, lv]) => `+${lv}${elementNames[elem] || elem}`);
-
-  return parts.length ? ` ${parts.join(' ')}` : '';
+  return `🔨 ${item.name} ${elem} 강화 성공! (${current}강 → ${current + 1}강)`;
 }
 
 function equipmentText(player){
@@ -1189,13 +1169,56 @@ function buildEquipmentButtons(player){
   return rows;
 }
 function buildEnhanceItemButtons(player){
-  if(!player.inventory.length) return [];
   const rows = [];
-  for(let i=0;i<Math.min(12, player.inventory.length);i+=4){
-    rows.push(new ActionRowBuilder().addComponents(
-      ...player.inventory.slice(i,i+4).map((it,idx)=> new ButtonBuilder().setCustomId(`enhance_item_${i+idx}`).setLabel(`${i+idx+1}.${it.type}`).setStyle(ButtonStyle.Primary))
-    ));
+
+  if(player.equipment.weapon){
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('enhance_equipped_weapon')
+          .setLabel(`⚔️ 착용 무기: ${player.equipment.weapon.name}`)
+          .setStyle(ButtonStyle.Danger)
+      )
+    );
   }
+
+  if(player.equipment.armor){
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('enhance_equipped_armor')
+          .setLabel(`🛡️ 착용 갑옷: ${player.equipment.armor.name}`)
+          .setStyle(ButtonStyle.Primary)
+      )
+    );
+  }
+
+  if(player.equipment.ring){
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('enhance_equipped_ring')
+          .setLabel(`💍 착용 반지: ${player.equipment.ring.name}`)
+          .setStyle(ButtonStyle.Success)
+      )
+    );
+  }
+
+  if(player.inventory.length){
+    for(let i = 0; i < Math.min(12, player.inventory.length); i += 4){
+      rows.push(
+        new ActionRowBuilder().addComponents(
+          ...player.inventory.slice(i, i + 4).map((item, idx) =>
+            new ButtonBuilder()
+              .setCustomId(`enhance_item_${i + idx}`)
+              .setLabel(`${i + idx + 1}. ${item.name}`)
+              .setStyle(ButtonStyle.Secondary)
+          )
+        )
+      );
+    }
+  }
+
   return rows;
 }
 function buildEnhanceElementButtons(){
@@ -1646,7 +1669,7 @@ if(id.startsWith('sell_')){
   }
 
   if (id === 'enhance_view') {
-    player.selectedEnhanceIndex = null;
+    player.selectedEnhanceTarget = null;
     await saveData(gameData);
     await interaction.reply({
       content: `강화할 아이템 선택\n${inventoryText(player)}\n\n보유 속성석: ${Object.entries(player.stones).map(([k,v])=>`${k}${v}`).join(' / ')}`,
@@ -1656,35 +1679,89 @@ if(id.startsWith('sell_')){
     return;
   }
 
-  if (id.startsWith('enhance_item_')) {
-    const idx = Number(id.replace('enhance_item_',''));
-    player.selectedEnhanceIndex = idx;
-    await saveData(gameData);
+if (id.startsWith('enhance_item_')) {
+  const idx = Number(id.replace('enhance_item_', ''));
+  player.selectedEnhanceTarget = { type: 'inventory', index: idx };
+  await saveData(gameData);
+
+  const item = player.inventory[idx];
+  await interaction.reply({
+    content: `선택 아이템: ${item ? item.name : '없음'}\n속성을 선택하세요.`,
+    components: buildEnhanceElementButtons(),
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'enhance_equipped_weapon') {
+  player.selectedEnhanceTarget = { type: 'equipped', slot: 'weapon' };
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: `선택 아이템: ${player.equipment.weapon ? player.equipment.weapon.name : '없음'}\n속성을 선택하세요.`,
+    components: buildEnhanceElementButtons(),
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'enhance_equipped_armor') {
+  player.selectedEnhanceTarget = { type: 'equipped', slot: 'armor' };
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: `선택 아이템: ${player.equipment.armor ? player.equipment.armor.name : '없음'}\n속성을 선택하세요.`,
+    components: buildEnhanceElementButtons(),
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'enhance_equipped_ring') {
+  player.selectedEnhanceTarget = { type: 'equipped', slot: 'ring' };
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: `선택 아이템: ${player.equipment.ring ? player.equipment.ring.name : '없음'}\n속성을 선택하세요.`,
+    components: buildEnhanceElementButtons(),
+    ephemeral: true
+  });
+  return;
+}
+
+
+
+
+
+ if (id.startsWith('enhance_elem_')) {
+  if(!player.selectedEnhanceTarget){
     await interaction.reply({
-      content: `선택 아이템: ${player.inventory[idx] ? player.inventory[idx].name : '없음'}\n속성을 선택하세요.`,
-      components: buildEnhanceElementButtons(),
+      content: '먼저 강화할 아이템을 선택하세요.',
       ephemeral: true
     });
     return;
   }
 
-  if (id.startsWith('enhance_elem_')) {
-    if (player.selectedEnhanceIndex === null || player.selectedEnhanceIndex === undefined) {
-      await interaction.reply({
-        content: '먼저 강화할 아이템을 선택하세요.',
-        ephemeral: true
-      });
-      return;
-    }
-    const elem = id.replace('enhance_elem_','');
-    const text = tryEnhanceItem(player, player.selectedEnhanceIndex, elem);
-    await saveData(gameData);
+  const elem = id.replace('enhance_elem_', '');
+  const item = getEnhanceTargetItem(player);
+
+  if(!item){
     await interaction.reply({
-      content: text,
+      content: '선택한 아이템이 없습니다.',
       ephemeral: true
     });
     return;
   }
+
+  const text = tryEnhanceItem(player, item, elem);
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: text,
+    ephemeral: true
+  });
+  return;
+}
 
   if (id.startsWith('craft_') && id !== 'craft_list') {
     const craftId = id.replace('craft_','');
