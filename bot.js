@@ -99,6 +99,12 @@ const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 5분
 const AUTO_HUNT_MAX_CHARGES = 10;
 const AUTO_HUNT_TURNS = 5;
 
+
+function endBattle(player) {
+  player.run = null;
+}
+
+
 function refreshAutoHuntCharges(player) {
   if (player.autoHuntCharges == null) player.autoHuntCharges = 0;
   if (!player.autoHuntLastChargeAt) player.autoHuntLastChargeAt = Date.now();
@@ -750,9 +756,8 @@ function performAttack(player, dungeonKey){
 
     const dungeon = DUNGEONS[dungeonKey];
     if(dungeon.type === 'random'){
-      player.run.target = null;
-      player.run.nextTarget = getRandomMonster(dungeonKey);
-      result.logs.push('다음 몬스터는 [공격] 버튼을 눌러 매칭하세요.');
+      endBattle(player);
+      result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
       return result;
     }
 
