@@ -13,60 +13,165 @@ const DATA_FILE = path.join(
 
 console.log("MONGO_URI 있음?", !!process.env.MONGO_URI);
 
-const { MongoClient } = require("mongodb");
+const { MongoClient } = require('mongodb');
 
+let mongoClient;
 let db;
+let playersCol;
+let legacyGameCol;
 
-async function connectDB() {
-  const uri = process.env.MONGO_URI;
-
-  console.log("🔥 MONGO_URI:", uri);
-
-  if (!uri) {
-    console.error("❌ MONGO_URI 없음");
-    process.exit(1);
-  }
-
-  const mongoClient = new MongoClient(uri);
-
-  await mongoClient.connect();
-
-  db = mongoClient.db("rpg_bot");
-
-  console.log("✅ DB 연결 완료");
-}
+let gameData = {};
 
 (async () => {
   await connectDB();
+  await migrateLegacyGameIfNeeded();
+  await loadData();
 })();
 
-async function saveData(data) {
-  if (!db) await connectDB();   // 추가
-  if (!db) {
-    console.log("❌ db 연결 안됨");
+  mongoClient = new MongoClient(process.env.MONGO_URI);
+  await mongoClient.connect();
+
+  db = mongoClient.db('rpg_bot');
+  playersCol = db.collection('players');
+  legacyGameCol = db.collection('game');
+
+  await playersCol.createIndex({ _id: 1 }, { unique: true });
+
+  console.log('✅ DB 연결 완료');
+}
+
+async function migrateLegacyGameIfNeeded(){
+  const playerCount = await playersCol.countDocuments();
+
+  // 이미 players 컬렉션 쓰고 있으면 마이그레이션 안 함
+  if (playerCount > 0) {
+    console.log('ℹ️ players 컬렉션 이미 존재 - 마이그레이션 생략');
     return;
   }
 
-  console.log("🔥 saveData 호출됨");
-  console.log("db 있음?", !!db);
-  console.log("저장될 키 수:", Object.keys(data || {}).length);
+  const legacy = await legacyGameCol.findOne({ _id: 'main' });
+  if (!legacy) {
+    console.log('ℹ️ 기존 game/main 문서 없음 - 마이그레이션 생략');
+    return;
+  }
 
-  await db.collection("game").updateOne(
-    { _id: "main" },
-    { $set: data },
-    { upsert: true }
+  const entries = Object.entries(legacy).filter(([key, value]) => {
+    if (key === '_id') return false;
+    if (!value || typeof value !== 'object') return false;
+    return true;
+  });
+
+  if (!entries.length) {
+    console.log('ℹ️ 마이그레이션할 플레이어 데이터 없음');
+    return;
+  }
+
+  await playersCol.bulkWrite(
+    entries.map(([userId, player]) => ({
+      updateOne: {
+        filter: { _id: userId },
+        update: {
+          $set: {
+            ...player,
+            userId
+          }
+        },
+        upsert: true
+      }
+    }))
   );
 
-  console.log("✅ 저장 완료");
+  console.log(`✅ 기존 game/main → players 마이그레이션 완료 (${entries.length}명)`);
 }
 
-async function loadData() {
-  if (!db) await connectDB();   // 추가
-  if (!db) return {};           // 추가
+async function loadData(){
+  if (!playersCol) throw new Error('playersCol 없음');
 
-  const result = await db.collection("game").findOne({ _id: "main" });
-  console.log("불러온 데이터:", result);
-  return result || {};
+  gameData = {};
+
+  const docs = await playersCol.find({}).toArray();
+
+  for (const doc of docs) {
+    const userId = doc._id;
+    const merged = {
+      ...getDefaultPlayer(userId),
+      ...doc,
+      userId
+    };
+    delete merged._id;
+    gameData[userId] = merged;
+  }
+
+  console.log(`✅ 플레이어 ${docs.length}명 로드 완료`);
+  return gameData;
+}
+
+async function savePlayer(playerOrUserId){
+  if (!playersCol) throw new Error('playersCol 없음');
+
+  const userId =
+    typeof playerOrUserId === 'string'
+      ? playerOrUserId
+      : playerOrUserId?.userId;
+
+  if (!userId) {
+    throw new Error('savePlayer: userId 없음');
+  }
+
+  const player =
+    typeof playerOrUserId === 'string'
+      ? gameData[userId]
+      : playerOrUserId;
+
+  if (!player) {
+    throw new Error(`savePlayer: player 없음 (${userId})`);
+  }
+
+  const doc = {
+    ...player,
+    userId
+  };
+  delete doc._id;
+
+  await playersCol.updateOne(
+    { _id: userId },
+    { $set: doc },
+    { upsert: true }
+  );
+}
+
+async function saveData(){
+  if (!playersCol) throw new Error('playersCol 없음');
+
+  const entries = Object.entries(gameData || {}).filter(([userId, player]) => {
+    return !!userId && !!player && typeof player === 'object';
+  });
+
+  // 빈 데이터로 전체 덮어쓰기 방지
+  if (!entries.length) {
+    console.log('⛔ saveData 차단: 저장할 플레이어가 없음');
+    return;
+  }
+
+  await playersCol.bulkWrite(
+    entries.map(([userId, player]) => {
+      const doc = {
+        ...player,
+        userId
+      };
+      delete doc._id;
+
+      return {
+        updateOne: {
+          filter: { _id: userId },
+          update: { $set: doc },
+          upsert: true
+        }
+      };
+    })
+  );
+
+  console.log(`✅ saveData 완료 (${entries.length}명)`);
 }
 
 
@@ -428,24 +533,30 @@ function defaultEquipment(){
 function getDefaultPlayer(userId){
   return {
     userId,
-    level:1, xp:0, nextXp:50, statPoints:0,
-    maxHp:100, hp:100, baseAtk:12, baseDef:3,
-    gold:100, reviveTickets:0, respawnAt:0,
-    stones:{ 화염:0, 얼음:0, 번개:0, 자연:0, 어둠:0 },
-    attributes:{},
-    potions:{ small:2, mid:1, big:0, elixir:0 },
+    level: 1,
+    xp: 0,
+    nextXp: 50,
+    statPoints: 0,
+    maxHp: 100,
+    hp: 100,
+    baseAtk: 12,
+    baseDef: 3,
+    gold: 100,
+    reviveTickets: 0,
+    respawnAt: 0,
+    stones: { 화염:0, 얼음:0, 번개:0, 자연:0, 어둠:0 },
+    attributes: {},
+    potions: { small:2, mid:1, big:0, elixir:0 },
     materials: blankMaterials(),
     inventory: [],
     equipment: defaultEquipment(),
-    stats:{ atk:0, critChance:0, critDamage:0, dodge:0 },
-    run:null,
-    selectedEnhanceIndex:null,
-
-autoHuntCharges: 10,
-autoHuntLastChargeAt: Date.now(),
-
+    stats: { atk:0, critChance:0, critDamage:0, dodge:0 },
+    run: null,
+    selectedEnhanceTarget: null,
+    autoHuntCharges: 10,
+    autoHuntLastChargeAt: Date.now(),
     battleMessageId: null,
-    battleChannelId: null,
+    battleChannelId: null
   };
 }
 
