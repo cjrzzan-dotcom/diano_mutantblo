@@ -1387,6 +1387,7 @@ client.once('ready', async () => {
 if (!gameData) gameData = {};
 });
 
+
 client.on('messageCreate', async (message)=>{
 console.log('메시지 받음:', message.content, message.channel.id);
   if(message.author.bot) return;
@@ -1567,10 +1568,6 @@ const dungeonKey = getDungeonByChannel(message.channel.id);
 if (command === '!시작') {
   const isTown = message.channel.id === TOWN_CHANNEL_ID;
 
-  if (!dungeonKey && !isTown) {
-    await message.reply('이 명령어는 마을 또는 지정한 던전 채널에서만 가능합니다.');
-    return;
-  }
 
   const startKey = isTown ? 'town' : dungeonKey;
 
@@ -1598,49 +1595,45 @@ client.on('interactionCreate', async (interaction) => {
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
+  if (id.startsWith('sell_')) {
+    const index = Number(id.replace('sell_', ''));
+    const item = player.inventory[index];
 
-if(id.startsWith('sell_')){
-  const index = Number(id.replace('sell_', ''));
-  const item = player.inventory[index];
+    if (!item) {
+      await interaction.reply({
+        content: '❌ 해당 아이템이 없습니다.',
+        ephemeral: true
+      });
+      return;
+    }
 
-  if(!item){
+    if (isEquippedItem(player, item)) {
+      await interaction.reply({
+        content: '❌ 장착 중인 아이템은 판매할 수 없습니다.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    const price = getItemSellPrice(item);
+    const itemName = item.name;
+
+    player.inventory.splice(index, 1);
+    player.gold += price;
+
+    await saveData(gameData);
+
     await interaction.reply({
-      content: '❌ 해당 아이템이 없습니다.',
+      content: `💰 ${itemName} 판매 완료! (+${price} 골드)`,
       ephemeral: true
     });
     return;
   }
 
-  if(isEquippedItem(player, item)){
-    await interaction.reply({
-      content: '❌ 장착 중인 아이템은 판매할 수 없습니다.',
-      ephemeral: true
-    });
-    return;
-  }
-
-  const price = getItemSellPrice(item);
-  const itemName = item.name;
-
-  player.inventory.splice(index, 1);
-  player.gold += price;
-
-  await saveData(gameData);
-
-  await interaction.reply({
-    content: `💰 ${itemName} 판매 완료! (+${price} 골드)`,
-    ephemeral: true
-  });
-  return;
-}
-
-
-
-  if (interaction.customId.startsWith('private_start_')) {
+  if (id.startsWith('private_start_')) {
     const parts = interaction.customId.split('_');
     const ownerId = parts[2];
     const startKey = parts.slice(3).join('_');
-
 
     if (interaction.user.id !== ownerId) {
       await interaction.reply({
@@ -1675,31 +1668,23 @@ if(id.startsWith('sell_')){
     await interaction.editReply(
       buildBattlePayload(player, interaction.channelId, startKey, '전투 시작!')
     );
-
     return;
   }
 
-if (id === 'status') {
-  await saveData(gameData);
-  await interaction.reply({
-    content: buildFullStatusText(player),
-    components: buildStatusButtons(player),
-    ephemeral: true
-  });
-  return;
-}
-
-  if (id === 'bag_view') {
+  // 마을/던전 공통으로 열려야 하는 버튼들
+  if (id === 'status') {
+    await saveData(gameData);
     await interaction.reply({
-      content: buildBagText(player),
+      content: buildFullStatusText(player),
+      components: buildStatusButtons(player),
       ephemeral: true
     });
     return;
   }
 
-  if (id === 'status') {
+  if (id === 'bag_view') {
     await interaction.reply({
-      content: buildFullStatusText(player),
+      content: buildBagText(player),
       ephemeral: true
     });
     return;
@@ -1744,99 +1729,95 @@ if (id === 'status') {
     player.selectedEnhanceTarget = null;
     await saveData(gameData);
     await interaction.reply({
-      content: `강화할 아이템 선택\n${inventoryText(player)}\n\n보유 속성석: ${Object.entries(player.stones).map(([k,v])=>`${k}${v}`).join(' / ')}`,
+      content: `강화할 아이템 선택\n${inventoryText(player)}\n\n보유 속성석: ${Object.entries(player.stones).map(([k,v]) => `${k}${v}`).join(' / ')}`,
       components: buildEnhanceItemButtons(player),
       ephemeral: true
     });
     return;
   }
 
-if (id.startsWith('enhance_item_')) {
-  const idx = Number(id.replace('enhance_item_', ''));
-  player.selectedEnhanceTarget = { type: 'inventory', index: idx };
-  await saveData(gameData);
+  if (id.startsWith('enhance_item_')) {
+    const idx = Number(id.replace('enhance_item_', ''));
+    player.selectedEnhanceTarget = { type: 'inventory', index: idx };
+    await saveData(gameData);
 
-  const item = player.inventory[idx];
-  await interaction.reply({
-    content: `${getEnhancePreviewText(player, item)}\n\n속성을 선택하세요.`,
-    components: buildEnhanceElementButtons(),
-    ephemeral: true
-  });
-  return;
-}
-
-if (id === 'enhance_equipped_weapon') {
-  player.selectedEnhanceTarget = { type: 'equipped', slot: 'weapon' };
-  await saveData(gameData);
-
-  await interaction.reply({
-    content: `${getEnhancePreviewText(player, player.equipment.weapon)}\n\n속성을 선택하세요.`,
-    components: buildEnhanceElementButtons(),
-    ephemeral: true
-  });
-  return;
-}
-
-if (id === 'enhance_equipped_armor') {
-  player.selectedEnhanceTarget = { type: 'equipped', slot: 'armor' };
-  await saveData(gameData);
-
-  await interaction.reply({
-    content: `${getEnhancePreviewText(player, player.equipment.armor)}\n\n속성을 선택하세요.`,
-    components: buildEnhanceElementButtons(),
-    ephemeral: true
-  });
-  return;
-}
-
-if (id === 'enhance_equipped_ring') {
-  player.selectedEnhanceTarget = { type: 'equipped', slot: 'ring' };
-  await saveData(gameData);
-
-  await interaction.reply({
-    content: `${getEnhancePreviewText(player, player.equipment.ring)}\n\n속성을 선택하세요.`,
-    components: buildEnhanceElementButtons(),
-    ephemeral: true
-  });
-  return;
-}
-
-
-
-
-
- if (id.startsWith('enhance_elem_')) {
-  if(!player.selectedEnhanceTarget){
-await interaction.reply({
-  content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
-  ephemeral: true
-});
-    return;
-  }
-
-  const elem = id.replace('enhance_elem_', '');
-  const item = getEnhanceTargetItem(player);
-
-  if(!item){
+    const item = player.inventory[idx];
     await interaction.reply({
-      content: '선택한 아이템이 없습니다.',
+      content: `${getEnhancePreviewText(player, item)}\n\n속성을 선택하세요.`,
+      components: buildEnhanceElementButtons(),
       ephemeral: true
     });
     return;
   }
 
-  const text = tryEnhanceItem(player, item, elem);
-  await saveData(gameData);
+  if (id === 'enhance_equipped_weapon') {
+    player.selectedEnhanceTarget = { type: 'equipped', slot: 'weapon' };
+    await saveData(gameData);
 
-  await interaction.reply({
-    content: text,
-    ephemeral: true
-  });
-  return;
-}
+    await interaction.reply({
+      content: `${getEnhancePreviewText(player, player.equipment.weapon)}\n\n속성을 선택하세요.`,
+      components: buildEnhanceElementButtons(),
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id === 'enhance_equipped_armor') {
+    player.selectedEnhanceTarget = { type: 'equipped', slot: 'armor' };
+    await saveData(gameData);
+
+    await interaction.reply({
+      content: `${getEnhancePreviewText(player, player.equipment.armor)}\n\n속성을 선택하세요.`,
+      components: buildEnhanceElementButtons(),
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id === 'enhance_equipped_ring') {
+    player.selectedEnhanceTarget = { type: 'equipped', slot: 'ring' };
+    await saveData(gameData);
+
+    await interaction.reply({
+      content: `${getEnhancePreviewText(player, player.equipment.ring)}\n\n속성을 선택하세요.`,
+      components: buildEnhanceElementButtons(),
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id.startsWith('enhance_elem_')) {
+    if (!player.selectedEnhanceTarget) {
+      await interaction.reply({
+        content: '먼저 강화할 아이템을 선택하세요.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    const elem = id.replace('enhance_elem_', '');
+    const item = getEnhanceTargetItem(player);
+
+    if (!item) {
+      await interaction.reply({
+        content: '선택한 아이템이 없습니다.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    const text = tryEnhanceItem(player, item, elem);
+    await saveData(gameData);
+
+    await interaction.reply({
+      content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
+      ephemeral: true
+    });
+    return;
+  }
 
   if (id.startsWith('craft_') && id !== 'craft_list') {
-    const craftId = id.replace('craft_','');
+    const craftId = id.replace('craft_', '');
     const res = tryCraft(player, craftId);
     await saveData(gameData);
     await interaction.reply({
@@ -1847,11 +1828,37 @@ await interaction.reply({
   }
 
   if (id.startsWith('equip_')) {
-    const idx = Number(id.replace('equip_',''));
+    const idx = Number(id.replace('equip_', ''));
     const text = equipItemByIndex(player, idx);
     await saveData(gameData);
     await interaction.reply({
       content: `${text}\n\n${equipmentText(player)}`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id === 'stat_atk' || id === 'stat_crit' || id === 'stat_critdmg' || id === 'stat_dodge') {
+    const map = {
+      stat_atk: 'atk',
+      stat_crit: 'critChance',
+      stat_critdmg: 'critDamage',
+      stat_dodge: 'dodge'
+    };
+    const text = tryUpgradeStat(player, map[id]);
+    await saveData(gameData);
+    await interaction.reply({
+      content: `${text}\n\n${buildFullStatusText(player)}`,
+      components: buildStatusButtons(player),
+      ephemeral: true
+    });
+    return;
+  }
+
+  // 아래부터는 던전 채널 전용
+  if (!dungeonKey) {
+    await interaction.reply({
+      content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
       ephemeral: true
     });
     return;
@@ -1872,6 +1879,7 @@ await interaction.reply({
       });
       return;
     }
+
     player.reviveTickets -= 1;
     player.hp = Math.max(1, Math.floor(player.maxHp));
     player.run.isDown = false;
@@ -1885,9 +1893,9 @@ await interaction.reply({
   }
 
   if (id.startsWith('use_')) {
-    const key = id.replace('use_','');
+    const key = id.replace('use_', '');
 
-    if (player.run?.target && dungeonKey) {
+    if (player.run?.target) {
       const result = usePotionInBattle(player, key);
       await saveData(gameData);
 
@@ -1900,16 +1908,9 @@ await interaction.reply({
 
     const text = usePotionOutOfBattle(player, key);
     await saveData(gameData);
+
     await interaction.reply({
       content: text,
-      ephemeral: true
-    });
-    return;
-  }
-
-  if (!dungeonKey) {
-    await interaction.reply({
-      content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
       ephemeral: true
     });
     return;
@@ -1999,6 +2000,7 @@ await interaction.reply({
 
   if (id === 'attack') {
     if (!player.run) createRunIfNeeded(player, dungeonKey);
+
     if (!player.run.target && player.run.nextTarget) {
       player.run.lastDrops = [];
       player.run.target = player.run.nextTarget;
@@ -2022,7 +2024,6 @@ await interaction.reply({
     return;
   }
 });
-
 
 
 require('dotenv').config();
