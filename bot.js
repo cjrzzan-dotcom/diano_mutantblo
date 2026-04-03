@@ -1425,12 +1425,7 @@ function buildEquipmentButtons(player){
       new ButtonBuilder()
         .setCustomId(`equip_${i}`)
         .setLabel(`${i+1}. ${item.name || '장비'}`)
-        .setStyle(ButtonStyle.Primary),
-
-      new ButtonBuilder()
-        .setCustomId(`sell_${i}`)
-        .setLabel('💰 판매')
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Primary)
     );
 
     // 버튼 5개 제한
@@ -1444,7 +1439,7 @@ function buildEquipmentButtons(player){
     rows.push(currentRow);
   }
 
-  return rows.slice(0,5);
+  return rows;
 }
 function buildEnhanceItemButtons(player){
   const rows = [];
