@@ -28,6 +28,12 @@ let gameData = {};
   await loadData();
 })();
 
+
+async function connectDB(){
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI 없음');
+  }
+
   mongoClient = new MongoClient(process.env.MONGO_URI);
   await mongoClient.connect();
 
@@ -39,6 +45,7 @@ let gameData = {};
 
   console.log('✅ DB 연결 완료');
 }
+
 
 async function migrateLegacyGameIfNeeded(){
   const playerCount = await playersCol.countDocuments();
