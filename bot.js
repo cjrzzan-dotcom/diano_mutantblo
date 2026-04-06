@@ -1045,10 +1045,6 @@ function performAttack(player, dungeonKey){
   }
 
   if(!player.run) createRunIfNeeded(player, dungeonKey);
-  ...
-}
-
-  if(!player.run) createRunIfNeeded(player, dungeonKey);
 
   if(player.run.isDown){
     result.logs.push('쓰러진 상태입니다. 먼저 부활권을 사용하거나 부활 시간을 기다리세요.');
