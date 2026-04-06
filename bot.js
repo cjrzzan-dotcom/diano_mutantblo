@@ -979,9 +979,9 @@ function getTotalEquippedElementEnhance(player){
 }
 
 
-function getElementEnhanceBonusDamage(player, monsterElement){
+function getElementEnhanceBonusDamage(player){
   const totalEnhance = getTotalEquippedElementEnhance(player);
-  return totalEnhance[monsterElement] || 0;
+  return Object.values(totalEnhance).reduce((sum, value) => sum + value, 0);
 }
 
 
@@ -1087,7 +1087,7 @@ function performAttack(player, dungeonKey){
 const target = player.run.target;
 const mult = getElementMultiplier(player.attributes, target.element);
 const attrBonus = getAttributeBonus(player.attributes);
-const enhanceBonusDamage = getElementEnhanceBonusDamage(player, target.element);
+const enhanceBonusDamage = getElementEnhanceBonusDamage(player);
 
 let damage = (getAttackPower(player) + attrBonus - target.def + enhanceBonusDamage) * mult;
 let isCrit = false;
@@ -1098,6 +1098,8 @@ if(chance(getCritChance(player))){
 }
 
 damage = Math.max(1, Math.floor(damage));
+
+result.logs.push(`✨ 장비 강화 보너스 발동! 추가피해 +${enhanceBonusDamage}`);
 
 if(enhanceBonusDamage > 0){
   result.logs.push(`✨ 장비 속성강화 보너스 발동! ${target.element} 추가피해 +${enhanceBonusDamage}`);
