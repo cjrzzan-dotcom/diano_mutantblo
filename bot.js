@@ -1346,12 +1346,13 @@ function buildTownButtons(player){
       new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('shop').setLabel('🏪 상점').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('craft_list').setLabel('🛠️ 제작').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
+
   
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
- new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
     ),
   ];
 }
@@ -1678,20 +1679,22 @@ await saveData(gameData);
     await message.reply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
     return;
   }
-    if(command === '!상점'){
+   if(command === '!상점'){
   await message.reply({
     content:
-  `🏪 상점
+`🏪 상점
 
-  💰 보유 골드: ${player.gold}
+💰 보유 골드: ${player.gold}
 
-  💊 작은물약 10G
-  🍗 중간물약 30G
-  🍖 큰물약 100G
-  🧪 엘릭서 3000G`,
+💊 작은물약 10G
+🍗 중간물약 30G
+🍖 큰물약 100G
+🧪 엘릭서 3000G`,
     components: buildShopButtons()
-  });    
-  }
+  });
+  return;
+}
+  
   if(command === '!제작목록'){
     await message.reply({ content:`🛠️ 제작목록\n${craftListText(player)}`, components:buildCraftButtons() });
     return;
@@ -1964,6 +1967,48 @@ if (id === 'status') {
     });
     return;
   }
+
+if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
+  const shopMap = {
+    buy_small: { key: 'small', name: '작은물약', price: 10 },
+    buy_mid: { key: 'mid', name: '중간물약', price: 30 },
+    buy_big: { key: 'big', name: '큰물약', price: 100 },
+    buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000 },
+  };
+
+  const buy = shopMap[id];
+  if (!buy) {
+    await interaction.reply({
+      content: '구매할 수 없는 아이템입니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (player.gold < buy.price) {
+    await interaction.reply({
+      content: `❌ 골드가 부족합니다. (${buy.name} ${buy.price}G)`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.gold -= buy.price;
+  player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content:
+`✅ ${buy.name} 1개 구매 완료!
+
+💰 남은 골드: ${player.gold}
+🧪 보유 물약:
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
+    ephemeral: true
+  });
+  return;
+}
 
   if (id === 'craft_list') {
     await interaction.reply({
