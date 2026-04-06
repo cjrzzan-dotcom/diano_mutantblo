@@ -379,7 +379,7 @@ const RARITIES = [
 const MATERIALS = [
   '슬라임젤리', '늑대가죽', '고블린뼈조각', '오우거가죽', '작은 용비늘', '낡은장비조각',
   '드래곤 비늘', '드래곤 발톱', '번개조각', '얼음조각', '붉은화염조각', '푸른화염조각', '어둠조각',
-  '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각',
+  '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각', '암흑의 조각',
   '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각'
 ];
 
@@ -400,14 +400,15 @@ const CRAFTS = [
   { id:'dragon_armor', label:'드래곤아머', type:'armor', materials:{ '낡은장비조각':5, '드래곤 비늘':7 }, base:{atk:0,def:28} },
   { id:'dragon_sword', label:'드래곤소드', type:'weapon', materials:{ '낡은장비조각':5, '드래곤 발톱':7 }, base:{atk:28,def:0} },
   { id:'zombie_sword', label:'좀비드래곤소드', type:'weapon', materials:{ '낡은장비조각':7, '좀비드래곤의 피':10 }, base:{atk:34,def:0} },
-  { id:'metal_sword', label:'장군넴소드', type:'weapon', materials:{ '낡은장비조각':8, '메탈조각':10 }, base:{atk:38,def:0} },
+  { id:'metal_sword', label:'장군넴소드', type:'weapon', materials:{ '낡은장비조각':8, '메탈조각':5 }, base:{atk:38,def:0} },
   { id:'metal_armor', label:'장군넴아머', type:'armor', materials:{ '낡은장비조각':8, '메탈조각':10 }, base:{atk:0,def:38} },
-  { id:'bald_armor', label:'대머리갑옷', type:'armor', materials:{ '낡은장비조각':9, '좀비드래곤의 가죽':10 }, base:{atk:0,def:43} },
-  { id:'light_sword', label:'빛의검', type:'weapon', materials:{ '낡은장비조각':10, '빛의 조각':10 }, base:{atk:45,def:0} },
+  { id:'bald_armor', label:'대머리갑옷', type:'armor', materials:{ '낡은장비조각':9, '좀비드래곤의 가죽':5 }, base:{atk:0,def:43} },
+  { id:'light_sword', label:'빛의검', type:'weapon', materials:{ '낡은장비조각':10, '빛의 조각':5 }, base:{atk:45,def:0} },
+  { id:'light_armor', label:'암흑갑옷', type:'weapon', materials:{ '낡은장비조각':10, '암흑의 조각':5 }, base:{atk:0,def:50} },
 
 { id:'butcher_axe', label:'도살자의도끼', type:'weapon', materials:{ '고급장비조각':10, '도살자의 도끼조각':15 }, base:{atk:52,def:0} },
 { id:'leoric_armor', label:'레오릭왕의갑옷', type:'armor', materials:{ '고급장비조각':15, '레오릭왕의 뼈조각':15 }, base:{atk:0,def:55} },
-{ id:'demon_cloak', label:'악마의망토', type:'armor', materials:{ '고급장비조각':20, '악마의 정수':20 }, base:{atk:0,def:68} },
+{ id:'demon_cloak', label:'악마의망토', type:'armor', materials:{ '고급장비조각':20, '악마의 살점':20 }, base:{atk:0,def:68} },
 { id:'demon_sword', label:'악마의검', type:'weapon', materials:{ '고급장비조각':20, '악마의 정수':20 }, base:{atk:70,def:0} },
 { id:'lilith_ring', label:'릴리트의 반지', type:'ring', materials:{ '릴리트의 뿔':20 }, ringRandom:true, base:{atk:0,def:0} },
 { id:'end_sword', label:'종말의검', type:'weapon', materials:{ '디아블로의 뿔':20 }, base:{atk:88,def:0} },
@@ -437,7 +438,7 @@ const DUNGEONS = {
     { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [85,120], xp: 65 },
     { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [90,130], xp: 70 },
     { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
-    { name: '어둠의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [100,150], xp: 100 },
+    { name: '암흑의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [100,150], xp: 100 },
     { name: '창조 드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
     { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
     { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
@@ -447,16 +448,16 @@ const DUNGEONS = {
   ]},
   '지옥의관문': { type: 'wave', autoAllowed: false, waves: [
     { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 60 },
-    { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [85,115], xp: 70 },
-    { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [100,135], xp: 84 },
-    { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [110,145], xp: 88 },
-    { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [125,165], xp: 96 },
-    { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [135,180], xp: 105 },
-    { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [180,230], xp: 120 },
-    { name: '바알', hp: 1500, atk: 130, def: 65, gold: [200,250], xp: 130 },
-    { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [220,270], xp: 140 },
-    { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [250,300], xp: 150 },
-    { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [400,520], xp: 220 },
+    { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 70 },
+    { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 84 },
+    { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [200,250], xp: 88 },
+    { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [250,300], xp: 96 },
+    { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [300,350], xp: 105 },
+    { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [600,700], xp: 120 },
+    { name: '바알', hp: 1500, atk: 130, def: 65, gold: [700,800], xp: 130 },
+    { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 140 },
+    { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 150 },
+    { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
   ]},
   '지옥의심장부': { type: 'wave', autoAllowed: false, waves: [
     { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [180,230], xp: 120 },
@@ -633,7 +634,7 @@ else if (dungeonKey === '오색룡의둥지') {
     base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '빛의 군주 드래곤');
 
   } else if (roll < 20) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '어둠의 군주 드래곤');
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '암흑의 군주 드래곤');
 
   } else if (roll < 21) {
     base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '창조 드래곤');
@@ -705,7 +706,7 @@ function getWaveMonster(dungeonKey, idx){
       base = dungeon.monsters.find(m => m.name === '빛의 군주 드래곤');
 
     } else if (roll < 20) {
-      base = dungeon.monsters.find(m => m.name === '어둠의 군주 드래곤');
+      base = dungeon.monsters.find(m => m.name === '암흑의 군주 드래곤');
 
     } else if (roll < 21) {
       base = dungeon.monsters.find(m => m.name === '창조 드래곤');
@@ -804,10 +805,12 @@ function createRingStats(){
   const count = rand(1,3);
   const pool = ['critChanceBonus','critDamageBonus','dodgeBonus'];
   const picked = [];
+
   while(picked.length < count){
-    const k = pick(pool);
+    const k = pick(당구);
     if(!picked.includes(k)) picked.push(k);
   }
+
   const out = { critChanceBonus:0, critDamageBonus:0, dodgeBonus:0 };
   for(const k of picked) out[k] = rand(2,5);
   return out;
@@ -910,7 +913,7 @@ function getMaterialDrops(monsterName){
     case '드래곤': if(chance(30)) drops.push(['작은 용비늘',1]); break;
   }
 
-  const dragonSet = ['번개드래곤','얼음드래곤','붉은화염드래곤','푸른화염드래곤','어둠드래곤','좀비드래곤','메탈드래곤','대독드래곤','빛의 군주 드래곤','어둠의 군주 드래곤','창조 드래곤','에인절라스드래곤','요리사응구드래곤','메이드빵게드래곤'];
+  const dragonSet = ['번개드래곤','얼음드래곤','붉은화염드래곤','푸른화염드래곤','어둠드래곤','좀비드래곤','메탈드래곤','대독드래곤','빛의 군주 드래곤','암흑의 군주 드래곤','창조 드래곤','에인절라스드래곤','요리사응구드래곤','메이드빵게드래곤'];
   if(dragonSet.includes(monsterName)){
     if(chance(35)) drops.push(['드래곤 비늘',1]);
     if(chance(35)) drops.push(['드래곤 발톱',1]);
@@ -927,7 +930,7 @@ function getMaterialDrops(monsterName){
     case '메탈드래곤': if(chance(30)) drops.push(['메탈조각',1]); break;
     case '대독드래곤': if(chance(30)) drops.push(['좀비드래곤의 가죽',1]); break;
     case '빛의 군주 드래곤': if(chance(30)) drops.push(['빛의 조각',1]); break;
-    case '어둠의 군주 드래곤': if(chance(40)) drops.push(['빛의 조각',2]); break;
+    case '암흑의 군주 드래곤': if(chance(40)) drops.push(['암흑의 조각',1]); break;
     case '창조 드래곤': if(chance(50)) drops.push(['빛의 조각',3]); break;
     case '에인절라스드래곤': drops.push(['부활권',5]); break;
 
@@ -938,7 +941,7 @@ function getMaterialDrops(monsterName){
 
   if(monsterName === '도살자' && chance(40)) drops.push(['도살자의 도끼조각',1]);
   if(monsterName === '레오릭 왕' && chance(40)) drops.push(['레오릭왕의 뼈조각',1]);
-  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 정수',1]);
+  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 살점',1]);
   if(monsterName === '릴리트' && chance(35)) drops.push(['릴리트의 뿔',1]);
   if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) drops.push(['악마의 정수',1]);
   if(monsterName === '종말의 화신 디아블로' && chance(40)) drops.push(['디아블로의 뿔',1]);
@@ -1573,15 +1576,63 @@ function buildShopButtons(){
   ];
 }
 
-function buildCraftButtons(){
-  const rows = [];
-  for(let i=0;i<CRAFTS.length;i+=4){
-    rows.push(new ActionRowBuilder().addComponents(
-      ...CRAFTS.slice(i,i+4).map(c => new ButtonBuilder().setCustomId(`craft_${c.id}`).setLabel(c.label).setStyle(ButtonStyle.Primary))
-    ));
-  }
-  return rows.slice(0,5);
+function craftListText(player){
+  return CRAFTS.map(c => {
+    const mats = Object.entries(c.materials)
+      .map(([m,n]) => `${m}${n}`)
+      .join(' / ');
+    return `- ${c.label} / ${mats} / ${canCraft(player,c) ? '제작가능' : '부족'}`;
+  }).join('\n');
 }
+
+function craftListTextByType(player, type){
+  const filtered = CRAFTS.filter(c => c.type === type);
+
+  if(!filtered.length) return '제작식이 없습니다.';
+
+  return filtered.map(c => {
+    const mats = Object.entries(c.materials)
+      .map(([m,n]) => `${m}${n}`)
+      .join(' / ');
+    return `- ${c.label} / ${mats} / ${canCraft(player,c) ? '제작가능' : '부족'}`;
+  }).join('\n');
+}
+
+function getCraftIdByLabel(label){
+  const f = CRAFTS.find(c => c.label === label);
+  return f ? f.id : null;
+}
+
+function buildCraftCategoryButtons(){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('craft_cat_weapon').setLabel('⚔️ 무기').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId('craft_cat_armor').setLabel('🛡️ 갑옷').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('craft_cat_ring').setLabel('💍 반지').setStyle(ButtonStyle.Success),
+    )
+  ];
+}
+
+function buildCraftButtonsByType(type){
+  const filtered = CRAFTS.filter(c => c.type === type);
+  const rows = [];
+
+  for(let i = 0; i < filtered.length; i += 4){
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        ...filtered.slice(i, i + 4).map(c =>
+          new ButtonBuilder()
+            .setCustomId(`craft_${c.id}`)
+            .setLabel(c.label)
+            .setStyle(ButtonStyle.Primary)
+        )
+      )
+    );
+  }
+
+  return rows.slice(0, 5);
+}
+
 
 function shortItemName(name, max = 10){
   if(!name) return '장비';
@@ -1792,16 +1843,6 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 /* 상점 reply 문구 예시 */
 '🏪 상점\n💊  작은물약 10G\n🍗 중간물약 30G\n🍖  큰물약 100G\n🧪 엘릭서 3000G'
 
-function craftListText(player){
-  return CRAFTS.map(c => {
-    const mats = Object.entries(c.materials).map(([m,n]) => `${m}${n}`).join(' / ');
-    return `- ${c.label} / ${mats} / ${canCraft(player,c)?'제작가능':'부족'}`;
-  }).join('\n');
-}
-function getCraftIdByLabel(label){
-  const f = CRAFTS.find(c => c.label === label);
-  return f ? f.id : null;
-}
 
 client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
@@ -2532,14 +2573,14 @@ if (id === 'auto') {
     const gainedGold = Math.max(0, player.gold - beforeGold);
     const gainedXp = Math.max(0, player.xp - beforeXp);
 
-    const reducedGold = Math.floor(gainedGold / 2);
-    const reducedXp = Math.floor(gainedXp / 2);
+    const reducedGold = Math.floor(gainedGold * 0.8);
+    const reducedXp = Math.floor(gainedXp * 0.8);
 
     player.gold = beforeGold + reducedGold;
     player.xp = beforeXp + reducedXp;
 
     if (player.run?.lastDrops) {
-      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.4);
+      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.8);
     }
 
     logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
