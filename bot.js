@@ -681,11 +681,72 @@ if (!base) {
 
 }
 function getWaveMonster(dungeonKey, idx){
-  const base = DUNGEONS[dungeonKey].waves[idx];
-  if(!base) return null;
-  return { ...base, currentHp:base.hp, element:pick(ELEMENTS) };
-}
+  const dungeon = DUNGEONS[dungeonKey];
+  if(!dungeon) return null;
 
+  let base = null;
+
+  // =========================
+  // 오색룡의 둥지 확률
+  // =========================
+  if (dungeonKey === '오색룡의둥지') {
+    const roll = Math.random() * 100;
+
+    if (roll < 7) {
+      base = dungeon.monsters.find(m => m.name === '좀비드래곤');
+
+    } else if (roll < 11) {
+      base = dungeon.monsters.find(m => m.name === '메탈드래곤');
+
+    } else if (roll < 15) {
+      base = dungeon.monsters.find(m => m.name === '대독드래곤');
+
+    } else if (roll < 18) {
+      base = dungeon.monsters.find(m => m.name === '빛의 군주 드래곤');
+
+    } else if (roll < 20) {
+      base = dungeon.monsters.find(m => m.name === '어둠의 군주 드래곤');
+
+    } else if (roll < 21) {
+      base = dungeon.monsters.find(m => m.name === '창조 드래곤');
+
+    } else if (roll < 21.3) {
+      base = dungeon.monsters.find(m => m.name === '요리사응구드래곤');
+
+    } else if (roll < 21.8) {
+      base = dungeon.monsters.find(m => m.name === '메이드빵게드래곤');
+
+    } else if (roll < 21.9) {
+      base = dungeon.monsters.find(m => m.name === '에인절라스드래곤');
+
+    } else {
+      const dragons = [
+        '번개드래곤',
+        '얼음드래곤',
+        '붉은화염드래곤',
+        '푸른화염드래곤',
+        '어둠드래곤'
+      ];
+      const pickName = dragons[Math.floor(Math.random() * dragons.length)];
+      base = dungeon.monsters.find(m => m.name === pickName);
+    }
+  }
+
+  // =========================
+  // 일반 웨이브 던전
+  // =========================
+  else {
+    base = dungeon.waves?.[idx] || null;
+  }
+
+  if(!base) return null;
+
+  return {
+    ...base,
+    currentHp: base.hp,
+    element: pick(ELEMENTS),
+  };
+}
 function isAllowedCategory(channel){
   if(ALLOWED_CATEGORY_IDS.length === 0) return true; // 비어있으면 제한 없음
   return ALLOWED_CATEGORY_IDS.includes(channel.parentId);
