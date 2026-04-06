@@ -1213,12 +1213,23 @@ function materialsText(player){
   const rows = Object.entries(player.materials).filter(([,v])=>v>0).map(([k,v])=>`${k} ${v}`);
   return rows.length ? rows.join(' / ') : '없음';
 }
-function inventoryText(player){
+
+const ITEMS_PER_PAGE = 5;
+
+function inventoryText(player, page = 1){
   if(!player.inventory.length) return '비어있음';
+
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+
   return player.inventory
-    .slice(0,15)
-    .map((it,idx)=>`${idx+1}. ${it.name}${getItemStatText(it)} [${it.type}]`)
+    .slice(start, end)
+    .map((it, idx) => `${start + idx + 1}. ${it.name}${getItemStatText(it)} [${it.type}]`)
     .join('\n');
+}
+
+function getInventoryTotalPages(player){
+  return Math.max(1, Math.ceil((player.inventory?.length || 0) / ITEMS_PER_PAGE));
 }
 
 function buildFullStatusText(player){
@@ -1336,10 +1347,11 @@ function buildTownButtons(player){
       new ButtonBuilder().setCustomId('shop').setLabel('🏪 상점').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('craft_list').setLabel('🛠️ 제작').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
+  
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
+ new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
     ),
   ];
 }
@@ -1415,45 +1427,62 @@ function buildCraftButtons(){
 }
 
 
-function buildEquipmentButtons(player){
+function buildEquipmentButtons(player, page = 1){
   if(!player.inventory.length) return [];
 
+  const totalPages = getInventoryTotalPages(player);
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+
+  const start = (safePage - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
+  const pageItems = player.inventory.slice(start, end);
+
   const rows = [];
-  let currentRow = new ActionRowBuilder();
-  let btnCount = 0;
 
-  player.inventory.forEach((item, i) => {
+  // 아이템 버튼들
+  pageItems.forEach((item, idx) => {
+    const absoluteIndex = start + idx;
 
-    const equipBtn = new ButtonBuilder()
-      .setCustomId(`equip_${i}`)
-      .setLabel(`${i+1}. ${item.name || '장비'}`)
-      .setStyle(ButtonStyle.Primary);
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`equip_${absoluteIndex}`)
+          .setLabel(`${absoluteIndex + 1}. ${item.name || '장비'}`)
+          .setStyle(ButtonStyle.Primary),
 
-    const sellBtn = new ButtonBuilder()
-      .setCustomId(`sell_${i}`)
-      .setLabel('💰')
-      .setStyle(ButtonStyle.Success);
-
-    // 버튼 추가
-    currentRow.addComponents(equipBtn, sellBtn);
-    btnCount += 2;
-
-    // 4개까지만 넣고 줄 바꿈 (안전)
-    if(btnCount >= 4){
-      rows.push(currentRow);
-      currentRow = new ActionRowBuilder();
-      btnCount = 0;
-    }
+        new ButtonBuilder()
+          .setCustomId(`sell_${absoluteIndex}`)
+          .setLabel('💰 판매')
+          .setStyle(ButtonStyle.Success)
+      )
+    );
   });
 
-  // 남은 버튼
-  if(currentRow.components.length > 0){
-    rows.push(currentRow);
-  }
+  // 페이지 이동 버튼
+  rows.push(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`equipment_prev_${safePage}`)
+        .setLabel('◀ 이전')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(safePage <= 1),
+
+      new ButtonBuilder()
+        .setCustomId(`equipment_page_${safePage}`)
+        .setLabel(`${safePage} / ${totalPages}`)
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(true),
+
+      new ButtonBuilder()
+        .setCustomId(`equipment_next_${safePage}`)
+        .setLabel('다음 ▶')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(safePage >= totalPages)
+    )
+  );
 
   return rows;
 }
-
 function buildEnhanceItemButtons(player){
   const rows = [];
 
@@ -1945,14 +1974,41 @@ if (id === 'status') {
     return;
   }
 
-  if (id === 'equipment_view') {
-    await interaction.reply({
-      content: `${equipmentText(player)}\n\n인벤토리\n${inventoryText(player)}`,
-      components: buildEquipmentButtons(player),
-      ephemeral: true
-    });
-    return;
-  }
+if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
+  const page = 1;
+  const totalPages = getInventoryTotalPages(player);
+
+  await interaction.reply({
+    content: `${equipmentText(player)}\n\n인벤토리 (${page}/${totalPages})\n${inventoryText(player, page)}`,
+    components: buildEquipmentButtons(player, page),
+    ephemeral: true
+  });
+  return;
+}
+
+
+
+if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
+  const parts = id.split('_');
+  const action = parts[1]; // prev or next
+  const currentPage = Number(parts[2]);
+
+  const totalPages = getInventoryTotalPages(player);
+
+  let nextPage = currentPage;
+  if (action === 'prev') nextPage--;
+  if (action === 'next') nextPage++;
+
+  if (nextPage < 1) nextPage = 1;
+  if (nextPage > totalPages) nextPage = totalPages;
+
+  await interaction.update({
+    content: `${equipmentText(player)}\n\n인벤토리 (${nextPage}/${totalPages})\n${inventoryText(player, nextPage)}`,
+    components: buildEquipmentButtons(player, nextPage)
+  });
+  return;
+}
+
 
   if (id === 'enhance_view') {
     player.selectedEnhanceTarget = null;
