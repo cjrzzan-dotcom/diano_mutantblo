@@ -735,8 +735,15 @@ function getWaveMonster(dungeonKey, idx){
   // =========================
   // 일반 웨이브 던전
   // =========================
-  else {
-    base = dungeon.waves?.[idx] || null;
+  else if (Array.isArray(dungeon.waves)) {
+    base = dungeon.waves[idx] || null;
+  }
+
+  // =========================
+  // monsters만 있는 일반 던전
+  // =========================
+  else if (Array.isArray(dungeon.monsters)) {
+    base = dungeon.monsters[idx] || dungeon.monsters[0] || null;
   }
 
   if(!base) return null;
@@ -747,6 +754,8 @@ function getWaveMonster(dungeonKey, idx){
     element: pick(ELEMENTS),
   };
 }
+
+
 function isAllowedCategory(channel){
   if(ALLOWED_CATEGORY_IDS.length === 0) return true; // 비어있으면 제한 없음
   return ALLOWED_CATEGORY_IDS.includes(channel.parentId);
