@@ -910,7 +910,7 @@ function getMaterialDrops(monsterName){
     case '드래곤': if(chance(30)) drops.push(['작은 용비늘',1]); break;
   }
 
-  const dragonSet = ['번개드래곤','얼음드래곤','붉은화염드래곤','푸른화염드래곤','어둠드래곤','좀비드래곤','메탈드래곤','대독드래곤','빛의 군주 드래곤'];
+  const dragonSet = ['번개드래곤','얼음드래곤','붉은화염드래곤','푸른화염드래곤','어둠드래곤','좀비드래곤','메탈드래곤','대독드래곤','빛의 군주 드래곤','어둠의 군주 드래곤','창조 드래곤','에인절라스드래곤','요리사응구드래곤','메이드빵게드래곤'];
   if(dragonSet.includes(monsterName)){
     if(chance(35)) drops.push(['드래곤 비늘',1]);
     if(chance(35)) drops.push(['드래곤 발톱',1]);
@@ -927,8 +927,8 @@ function getMaterialDrops(monsterName){
     case '메탈드래곤': if(chance(30)) drops.push(['메탈조각',1]); break;
     case '대독드래곤': if(chance(30)) drops.push(['좀비드래곤의 가죽',1]); break;
     case '빛의 군주 드래곤': if(chance(30)) drops.push(['빛의 조각',1]); break;
-    case '어둠의 군주 드래곤': if(chance(40)) drops.push(['빛의 조각',1]); break;
-    case '군주 드래곤': if(chance(50)) drops.push(['빛의 조각',1]); break;
+    case '어둠의 군주 드래곤': if(chance(40)) drops.push(['빛의 조각',2]); break;
+    case '창조 드래곤': if(chance(50)) drops.push(['빛의 조각',3]); break;
     case '에인절라스드래곤': drops.push(['부활권',5]); break;
 
   }
