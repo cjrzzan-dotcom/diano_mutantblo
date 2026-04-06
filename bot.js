@@ -208,8 +208,8 @@ const client = new Client({
 require('dotenv').config();
 
 const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 5분
-const AUTO_HUNT_MAX_CHARGES = 10;
-const AUTO_HUNT_TURNS = 20;
+const AUTO_HUNT_MAX_CHARGES = 20;
+const AUTO_HUNT_TURNS = 500;
 
 
 function endBattle(player) {
@@ -438,7 +438,7 @@ const DUNGEONS = {
     { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [90,130], xp: 70 },
     { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
     { name: '어둠의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [100,150], xp: 100 },
-    { name: '드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
+    { name: '창조 드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
     { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
     { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
     { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500 },
@@ -636,7 +636,7 @@ else if (dungeonKey === '오색룡의둥지') {
     base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '어둠의 군주 드래곤');
 
   } else if (roll < 21) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '군주 드래곤');
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '창조 드래곤');
 
   } else if (roll < 21.3) {
     base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '요리사응구드래곤');
