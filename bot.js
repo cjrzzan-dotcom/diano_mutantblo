@@ -755,11 +755,6 @@ function getElementEnhanceText(item){
   const map = item.elementEnhance;
   const parts = [];
 
-  if(map.fire) parts.push(`🔥${map.fire}`);
-  if(map.water) parts.push(`💧${map.water}`);
-  if(map.wind) parts.push(`🌪️${map.wind}`);
-  if(map.light) parts.push(`⚡${map.light}`);
-  if(map.dark) parts.push(`🌑${map.dark}`);
   if(map.화염) parts.push(`🔥${map.화염}`);
   if(map.얼음) parts.push(`❄️${map.얼음}`);
   if(map.번개) parts.push(`⚡${map.번개}`);
@@ -883,7 +878,7 @@ function grantDrops(player, monster){
   player.gold += gold;
   lines.push(`💰 골드 +${gold}`);
 
-  if(chance(20)){
+  if(chance(15)){
     player.stones[monster.element] += 1;
     lines.push(`💎 ${monster.element}석 +1`);
   }
@@ -941,6 +936,32 @@ function getEnhancePreviewText(player, item){
 
   return lines.join('\n');
 }
+
+function getTotalEquippedElementEnhance(player){
+  const total = {};
+
+  const equippedItems = [
+    player.equipment?.weapon,
+    player.equipment?.armor,
+    player.equipment?.ring
+  ].filter(Boolean);
+
+  for(const item of equippedItems){
+    const enhanceMap = item.elementEnhance || {};
+    for(const [elem, value] of Object.entries(enhanceMap)){
+      total[elem] = (total[elem] || 0) + value;
+    }
+  }
+
+  return total;
+}
+
+
+function getElementEnhanceBonusDamage(player, monsterElement){
+  const totalEnhance = getTotalEquippedElementEnhance(player);
+  return totalEnhance[monsterElement] || 0;
+}
+
 
 
 function enemyAttack(player, target, logs){
@@ -1013,14 +1034,19 @@ function usePotionInBattle(player, key){
   enemyAttack(player, player.run.target, logs);
   return { logs };
 }
+
+
 function performAttack(player, dungeonKey){
+  const result = { logs:[], killedTarget:null, levelUps:[], clearedDungeon:false };
 
   const revived = reviveIfRespawnReady(player);
   if(revived){
     result.logs.push('✨ 부활 시간이 지나 자동으로 부활했습니다.');
   }
 
-  const result = { logs:[], killedTarget:null, levelUps:[], clearedDungeon:false };
+  if(!player.run) createRunIfNeeded(player, dungeonKey);
+  ...
+}
 
   if(!player.run) createRunIfNeeded(player, dungeonKey);
 
@@ -1040,22 +1066,27 @@ function performAttack(player, dungeonKey){
     return result;
   }
 
-  const target = player.run.target;
-  const mult = getElementMultiplier(player.attributes, target.element);
-  const attrBonus = getAttributeBonus(player.attributes);
+const target = player.run.target;
+const mult = getElementMultiplier(player.attributes, target.element);
+const attrBonus = getAttributeBonus(player.attributes);
+const enhanceBonusDamage = getElementEnhanceBonusDamage(player, target.element);
 
-  let damage = (getAttackPower(player) + attrBonus - target.def) * mult;
-  let isCrit = false;
+let damage = (getAttackPower(player) + attrBonus - target.def + enhanceBonusDamage) * mult;
+let isCrit = false;
 
-  if(chance(getCritChance(player))){
-    damage *= 1.5 + (getCritDamage(player)/100);
-    isCrit = true;
-  }
+if(chance(getCritChance(player))){
+  damage *= 1.5 + (getCritDamage(player)/100);
+  isCrit = true;
+}
 
-  damage = Math.max(1, Math.floor(damage));
-  target.currentHp -= damage;
+damage = Math.max(1, Math.floor(damage));
 
-  result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+if(enhanceBonusDamage > 0){
+  result.logs.push(`✨ 장비 속성강화 보너스 발동! ${target.element} 추가피해 +${enhanceBonusDamage}`);
+}
+
+target.currentHp -= damage;
+result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
   if(target.currentHp <= 0){
     target.currentHp = 0;
@@ -1154,6 +1185,18 @@ function tryEnhanceItem(player, item, elem){
 
   const current = item.elementEnhance[elem] || 0;
 
+  // 현재 붙은 속성 종류 수
+  const activeElements = Object.entries(item.elementEnhance)
+    .filter(([, value]) => value > 0)
+    .map(([key]) => key);
+
+  const isNewElement = current <= 0;
+
+  // 새 속성을 붙이려는데 이미 2종류 있으면 막기
+  if(isNewElement && activeElements.length >= 2){
+    return `이 아이템은 속성을 최대 2개까지만 강화할 수 있습니다. (현재: ${activeElements.join(', ')})`;
+  }
+
   const stoneCosts = [1, 2, 4, 8, 10];
   const goldCosts = [100, 150, 200, 300, 500];
   const chances = [1.00, 0.75, 0.50, 0.35, 0.15];
@@ -1233,10 +1276,6 @@ function inventoryText(player, page = 1){
     .slice(start, end)
     .map((it, idx) => `${start + idx + 1}. ${it.name}${getItemStatText(it)} [${it.type}]`)
     .join('\n');
-}
-
-function getInventoryTotalPages(player){
-  return Math.max(1, Math.ceil((player.inventory?.length || 0) / ITEMS_PER_PAGE));
 }
 
 function buildFullStatusText(player){
