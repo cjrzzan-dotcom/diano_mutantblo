@@ -1968,6 +1968,17 @@ if (id === 'status') {
     return;
   }
 
+if (id === 'equipment_view') {
+  await interaction.reply({
+    content: `🧰 장비창\n\n${equipmentText(player)}\n\n🎒 인벤토리\n${inventoryText(player)}`,
+    components: buildEquipmentButtons(player),
+    ephemeral: true
+  });
+  return;
+}
+
+
+
 if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
   const shopMap = {
     buy_small: { key: 'small', name: '작은물약', price: 10 },
@@ -2185,14 +2196,27 @@ if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
     return;
   }
 
-  // 아래부터는 던전 채널 전용
-  if (!dungeonKey) {
-    await interaction.reply({
-      content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
-      ephemeral: true
-    });
-    return;
-  }
+  // 던전 전용 버튼만 여기서 막기
+const dungeonOnlyButtons = [
+  'attack',
+  'revive',
+  'auto',
+  'use_small',
+  'use_mid',
+  'use_big',
+  'use_elixir'
+];
+
+const isDungeonOnlyButton =
+  dungeonOnlyButtons.includes(id);
+
+if (isDungeonOnlyButton && !dungeonKey) {
+  await interaction.reply({
+    content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
+    ephemeral: true
+  });
+  return;
+}
 
 if (id === 'revive') {
   if (!player.run?.isDown) {
