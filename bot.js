@@ -437,6 +437,8 @@ const DUNGEONS = {
     { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [85,120], xp: 65 },
     { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [90,130], xp: 70 },
     { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
+    { name: '어둠의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [100,150], xp: 100 },
+    { name: '드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
   ]},
   '지옥의관문': { type: 'wave', autoAllowed: false, waves: [
     { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 60 },
@@ -607,33 +609,51 @@ function getRandomMonster(dungeonKey) {
     }
   }
 
-  // =========================
-  // 오색룡의 둥지 확률
-  // =========================
-  else if (dungeonKey === '오색룡의둥지') {
-    const roll = Math.random() * 100;
+// =========================
+// 오색룡의 둥지 확률 (밸런스 수정)
+// =========================
+else if (dungeonKey === '오색룡의둥지') {
+  const roll = Math.random() * 100;
 
-    if (roll < 25) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '좀비드래곤');
-    } else if (roll < 29) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '메탈드래곤');
-    } else if (roll < 33) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '대독드래곤');
-    } else if (roll < 36) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '빛의 군주 드래곤');
-    } else {
-      // 나머지 64% → 오색룡 5종 랜덤
-      const dragons = [
-        '번개드래곤',
-        '얼음드래곤',
-        '붉은화염드래곤',
-        '푸른화염드래곤',
-        '어둠드래곤'
-      ];
-      const pickName = dragons[Math.floor(Math.random() * dragons.length)];
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === pickName);
-    }
+  if (roll < 7) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '좀비드래곤');
+
+  } else if (roll < 11) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '메탈드래곤');
+
+  } else if (roll < 15) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '대독드래곤');
+
+  } else if (roll < 18) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '빛의 군주 드래곤');
+
+  } else if (roll < 20) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '어둠의 군주 드래곤');
+
+  } else if (roll < 21) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '군주 드래곤');
+
+  } else if (roll < 21.3) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '요리사응구드래곤');
+
+  } else if (roll < 21.8) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '메이드빵게드래곤');
+
+  } else if (roll < 21.9) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '에인절라스드래곤');
+
+  } else {
+    const dragons = [
+      '번개드래곤',
+      '얼음드래곤',
+      '붉은화염드래곤',
+      '푸른화염드래곤',
+      '어둠드래곤'
+    ];
+    const pickName = dragons[Math.floor(Math.random() * dragons.length)];
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === pickName);
   }
+}
 
   // =========================
   // 나머지 던전
@@ -828,6 +848,8 @@ function getMaterialDrops(monsterName){
     case '메탈드래곤': if(chance(30)) drops.push(['메탈조각',1]); break;
     case '대독드래곤': if(chance(30)) drops.push(['좀비드래곤의 가죽',1]); break;
     case '빛의 군주 드래곤': if(chance(30)) drops.push(['빛의 조각',1]); break;
+    case '어둠의 군주 드래곤': if(chance(40)) drops.push(['빛의 조각',1]); break;
+    case '군주 드래곤': if(chance(50)) drops.push(['빛의 조각',1]); break;
   }
 
  const hellGate = ['도살자','레오릭 왕','두리엘','안다리엘','벨리알','아즈모단','릴리트','바알','메피스토','디아블로','종말의 화신 디아블로'];
@@ -1270,7 +1292,7 @@ function inventoryText(player, page = 1){
 
   return player.inventory
     .slice(start, end)
-    .map((it, idx) => `${start + idx + 1}. ${it.name}${getItemStatText(it)} [${it.type}]`)
+    .map((it, idx) => `${start + idx + 1}. ${it.name} [${it.type}]`)
     .join('\n');
 }
 
@@ -1469,6 +1491,10 @@ function buildCraftButtons(){
   return rows.slice(0,5);
 }
 
+function shortItemName(name, max = 10){
+  if(!name) return '장비';
+  return name.length > max ? name.slice(0, max) + '…' : name;
+}
 
 function buildEquipmentButtons(player, page = 1){
   if(!player.inventory.length) return [];
@@ -1489,7 +1515,7 @@ function buildEquipmentButtons(player, page = 1){
 
     const equipBtn = new ButtonBuilder()
       .setCustomId(`equip_${absoluteIndex}`)
-      .setLabel(`${absoluteIndex + 1}. ${item.name || '장비'}`)
+      .setLabel(`${absoluteIndex + 1}. ${shortItemName(item.name, 8)}`)
       .setStyle(ButtonStyle.Primary);
 
     const sellBtn = new ButtonBuilder()
@@ -1521,7 +1547,7 @@ function buildEquipmentButtons(player, page = 1){
 
       new ButtonBuilder()
         .setCustomId(`equipment_page_${safePage}`)
-        .setLabel(`${safePage} / ${totalPages}`)
+        .setLabel(`${safePage}/${totalPages}`)
         .setStyle(ButtonStyle.Primary)
         .setDisabled(true),
 
