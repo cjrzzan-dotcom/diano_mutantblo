@@ -938,7 +938,7 @@ function getMaterialDrops(monsterName){
 
   if(monsterName === '도살자' && chance(40)) drops.push(['도살자의 도끼조각',1]);
   if(monsterName === '레오릭 왕' && chance(40)) drops.push(['레오릭왕의 뼈조각',1]);
-  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 살점',1]);
+  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 정수',1]);
   if(monsterName === '릴리트' && chance(35)) drops.push(['릴리트의 뿔',1]);
   if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) drops.push(['악마의 정수',1]);
   if(monsterName === '종말의 화신 디아블로' && chance(40)) drops.push(['디아블로의 뿔',1]);
@@ -1559,12 +1559,18 @@ function buildStatusButtons(player){
   )];
 }
 function buildShopButtons(){
-  return [new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('buy_small').setLabel('💊 10G').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('buy_mid').setLabel(' 🍗 30G').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('buy_big').setLabel(' 🍖 100G').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('buy_elixir').setLabel(' 🧪 3000G').setStyle(ButtonStyle.Secondary),
-  )];
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('buy_small').setLabel('💊 10G').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_mid').setLabel('🍗 30G').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_big').setLabel('🍖 100G').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_elixir').setLabel('🧪 3000G').setStyle(ButtonStyle.Secondary),
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('buy_big_10').setLabel('🍖×10 (1000G)').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_elixir').setLabel('🧪 3000G').setStyle(ButtonStyle.Secondary),
+    )
+  ];
 }
 
 function buildCraftButtons(){
@@ -2215,6 +2221,25 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
     });
     return;
   }
+
+if(id === 'buy_big_10'){
+  const cost = 1000; 
+
+  if(player.gold < cost){
+    await interaction.reply({ content:'골드가 부족합니다.', ephemeral:true });
+    return;
+  }
+
+  player.gold -= cost;
+  player.potions.big += 10;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content:`🍖 큰물약 10개 구매! (-${cost}G)`,
+    ephemeral:true
+  });
+}
 
   player.gold -= buy.price;
   player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
