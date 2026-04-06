@@ -1984,6 +1984,16 @@ if (id === 'status') {
     return;
   }
 
+  if (id === 'craft_list') {
+    await interaction.reply({
+      content: `🛠️ 제작목록\n${craftListText(player)}`,
+      components: buildCraftButtons(),
+      ephemeral: true
+    });
+    return;
+  }
+
+
 if (id === 'equipment_view') {
   await interaction.reply({
     content: `🧰 장비창\n\n${equipmentText(player)}\n\n🎒 인벤토리\n${inventoryText(player)}`,
@@ -1993,6 +2003,26 @@ if (id === 'equipment_view') {
   return;
 }
 
+if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
+  const parts = id.split('_');
+  const action = parts[1]; // prev or next
+  const currentPage = Number(parts[2]);
+
+  const totalPages = getInventoryTotalPages(player);
+
+  let nextPage = currentPage;
+  if (action === 'prev') nextPage--;
+  if (action === 'next') nextPage++;
+
+  if (nextPage < 1) nextPage = 1;
+  if (nextPage > totalPages) nextPage = totalPages;
+
+  await interaction.update({
+    content: `${equipmentText(player)}\n\n인벤토리 (${nextPage}/${totalPages})\n${inventoryText(player, nextPage)}`,
+    components: buildEquipmentButtons(player, nextPage)
+  });
+  return;
+}
 
 
 if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
@@ -2037,14 +2067,6 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
   return;
 }
 
-  if (id === 'craft_list') {
-    await interaction.reply({
-      content: `🛠️ 제작목록\n${craftListText(player)}`,
-      components: buildCraftButtons(),
-      ephemeral: true
-    });
-    return;
-  }
 
 if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
   const page = 1;
@@ -2060,26 +2082,6 @@ if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
 
 
 
-if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
-  const parts = id.split('_');
-  const action = parts[1]; // prev or next
-  const currentPage = Number(parts[2]);
-
-  const totalPages = getInventoryTotalPages(player);
-
-  let nextPage = currentPage;
-  if (action === 'prev') nextPage--;
-  if (action === 'next') nextPage++;
-
-  if (nextPage < 1) nextPage = 1;
-  if (nextPage > totalPages) nextPage = totalPages;
-
-  await interaction.update({
-    content: `${equipmentText(player)}\n\n인벤토리 (${nextPage}/${totalPages})\n${inventoryText(player, nextPage)}`,
-    components: buildEquipmentButtons(player, nextPage)
-  });
-  return;
-}
 
 
   if (id === 'enhance_view') {
