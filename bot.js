@@ -209,7 +209,7 @@ require('dotenv').config();
 
 const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 5분
 const AUTO_HUNT_MAX_CHARGES = 10;
-const AUTO_HUNT_TURNS = 5;
+const AUTO_HUNT_TURNS = 20;
 
 
 function endBattle(player) {
@@ -439,6 +439,11 @@ const DUNGEONS = {
     { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
     { name: '어둠의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [100,150], xp: 100 },
     { name: '드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
+    { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1300], xp: 200 },
+    { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [2000,5000], xp: 300 },
+    { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500 },
+
+
   ]},
   '지옥의관문': { type: 'wave', autoAllowed: false, waves: [
     { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 60 },
@@ -850,6 +855,8 @@ function getMaterialDrops(monsterName){
     case '빛의 군주 드래곤': if(chance(30)) drops.push(['빛의 조각',1]); break;
     case '어둠의 군주 드래곤': if(chance(40)) drops.push(['빛의 조각',1]); break;
     case '군주 드래곤': if(chance(50)) drops.push(['빛의 조각',1]); break;
+    case '에인절라스드래곤': drops.push(['부활권',5]); break;
+
   }
 
  const hellGate = ['도살자','레오릭 왕','두리엘','안다리엘','벨리알','아즈모단','릴리트','바알','메피스토','디아블로','종말의 화신 디아블로'];
@@ -905,9 +912,14 @@ function grantDrops(player, monster){
     lines.push(`💎 ${monster.element}석 +1`);
   }
 
-  for(const [name, amount] of getMaterialDrops(monster.name)){
+for(const [name, amount] of getMaterialDrops(monster.name)){
+  if(name === '부활권'){
+    player.reviveTickets += amount;
+    lines.push(`💖 부활권 +${amount}`);
+  } else {
     grantMaterial(player, name, amount, lines);
   }
+}
 
   let reviveChance = 0.3;
   if(monster.name.includes('드래곤')) reviveChance = 0.8;
@@ -915,7 +927,7 @@ function grantDrops(player, monster){
   if(monster.name.includes('군주') || monster.name.includes('디아블로') || monster.name.includes('메피스토') || monster.name.includes('바알') || monster.name.includes('릴리트')) reviveChance = 2;
   if(chance(reviveChance)){
     player.reviveTickets += 1;
-    lines.push('🎫 부활권 +1');
+    lines.push('💖 부활권 +1');
   }
 
   lines.push(`✨ 경험치 +${monster.xp}`);
@@ -2404,14 +2416,14 @@ if (id === 'auto') {
     const gainedGold = Math.max(0, player.gold - beforeGold);
     const gainedXp = Math.max(0, player.xp - beforeXp);
 
-    const reducedGold = Math.floor(gainedGold / 5);
-    const reducedXp = Math.floor(gainedXp / 5);
+    const reducedGold = Math.floor(gainedGold / 2);
+    const reducedXp = Math.floor(gainedXp / 2);
 
     player.gold = beforeGold + reducedGold;
     player.xp = beforeXp + reducedXp;
 
     if (player.run?.lastDrops) {
-      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.2);
+      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.4);
     }
 
     logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
