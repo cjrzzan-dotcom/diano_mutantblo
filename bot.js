@@ -439,8 +439,8 @@ const DUNGEONS = {
     { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
     { name: '어둠의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [100,150], xp: 100 },
     { name: '드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
-    { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1300], xp: 200 },
-    { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [2000,5000], xp: 300 },
+    { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
+    { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
     { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500 },
 
 
@@ -688,17 +688,17 @@ function isAllowedCategory(channel){
 }
 
 function createRunIfNeeded(player, dungeonKey){
-  if(player.run && player.run.dungeon === dungeonKey) return;
-  const d = DUNGEONS[dungeonKey];
-  player.run = {
-    dungeon:dungeonKey,
-    waveIndex:0,
-    kills:0,
-    target:d.type === 'random' ? getRandomMonster(dungeonKey) : getWaveMonster(dungeonKey, 0),
-    nextTarget:null,
-    isDown:false,
-    lastDrops:[],
-  };
+  if(!player.run || player.run.dungeon !== dungeonKey){
+    player.run = {
+      dungeon: dungeonKey,
+      waveIndex: 0,
+      target: null,
+      nextTarget: null,
+      kills: 0,
+      lastDrops: [],
+      isDown: false
+    };
+  }
 }
 
 function getFileCandidate(name){
@@ -1110,8 +1110,6 @@ if(chance(getCritChance(player))){
 }
 
 damage = Math.max(1, Math.floor(damage));
-
-result.logs.push(`✨ 장비 강화 보너스 발동! 추가피해 +${enhanceBonusDamage}`);
 
 if(enhanceBonusDamage > 0){
   result.logs.push(`✨ 장비 속성강화 보너스 발동! ${target.element} 추가피해 +${enhanceBonusDamage}`);
