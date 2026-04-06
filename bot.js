@@ -439,32 +439,32 @@ const DUNGEONS = {
     { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
   ]},
   '지옥의관문': { type: 'wave', autoAllowed: false, waves: [
-    { name: '도살자', hp: 750, atk: 48, def: 20, gold: [70,100], xp: 60 },
-    { name: '레오릭 왕', hp: 800, atk: 50, def: 22, gold: [85,115], xp: 70 },
-    { name: '두리엘', hp: 900, atk: 52, def: 24, gold: [100,135], xp: 84 },
-    { name: '안다리엘', hp: 950, atk: 54, def: 26, gold: [110,145], xp: 88 },
-    { name: '벨리알', hp: 1000, atk: 56, def: 28, gold: [125,165], xp: 96 },
-    { name: '아즈모단', hp: 1100, atk: 58, def: 30, gold: [135,180], xp: 105 },
-    { name: '릴리트', hp: 1300, atk: 60, def: 32, gold: [180,230], xp: 120 },
-    { name: '바알', hp: 1500, atk: 70, def: 35, gold: [200,250], xp: 130 },
-    { name: '메피스토', hp: 1700, atk: 90, def: 30, gold: [220,270], xp: 140 },
-    { name: '디아블로', hp: 2000, atk: 100, def: 40, gold: [250,300], xp: 150 },
-    { name: '종말의 화신 디아블로', hp: 4000, atk: 110, def: 45, gold: [400,520], xp: 220 },
+    { name: '도살자', hp: 750, atk: 60, def: 20, gold: [70,100], xp: 60 },
+    { name: '레오릭 왕', hp: 800, atk: 70, def: 22, gold: [85,115], xp: 70 },
+    { name: '두리엘', hp: 900, atk: 80, def: 24, gold: [100,135], xp: 84 },
+    { name: '안다리엘', hp: 950, atk: 90, def: 26, gold: [110,145], xp: 88 },
+    { name: '벨리알', hp: 1000, atk: 100, def: 28, gold: [125,165], xp: 96 },
+    { name: '아즈모단', hp: 1100, atk: 110, def: 30, gold: [135,180], xp: 105 },
+    { name: '릴리트', hp: 1300, atk: 120, def: 32, gold: [180,230], xp: 120 },
+    { name: '바알', hp: 1500, atk: 130, def: 35, gold: [200,250], xp: 130 },
+    { name: '메피스토', hp: 1700, atk: 140, def: 30, gold: [220,270], xp: 140 },
+    { name: '디아블로', hp: 2000, atk: 150, def: 40, gold: [250,300], xp: 150 },
+    { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 45, gold: [400,520], xp: 220 },
   ]},
   '지옥의심장부': { type: 'wave', autoAllowed: false, waves: [
-    { name: '우버 레오릭 왕', hp: 5000, atk: 110, def: 50, gold: [180,230], xp: 120 },
-    { name: '우버 안다리엘', hp: 5500, atk: 120, def: 55, gold: [220,280], xp: 135 },
-    { name: '우버 두리엘', hp: 6000, atk: 130, def: 60, gold: [250,310], xp: 145 },
-    { name: '우버 바알', hp: 6500, atk: 140, def: 65, gold: [320,390], xp: 165 },
-    { name: '우버 디아블로', hp: 7000, atk: 150, def: 70, gold: [350,420], xp: 175 },
-    { name: '우버 메피스토', hp: 7500, atk: 160, def: 75, gold: [370,450], xp: 182 },
-    { name: '우버 릴리트', hp: 8000, atk: 170, def: 80, gold: [400,490], xp: 190 },
-    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 180, def: 85, gold: [650,800], xp: 260 },
+    { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 50, gold: [180,230], xp: 120 },
+    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 55, gold: [220,280], xp: 135 },
+    { name: '우버 두리엘', hp: 6000, atk: 250, def: 60, gold: [250,310], xp: 145 },
+    { name: '우버 바알', hp: 6500, atk: 270, def: 65, gold: [320,390], xp: 165 },
+    { name: '우버 디아블로', hp: 7000, atk: 290, def: 70, gold: [350,420], xp: 175 },
+    { name: '우버 메피스토', hp: 7500, atk: 310, def: 75, gold: [370,450], xp: 182 },
+    { name: '우버 릴리트', hp: 8000, atk: 350, def: 80, gold: [400,490], xp: 190 },
+    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 85, gold: [650,800], xp: 260 },
   ]},
   '지옥의왕좌': { type: 'wave', autoAllowed: false, waves: [
-    { name: '증오의 군주 디아블로', hp: 15000, atk: 200, def: 90, gold: [500,620], xp: 220 },
-    { name: '파괴의 군주 디아블로', hp: 20000, atk: 250, def: 95, gold: [560,700], xp: 240 },
-    { name: '만악의 군주 디아블로', hp: 25000, atk: 300, def: 100, gold: [700,900], xp: 300 },
+    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 90, gold: [500,620], xp: 220 },
+    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 95, gold: [560,700], xp: 240 },
+    { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 100, gold: [700,900], xp: 300 },
   ]},
 };
 
@@ -1413,34 +1413,47 @@ function buildCraftButtons(){
   }
   return rows.slice(0,5);
 }
+
+
 function buildEquipmentButtons(player){
   if(!player.inventory.length) return [];
 
   const rows = [];
   let currentRow = new ActionRowBuilder();
+  let btnCount = 0;
 
   player.inventory.forEach((item, i) => {
 
-    currentRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId(`equip_${i}`)
-        .setLabel(`${i+1}. ${item.name || '장비'}`)
-        .setStyle(ButtonStyle.Primary)
-    );
+    const equipBtn = new ButtonBuilder()
+      .setCustomId(`equip_${i}`)
+      .setLabel(`${i+1}. ${item.name || '장비'}`)
+      .setStyle(ButtonStyle.Primary);
 
-    // 버튼 5개 제한
-    if(currentRow.components.length >= 5){
+    const sellBtn = new ButtonBuilder()
+      .setCustomId(`sell_${i}`)
+      .setLabel('💰')
+      .setStyle(ButtonStyle.Success);
+
+    // 버튼 추가
+    currentRow.addComponents(equipBtn, sellBtn);
+    btnCount += 2;
+
+    // 4개까지만 넣고 줄 바꿈 (안전)
+    if(btnCount >= 4){
       rows.push(currentRow);
       currentRow = new ActionRowBuilder();
+      btnCount = 0;
     }
   });
 
+  // 남은 버튼
   if(currentRow.components.length > 0){
     rows.push(currentRow);
   }
 
   return rows;
 }
+
 function buildEnhanceItemButtons(player){
   const rows = [];
 
