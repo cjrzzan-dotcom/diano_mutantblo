@@ -666,6 +666,10 @@ else if (dungeonKey === '오색룡의둥지') {
   else {
     base = pick(DUNGEONS[dungeonKey].monsters);
   }
+if (!base) {
+  console.log('base 없음, fallback 사용. dungeonKey =', dungeonKey);
+  base = pick(DUNGEONS[dungeonKey].monsters);
+}
 
   return {
     ...base,
