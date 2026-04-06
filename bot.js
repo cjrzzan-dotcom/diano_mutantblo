@@ -693,17 +693,11 @@ function isAllowedCategory(channel){
 
 function createRunIfNeeded(player, dungeonKey){
   if(!player.run || player.run.dungeon !== dungeonKey){
-    let firstTarget = getWaveMonster(dungeonKey, 0);
-
-    if(!firstTarget){
-      firstTarget = getWaveMonster(dungeonKey, 1);
-    }
-
     player.run = {
       dungeon: dungeonKey,
-      waveIndex: firstTarget ? 1 : 0,
-      target: firstTarget || null,
-      nextTarget: null,
+      waveIndex: 0,
+      target: null,
+      nextTarget: getWaveMonster(dungeonKey, 0),
       kills: 0,
       lastDrops: [],
       isDown: false
