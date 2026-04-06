@@ -1152,7 +1152,7 @@ function performAttack(player, dungeonKey){
     result.logs.push('✨ 부활 시간이 지나 자동으로 부활했습니다.');
   }
 
-  if(!player.run) createRunIfNeeded(player, dungeonKey);
+  createRunIfNeeded(player, dungeonKey);
 
   if(player.run.isDown){
     result.logs.push('쓰러진 상태입니다. 먼저 부활권을 사용하거나 부활 시간을 기다리세요.');
@@ -1832,11 +1832,7 @@ await saveData(gameData);
     await message.reply('초기화 완료');
     return;
   }
-  if(Date.now() < player.respawnAt){
-    const min = Math.ceil((player.respawnAt - Date.now())/60000);
-    await message.reply(`💀 아직 사망 페널티 중입니다. 약 ${min}분 후 다시 가능합니다.`);
-    return;
- }
+
   if(command === '!상태'){
     await saveData(gameData);
     await message.reply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
@@ -1902,6 +1898,13 @@ await saveData(gameData);
     return;
   }
  if(command === '!자동'){
+
+  if(Date.now() < player.respawnAt){
+    const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
+    await message.reply(`💀 아직 사망 패널티 중입니다. 약 ${min}분 후 다시 사냥할 수 있습니다.`);
+    return;
+  }
+
 refreshAutoHuntCharges(player);
 
 if (player.autoHuntCharges <= 0) {
@@ -1984,6 +1987,13 @@ if(dropLines){
 const dungeonKey = getDungeonByChannel(message.channel.id);
 
 if (command === '!시작') {
+  
+  if(Date.now() < player.respawnAt){
+    const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
+    await message.reply(`💀 아직 사망 패널티 중입니다. 약 ${min}분 후 다시 사냥할 수 있습니다.`);
+    return;
+  }
+
   const isTown = message.channel.id === TOWN_CHANNEL_ID;
 
 
@@ -2051,6 +2061,15 @@ if(revived) await saveData(gameData);
     });
     return;
   }
+
+if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
+  const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
+  await interaction.reply({
+    content: `💀 아직 사망 패널티 중입니다. 약 ${min}분 후 다시 사냥할 수 있습니다.`,
+    ephemeral: true
+  });
+  return;
+}
 
 if (id.startsWith('private_start_')) {
   const parts = interaction.customId.split('_');
