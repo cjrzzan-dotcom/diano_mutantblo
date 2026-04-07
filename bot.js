@@ -697,7 +697,7 @@ function getWaveMonster(dungeonKey, idx){
 
   let base = null;
 
-else if (dungeonKey === '드높은천상') {
+ if (dungeonKey === '드높은천상') {
   const roll = Math.random() * 100;
 
   if (roll < 45) {
@@ -720,7 +720,7 @@ else if (dungeonKey === '드높은천상') {
   // =========================
   // 오색룡의 둥지 확률
   // =========================
-  if (dungeonKey === '오색룡의둥지') {
+else  if (dungeonKey === '오색룡의둥지') {
     const roll = Math.random() * 100;
 
     if (roll < 7) {
