@@ -339,6 +339,7 @@ const DUNGEON_CHANNELS_PROD = {
   '1487953115024982076': '지옥의관문',
   '1487953176677060780': '지옥의심장부',
   '1487953322160816148': '지옥의왕좌',
+'1490976926762926100': '드높은천상',
 };
 
 const DUNGEON_CHANNELS_TEST = {
@@ -380,7 +381,7 @@ const MATERIALS = [
   '슬라임젤리', '늑대가죽', '고블린뼈조각', '오우거가죽', '작은 용비늘', '낡은장비조각',
   '드래곤 비늘', '드래곤 발톱', '번개조각', '얼음조각', '붉은화염조각', '푸른화염조각', '어둠조각',
   '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각', '암흑의 조각',
-  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각'
+  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','천상의 조각','천상석',
 ];
 
 const CRAFTS = [
@@ -413,6 +414,8 @@ const CRAFTS = [
 { id:'lilith_ring', label:'릴리트의 반지', type:'ring', materials:{ '릴리트의 뿔':20 }, ringRandom:true, base:{atk:0,def:0} },
 { id:'end_sword', label:'종말의검', type:'weapon', materials:{ '디아블로의 뿔':20 }, base:{atk:88,def:0} },
 
+{ id:'lilith_sword', label:'천상의 심판', type:'weapon', materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
+{ id:'end_armor', label:'천상의 갑주', type:'armor', materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
 
 
 ];
@@ -469,10 +472,17 @@ const DUNGEONS = {
     { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [3000,3200], xp: 190 },
     { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [3500,4000], xp: 260 },
   ]},
+'드높은천상': { type: 'random', autoAllowed: false, monsters: [
+  { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [3200,3600], xp: 210 },
+  { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [3400,3800], xp: 220 },
+  { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [4200,4800], xp: 260 },
+  { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [5200,6000], xp: 320 },
+  { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [8000,10000], xp: 500 },
+]},
   '지옥의왕좌': { type: 'wave', autoAllowed: false, waves: [
-    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 100, gold: [500,620], xp: 220 },
-    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 100, gold: [560,700], xp: 240 },
-    { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 100, gold: [700,900], xp: 300 },
+    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 120, gold: [10000,10000], xp: 300 },
+    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 120, gold: [10000,12000], xp: 500 },
+    { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 120, gold: [13000,15000], xp: 800 },
   ]},
 };
 
@@ -686,6 +696,26 @@ function getWaveMonster(dungeonKey, idx){
   if(!dungeon) return null;
 
   let base = null;
+
+else if (dungeonKey === '드높은천상') {
+  const roll = Math.random() * 100;
+
+  if (roll < 45) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '아우리엘');
+
+  } else if (roll < 84.9) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '이테리엘');
+
+  } else if (roll < 94.9) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '말티엘');
+
+  } else if (roll < 99.9) {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '임페리우스');
+
+  } else {
+    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '티리엘');
+  }
+}
 
   // =========================
   // 오색룡의 둥지 확률
@@ -933,6 +963,14 @@ function getMaterialDrops(monsterName){
     case '암흑의 군주 드래곤': if(chance(40)) drops.push(['암흑의 조각',1]); break;
     case '창조 드래곤': if(chance(50)) drops.push(['빛의 조각',3]); break;
     case '에인절라스드래곤': drops.push(['부활권',5]); break;
+    case '티리엘': drops.push(['천상의 조각',1]); break;
+
+const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','티리엘'];
+
+if(heavenSet.includes(monsterName)){
+  if(chance(40)) drops.push(['천상석',1]);
+}
+
 
   }
 
