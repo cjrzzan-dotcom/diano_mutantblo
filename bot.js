@@ -1216,8 +1216,16 @@ const mult = getElementMultiplier(player.attributes, target.element);
 const attrBonus = getAttributeBonus(player.attributes);
 const enhanceBonusDamage = getElementEnhanceBonusDamage(player);
 
-let damage = (getAttackPower(player) + attrBonus - target.def + enhanceBonusDamage) * mult;
+let damage = (getAttackPower(player) * mult) + attrBonus - target.def + enhanceBonusDamage;
 let isCrit = false;
+
+
+if (mult > 1) {
+  result.logs.push(`🔥 속성 우위! 데미지 ${mult}배 적용`);
+} else if (mult < 1) {
+  result.logs.push(`💧 속성 열세! 데미지 ${mult}배 적용`);
+}
+
 
 if(chance(getCritChance(player))){
   damage *= 1.5 + (getCritDamage(player)/100);
