@@ -460,19 +460,19 @@ const DUNGEONS = {
     { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
   ]},
   '지옥의심장부': { type: 'wave', autoAllowed: false, waves: [
-    { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [180,230], xp: 120 },
-    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [220,280], xp: 135 },
-    { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [250,310], xp: 145 },
-    { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [320,390], xp: 165 },
-    { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [350,420], xp: 175 },
-    { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [370,450], xp: 182 },
-    { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [400,490], xp: 190 },
-    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [650,800], xp: 260 },
+    { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [1800,2000], xp: 120 },
+    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [2000,2200], xp: 135 },
+    { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [2200,2400], xp: 145 },
+    { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [2400,2600], xp: 165 },
+    { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [2600,2800], xp: 175 },
+    { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [2800,3000], xp: 182 },
+    { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [3000,3200], xp: 190 },
+    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [3500,4000], xp: 260 },
   ]},
   '지옥의왕좌': { type: 'wave', autoAllowed: false, waves: [
-    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 110, gold: [500,620], xp: 220 },
-    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 120, gold: [560,700], xp: 240 },
-    { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 130, gold: [700,900], xp: 300 },
+    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 100, gold: [500,620], xp: 220 },
+    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 100, gold: [560,700], xp: 240 },
+    { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 100, gold: [700,900], xp: 300 },
   ]},
 };
 
@@ -807,7 +807,7 @@ function createRingStats(){
   const picked = [];
 
   while(picked.length < count){
-    const k = pick(당구);
+    const k = pick(pool);
     if(!picked.includes(k)) picked.push(k);
   }
 
@@ -2533,6 +2533,7 @@ if (id === 'revive') {
   player.reviveTickets -= 1;
   player.hp = Math.max(1, Math.floor(player.maxHp));
   player.run.isDown = false;
+  player.respawnAt = 0; // 이거 추가
   await saveData(gameData);
 
   await interaction.update(
