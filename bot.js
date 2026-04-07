@@ -1598,21 +1598,6 @@ function craftListTextByType(player, type){
   }).join('\n');
 }
 
-function getCraftIdByLabel(label){
-  const f = CRAFTS.find(c => c.label === label);
-  return f ? f.id : null;
-}
-
-function buildCraftCategoryButtons(){
-  return [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('craft_cat_weapon').setLabel('⚔️ 무기').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId('craft_cat_armor').setLabel('🛡️ 갑옷').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('craft_cat_ring').setLabel('💍 반지').setStyle(ButtonStyle.Success),
-    )
-  ];
-}
-
 function buildCraftButtonsByType(type){
   const filtered = CRAFTS.filter(c => c.type === type);
   const rows = [];
@@ -1632,6 +1617,22 @@ function buildCraftButtonsByType(type){
 
   return rows.slice(0, 5);
 }
+
+function getCraftIdByLabel(label){
+  const f = CRAFTS.find(c => c.label === label);
+  return f ? f.id : null;
+}
+
+function buildCraftCategoryButtons(){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('craft_cat_weapon').setLabel('⚔️ 무기').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId('craft_cat_armor').setLabel('🛡️ 갑옷').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('craft_cat_ring').setLabel('💍 반지').setStyle(ButtonStyle.Success),
+    )
+  ];
+}
+
 
 
 function shortItemName(name, max = 10){
@@ -1901,10 +1902,13 @@ await saveData(gameData);
   return;
 }
   
-  if(command === '!제작목록'){
-    await message.reply({ content:`🛠️ 제작목록\n${craftListText(player)}`, components:buildCraftButtons() });
-    return;
-  }
+if(command === '!제작목록'){
+  await message.reply({
+    content: `🛠️ 제작 카테고리를 선택하세요.`,
+    components: buildCraftCategoryButtons()
+  });
+  return;
+}
   if(command === '!제작'){
     const craftId = getCraftIdByLabel(arg);
     if(!craftId){
@@ -2197,14 +2201,40 @@ if (id === 'status') {
     return;
   }
 
-  if (id === 'craft_list') {
-    await interaction.reply({
-      content: `🛠️ 제작목록\n${craftListText(player)}`,
-      components: buildCraftButtons(),
-      ephemeral: true
-    });
-    return;
-  }
+if (id === 'craft_list') {
+  await interaction.reply({
+    content: `🛠️ 제작 카테고리를 선택하세요.`,
+    components: buildCraftCategoryButtons(),
+    ephemeral: true
+  });
+  return;
+}
+if (id === 'craft_cat_weapon') {
+  await interaction.reply({
+    content: `⚔️ 무기 제작목록\n${craftListTextByType(player, 'weapon')}`,
+    components: buildCraftButtonsByType('weapon'),
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'craft_cat_armor') {
+  await interaction.reply({
+    content: `🛡️ 갑옷 제작목록\n${craftListTextByType(player, 'armor')}`,
+    components: buildCraftButtonsByType('armor'),
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'craft_cat_ring') {
+  await interaction.reply({
+    content: `💍 반지 제작목록\n${craftListTextByType(player, 'ring')}`,
+    components: buildCraftButtonsByType('ring'),
+    ephemeral: true
+  });
+  return;
+}
 
 
 if (id === 'equipment_view') {
