@@ -2268,6 +2268,33 @@ if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
   return;
 }
 
+if (id === 'buy_big_10') {
+  const cost = 1000;
+
+  if (player.gold < cost) {
+    await interaction.reply({
+      content: '❌ 골드가 부족합니다. (큰물약 10개 1000G)',
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.gold -= cost;
+  player.potions.big = (player.potions.big || 0) + 10;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content:
+`✅ 큰물약 10개 구매 완료!
+
+💰 남은 골드: ${player.gold}
+🧪 보유 물약:
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
+    ephemeral: true
+  });
+  return;
+}
 
 if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
   const shopMap = {
@@ -2278,6 +2305,7 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
   };
 
   const buy = shopMap[id];
+
   if (!buy) {
     await interaction.reply({
       content: '구매할 수 없는 아이템입니다.',
@@ -2293,25 +2321,6 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
     });
     return;
   }
-
-if(id === 'buy_big_10'){
-  const cost = 1000; 
-
-  if(player.gold < cost){
-    await interaction.reply({ content:'골드가 부족합니다.', ephemeral:true });
-    return;
-  }
-
-  player.gold -= cost;
-  player.potions.big += 10;
-
-  await saveData(gameData);
-
-  await interaction.reply({
-    content:`🍖 큰물약 10개 구매! (-${cost}G)`,
-    ephemeral:true
-  });
-}
 
   player.gold -= buy.price;
   player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
@@ -2329,6 +2338,9 @@ if(id === 'buy_big_10'){
   });
   return;
 }
+
+
+
 
 
 if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
