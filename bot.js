@@ -404,7 +404,7 @@ const CRAFTS = [
   { id:'metal_armor', label:'장군넴아머', type:'armor', materials:{ '낡은장비조각':8, '메탈조각':10 }, base:{atk:0,def:38} },
   { id:'bald_armor', label:'대머리갑옷', type:'armor', materials:{ '낡은장비조각':9, '좀비드래곤의 가죽':5 }, base:{atk:0,def:43} },
   { id:'light_sword', label:'빛의검', type:'weapon', materials:{ '낡은장비조각':10, '빛의 조각':5 }, base:{atk:45,def:0} },
-  { id:'light_armor', label:'암흑갑옷', type:'weapon', materials:{ '낡은장비조각':10, '암흑의 조각':5 }, base:{atk:0,def:50} },
+  { id:'light_armor', label:'암흑갑옷', type:'armor', materials:{ '낡은장비조각':10, '암흑의 조각':5 }, base:{atk:0,def:50} },
 
 { id:'butcher_axe', label:'도살자의도끼', type:'weapon', materials:{ '고급장비조각':10, '도살자의 도끼조각':15 }, base:{atk:52,def:0} },
 { id:'leoric_armor', label:'레오릭왕의갑옷', type:'armor', materials:{ '고급장비조각':15, '레오릭왕의 뼈조각':15 }, base:{atk:0,def:55} },
@@ -1567,7 +1567,7 @@ function buildShopButtons(){
       new ButtonBuilder().setCustomId('buy_small').setLabel('💊 10G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_mid').setLabel('🍗 30G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_big').setLabel('🍖 100G').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('buy_elixir').setLabel('🧪 3000G').setStyle(ButtonStyle.Secondary),
+  
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('buy_big_10').setLabel('🍖×10 (1000G)').setStyle(ButtonStyle.Secondary),
@@ -2194,6 +2194,7 @@ if (id === 'status') {
 💊 작은물약 10G
 🍗 중간물약 30G
 🍖 큰물약 100G
+🍖 x 10 큰물약 1000G
 🧪 엘릭서 3000G`,
       components: buildShopButtons(),
       ephemeral: true
