@@ -207,9 +207,13 @@ const client = new Client({
 
 require('dotenv').config();
 
-const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 5분
-const AUTO_HUNT_MAX_CHARGES = 20;
+const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 1분
+const AUTO_HUNT_MAX_CHARGES = 50;
 const AUTO_HUNT_TURNS = 500;
+
+
+const ATTRIBUTE_MAX = 10;
+
 
 
 function endBattle(player) {
@@ -311,6 +315,9 @@ function getItemSellPrice(item){
 
   const enhanceMap = item.elementEnhance || {};
   const enhanceTotal = Object.values(enhanceMap).reduce((a, b) => a + (b || 0), 0);
+
+
+
 
   const statValue =
     atk * 8 +
@@ -1059,31 +1066,23 @@ function handleNoReviveDeath(player){
 function getEnhancePreviewText(player, item){
   if(!item) return '선택한 아이템이 없습니다.';
 
-  const stoneCosts = [1, 2, 4, 8, 10];
-  const goldCosts = [100, 150, 200, 300, 500];
-  const chances = [100, 75, 50, 35, 15];
+  const goldCosts = [100, 150, 250, 400, 700, 1000, 1500, 2200, 3000, 4500];
+  const chances =   [100, 95, 90, 80, 70, 55, 40, 30, 20, 10];
+  const maxLevel = 10;
 
-  const enhanceMap = item.elementEnhance || {};
+  const current = item.enhanceLevel || 0;
 
-  const lines = [
-    `선택 아이템: ${item.name}${getItemStatText(item)}${getElementEnhanceText(item)}`,
-    ``
-  ];
-
-  for(const elem of ELEMENTS){
-    const current = enhanceMap[elem] || 0;
-
-    if(current >= 5){
-      lines.push(`${elem}: ${current}강 (최대)`);
-      continue;
-    }
-
-    lines.push(
-      `${elem}: 현재 ${current}강 → 다음 ${current+1}강 / 비용 ${elem}석 ${stoneCosts[current]}개, ${goldCosts[current]}G / 성공 ${chances[current]}%`
-    );
+  if(current >= maxLevel){
+    return `선택 아이템: ${item.name}${getItemStatText(item)}\n현재 강화: +${current}\n최대 강화입니다.`;
   }
 
-  return lines.join('\n');
+  return [
+    `선택 아이템: ${item.name}${getItemStatText(item)}`,
+    `현재 강화: +${current}`,
+    `다음 강화: +${current + 1}`,
+    `비용: ${goldCosts[current]}G`,
+    `성공 확률: ${chances[current]}%`
+  ].join('\n');
 }
 
 function getTotalEquippedElementEnhance(player){
@@ -1332,71 +1331,63 @@ function equipItemByIndex(player, idx){
   player.inventory.splice(idx,1);
   return `✅ ${item.name} 장착 완료!`;
 }
-function tryEnhanceItem(player, item, elem){
+
+
+function getEnhanceLevelText(item){
+  if(!item || !item.enhanceLevel) return '';
+  return ` [+${item.enhanceLevel}]`;
+}
+
+
+function tryEnhanceItem(player, item){
   if(!item) return '없는 아이템입니다.';
-  if(!item.elementEnhance) item.elementEnhance = {};
 
-  const current = item.elementEnhance[elem] || 0;
+  if(item.enhanceLevel === undefined) item.enhanceLevel = 0;
 
-  // 현재 붙은 속성 종류 수
-  const activeElements = Object.entries(item.elementEnhance)
-    .filter(([, value]) => value > 0)
-    .map(([key]) => key);
+  const current = item.enhanceLevel;
 
-  const isNewElement = current <= 0;
+  const goldCosts = [100,150,250,400,700,1000,1500,2200,3000,4500];
+  const chances   = [1.00,0.95,0.90,0.80,0.70,0.55,0.40,0.30,0.20,0.10];
+  const maxLevel = 10;
 
-  // 새 속성을 붙이려는데 이미 2종류 있으면 막기
-  if(isNewElement && activeElements.length >= 2){
-    return `이 아이템은 속성을 최대 2개까지만 강화할 수 있습니다. (현재: ${activeElements.join(', ')})`;
-  }
+  if(current >= maxLevel) return '이미 최대 강화입니다.';
 
-  const stoneCosts = [1, 2, 4, 8, 10];
-  const goldCosts = [100, 150, 200, 300, 500];
-  const chances = [1.00, 0.75, 0.50, 0.35, 0.15];
-
-  if(current >= 5) return '이미 최대 강화입니다.';
-
-  const needStone = stoneCosts[current];
   const needGold = goldCosts[current];
   const successChance = chances[current];
 
-  if((player.stones[elem] || 0) < needStone){
-    return `${elem}석이 부족합니다. (${needStone}개 필요)`;
-  }
   if(player.gold < needGold){
-    return `골드가 부족합니다. (${needGold}G 필요)`;
+    return `골드 부족 (${needGold}G 필요)`;
   }
 
-  player.stones[elem] -= needStone;
   player.gold -= needGold;
 
   if(Math.random() > successChance){
-    return `❌ ${item.name} ${elem} 강화 실패... (소모: ${elem}석 ${needStone}개, ${needGold}G)`;
+    return `❌ ${item.name} 강화 실패...`;
   }
 
-  item.elementEnhance[elem] = current + 1;
+  item.enhanceLevel += 1;
 
-  if(item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
-  if(item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
+  if(item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 3;
+  if(item.type === 'armor') item.defBonus = (item.defBonus || 0) + 3;
   if(item.type === 'ring'){
-    const p = pick(['critChanceBonus', 'critDamageBonus', 'dodgeBonus']);
-    item[p] = (item[p] || 0) + 1;
+    const p = pick(['critChanceBonus','critDamageBonus','dodgeBonus']);
+    item[p] = (item[p] || 0) + 2;
   }
 
-  return `🔨 ${item.name} ${elem} 강화 성공! (${current}강 → ${current + 1}강)`;
+  return `🔨 ${item.name} 강화 성공! (+${item.enhanceLevel})`;
 }
 
 function equipmentText(player){
   const weapon = player.equipment.weapon
-    ? `${player.equipment.weapon.name}${getItemStatText(player.equipment.weapon)}${getElementEnhanceText(player.equipment.weapon)}`
+    ? `${player.equipment.weapon.name}${getEnhanceLevelText(player.equipment.weapon)}${getItemStatText(player.equipment.weapon)}`
     : '없음';
 
   const armor = player.equipment.armor
-    ? `${player.equipment.armor.name}${getItemStatText(player.equipment.armor)}${getElementEnhanceText(player.equipment.armor)}`
+    ? `${player.equipment.armor.name}${getEnhanceLevelText(player.equipment.armor)}${getItemStatText(player.equipment.armor)}`
     : '없음';
 
   const ring = player.equipment.ring
-    ? `${player.equipment.ring.name}${getItemStatText(player.equipment.ring)}${getElementEnhanceText(player.equipment.ring)}`
+    ? `${player.equipment.ring.name}${getEnhanceLevelText(player.equipment.ring)}${getItemStatText(player.equipment.ring)}`
     : '없음';
 
   return [
@@ -1804,15 +1795,6 @@ function buildEnhanceItemButtons(player){
 
   return rows;
 }
-function buildEnhanceElementButtons(){
-  return [new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('enhance_elem_화염').setLabel('화염').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId('enhance_elem_얼음').setLabel('얼음').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('enhance_elem_번개').setLabel('번개').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId('enhance_elem_자연').setLabel('자연').setStyle(ButtonStyle.Success),
-    new ButtonBuilder().setCustomId('enhance_elem_어둠').setLabel('어둠').setStyle(ButtonStyle.Secondary),
-  )];
-}
 
 function buildIntroPayload(dungeonKey, target){
   if(!target){
@@ -1974,26 +1956,38 @@ if(command === '!제작목록'){
     await message.reply(text);
     return;
   }
-  if(command === '!강화'){
-    if(!arg || !ELEMENTS.includes(arg)){
-      await message.reply(`사용법: !강화 ${ELEMENTS.join('|')}`);
-      return;
-    }
-    const active = Object.keys(player.attributes);
-    if(!player.attributes[arg] && active.length >= 2){
-      await message.reply('속성은 최대 2개까지만 강화할 수 있습니다.');
-      return;
-    }
-    if((player.stones[arg]||0) < 1){
-      await message.reply(`${arg}석이 부족합니다.`);
-      return;
-    }
-    player.stones[arg] -= 1;
-    player.attributes[arg] = (player.attributes[arg] || 0) + 1;
-    await saveData(gameData);
-    await message.reply(`💎 ${arg} 강화 성공! 현재 ${arg}+${player.attributes[arg]}`);
+if(command === '!강화'){
+  if(!arg || !ELEMENTS.includes(arg)){
+    await message.reply(`사용법: !강화 ${ELEMENTS.join('|')}`);
     return;
   }
+
+  const active = Object.entries(player.attributes)
+    .filter(([,v]) => v > 0)
+    .map(([k]) => k);
+
+  if((player.attributes[arg] || 0) <= 0 && active.length >= 2){
+    await message.reply('속성은 최대 2개까지만 강화할 수 있습니다.');
+    return;
+  }
+
+  if((player.attributes[arg] || 0) >= ATTRIBUTE_MAX){
+    await message.reply(`❌ ${arg} 속성은 최대 +${ATTRIBUTE_MAX}입니다.`);
+    return;
+  }
+
+  if((player.stones[arg] || 0) < 1){
+    await message.reply(`${arg}석이 부족합니다.`);
+    return;
+  }
+
+  player.stones[arg] -= 1;
+  player.attributes[arg] = (player.attributes[arg] || 0) + 1;
+
+  await saveData(gameData);
+  await message.reply(`💎 ${arg} 강화 성공! 현재 ${arg}+${player.attributes[arg]} / 최대 ${ATTRIBUTE_MAX}`);
+  return;
+}
  if(command === '!자동'){
 
   if(Date.now() < player.respawnAt){
@@ -2405,75 +2399,102 @@ if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
 
 
 
-  if (id === 'enhance_view') {
-    player.selectedEnhanceTarget = null;
-    await saveData(gameData);
+if (id === 'enhance_view') {
+  player.selectedEnhanceTarget = null;
+  await saveData(gameData);
+  await interaction.reply({
+    content: `🔨 강화할 아이템을 선택하세요.\n\n${inventoryText(player)}\n\n강화는 골드만 소모됩니다.`,
+    components: buildEnhanceItemButtons(player),
+    ephemeral: true
+  });
+  return;
+}
+
+if (id.startsWith('enhance_item_')) {
+  const idx = Number(id.replace('enhance_item_', ''));
+  const item = player.inventory[idx];
+
+  if (!item) {
     await interaction.reply({
-      content: `강화할 아이템 선택\n${inventoryText(player)}\n\n보유 속성석: ${Object.entries(player.stones).map(([k,v]) => `${k}${v}`).join(' / ')}`,
-      components: buildEnhanceItemButtons(player),
+      content: '선택한 아이템이 없습니다.',
       ephemeral: true
     });
     return;
   }
 
-  if (id.startsWith('enhance_item_')) {
-    const idx = Number(id.replace('enhance_item_', ''));
-    player.selectedEnhanceTarget = { type: 'inventory', index: idx };
-    await saveData(gameData);
+  const text = tryEnhanceItem(player, item);
+  await saveData(gameData);
 
-    const item = player.inventory[idx];
+  await interaction.reply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'enhance_equipped_weapon') {
+  const item = player.equipment.weapon;
+
+  if (!item) {
     await interaction.reply({
-      content: `${getEnhancePreviewText(player, item)}\n\n속성을 선택하세요.`,
-      components: buildEnhanceElementButtons(),
+      content: '착용 무기가 없습니다.',
       ephemeral: true
     });
     return;
   }
 
-  if (id === 'enhance_equipped_weapon') {
-    player.selectedEnhanceTarget = { type: 'equipped', slot: 'weapon' };
-    await saveData(gameData);
+  const text = tryEnhanceItem(player, item);
+  await saveData(gameData);
 
+  await interaction.reply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'enhance_equipped_armor') {
+  const item = player.equipment.armor;
+
+  if (!item) {
     await interaction.reply({
-      content: `${getEnhancePreviewText(player, player.equipment.weapon)}\n\n속성을 선택하세요.`,
-      components: buildEnhanceElementButtons(),
+      content: '착용 갑옷이 없습니다.',
       ephemeral: true
     });
     return;
   }
 
-  if (id === 'enhance_equipped_armor') {
-    player.selectedEnhanceTarget = { type: 'equipped', slot: 'armor' };
-    await saveData(gameData);
+  const text = tryEnhanceItem(player, item);
+  await saveData(gameData);
 
+  await interaction.reply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'enhance_equipped_ring') {
+  const item = player.equipment.ring;
+
+  if (!item) {
     await interaction.reply({
-      content: `${getEnhancePreviewText(player, player.equipment.armor)}\n\n속성을 선택하세요.`,
-      components: buildEnhanceElementButtons(),
+      content: '착용 반지가 없습니다.',
       ephemeral: true
     });
     return;
   }
 
-  if (id === 'enhance_equipped_ring') {
-    player.selectedEnhanceTarget = { type: 'equipped', slot: 'ring' };
-    await saveData(gameData);
+  const text = tryEnhanceItem(player, item);
+  await saveData(gameData);
 
-    await interaction.reply({
-      content: `${getEnhancePreviewText(player, player.equipment.ring)}\n\n속성을 선택하세요.`,
-      components: buildEnhanceElementButtons(),
-      ephemeral: true
-    });
-    return;
-  }
+  await interaction.reply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
+    ephemeral: true
+  });
+  return;
+}
 
-  if (id.startsWith('enhance_elem_')) {
-    if (!player.selectedEnhanceTarget) {
-      await interaction.reply({
-        content: '먼저 강화할 아이템을 선택하세요.',
-        ephemeral: true
-      });
-      return;
-    }
 
     const elem = id.replace('enhance_elem_', '');
     const item = getEnhanceTargetItem(player);
@@ -2585,6 +2606,68 @@ if (id === 'revive') {
   await interaction.update(
     buildBattlePayload(player, interaction.channelId, player.run.dungeon, '💖 부활권 사용! 부활했습니다.')
   );
+  return;
+}
+
+if (id.startsWith('attr_')) {
+  const map = {
+    attr_fire: '화염',
+    attr_ice: '얼음',
+    attr_lightning: '번개',
+    attr_nature: '자연',
+    attr_dark: '어둠'
+  };
+
+  const key = map[id];
+  if (!key) return;
+
+  const active = Object.entries(player.attributes)
+    .filter(([,v]) => v > 0)
+    .map(([k]) => k);
+
+  if((player.attributes[key] || 0) <= 0 && active.length >= 2){
+    await interaction.reply({
+      content: '속성은 최대 2개까지만 강화할 수 있습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if((player.attributes[key] || 0) >= ATTRIBUTE_MAX){
+    await interaction.reply({
+      content: `❌ ${key} 속성은 최대 +${ATTRIBUTE_MAX}입니다.`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  if ((player.stones[key] || 0) <= 0) {
+    await interaction.reply({
+      content: `❌ ${key} 속성석이 부족합니다.`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.stones[key] -= 1;
+  player.attributes[key] = (player.attributes[key] || 0) + 1;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content:
+`✨ ${key} 속성 강화 성공!
+
+현재 속성:
+🔥 ${player.attributes.화염 || 0}
+❄️ ${player.attributes.얼음 || 0}
+⚡ ${player.attributes.번개 || 0}
+🌿 ${player.attributes.자연 || 0}
+🌑 ${player.attributes.어둠 || 0}
+
+(속성당 최대 +${ATTRIBUTE_MAX})`,
+    ephemeral: true
+  });
   return;
 }
 
