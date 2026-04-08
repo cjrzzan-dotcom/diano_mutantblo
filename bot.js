@@ -392,7 +392,25 @@ const DUNGEON_CHANNELS_PROD = {
 
 const DUNGEON_CHANNELS_TEST = {
   '1488405763415212053': '초심자의숲',
+  '테스트오색룡채널ID': '오색룡의둥지',
+  '테스트지옥채널ID': '지옥의관문',
+  '테스트천상채널ID': '드높은천상',
 };
+
+const DUNGEON_CHANNELS = MODE === 'prod'
+  ? DUNGEON_CHANNELS_PROD
+  : DUNGEON_CHANNELS_TEST;
+
+function getDungeonByChannel(channelId){
+  return DUNGEON_CHANNELS[channelId] || null;
+}
+
+function isAllowedCategory(channel){
+  if(ALLOWED_CATEGORY_IDS.length === 0) return true;
+  return ALLOWED_CATEGORY_IDS.includes(channel.parentId);
+}
+
+
 
 const DUNGEON_CHANNELS = MODE === 'prod'
   ? DUNGEON_CHANNELS_PROD
