@@ -397,9 +397,7 @@ const DUNGEON_CHANNELS_TEST = {
   '테스트천상채널ID': '드높은천상',
 };
 
-const DUNGEON_CHANNELS = MODE === 'prod'
-  ? DUNGEON_CHANNELS_PROD
-  : DUNGEON_CHANNELS_TEST;
+
 
 function getDungeonByChannel(channelId){
   return DUNGEON_CHANNELS[channelId] || null;
