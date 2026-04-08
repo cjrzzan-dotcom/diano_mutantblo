@@ -2918,33 +2918,47 @@ if (id === 'auto') {
 if (id === 'attack') {
   if (!player.run) createRunIfNeeded(player, dungeonKey);
 
-  // 다음 몬스터 등장 시: 이미지 먼저 → 1초 뒤 전투창
   if (!player.run.target && player.run.nextTarget) {
     player.run.lastDrops = [];
     player.run.target = player.run.nextTarget;
     player.run.nextTarget = null;
     await saveData(gameData);
 
-    // 1) 먼저 등장 이미지
     await interaction.update(
       buildIntroPayload(dungeonKey, player.run.target)
     );
 
-    // 2) 1초 대기
     await sleep(INTRO_DELAY_MS);
 
-    // 3) 전투 UI
     await interaction.editReply(
       buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
     );
     return;
   }
 
-  const result = performAttack(player, dungeonKey);
+  const logs = [];
+
+  for (let i = 0; i < 3; i++) {
+    if (!player.run) break;
+    if (player.run.isDown) break;
+
+    logs.push(`\n⚔️ [${i + 1}턴]`);
+
+    const result = performAttack(player, dungeonKey);
+
+    logs.push(...result.logs);
+
+    // 죽으면 중단
+    if (Date.now() < player.respawnAt) break;
+
+    // 몬스터 죽고 다음 몹 대기면 멈춤
+    if (!player.run?.target && player.run?.nextTarget) break;
+  }
+
   await saveData(gameData);
 
   await interaction.update(
-    buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
+    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
   );
   return;
 }
