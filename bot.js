@@ -2025,18 +2025,6 @@ if(command === '!강화'){
   return;
 }
 
-  if((player.stones[arg] || 0) < 1){
-    await message.reply(`${arg}석이 부족합니다.`);
-    return;
-  }
-
-  player.stones[arg] -= 1;
-  player.attributes[arg] = (player.attributes[arg] || 0) + 1;
-
-  await saveData(gameData);
-  await message.reply(`💎 ${arg} 강화 성공! 현재 ${arg}+${player.attributes[arg]} / 최대 ${ATTRIBUTE_MAX}`);
-  return;
-}
  if(command === '!자동'){
 
   if(Date.now() < player.respawnAt){
