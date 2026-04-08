@@ -207,7 +207,7 @@ const client = new Client({
 
 require('dotenv').config();
 
-const AUTO_HUNT_CHARGE_MS = 5 * 60 * 1000; // 1분
+const AUTO_HUNT_CHARGE_MS = 1 * 60 * 1000; // 1분
 const AUTO_HUNT_MAX_CHARGES = 50;
 const AUTO_HUNT_TURNS = 500;
 
@@ -215,6 +215,8 @@ const AUTO_HUNT_TURNS = 500;
 const ATTRIBUTE_MAX = 10;
 const ATTRIBUTE_GOLD_COSTS = [100, 150, 250, 400, 700, 1000, 1500, 2200, 3000, 4500];
 const ATTRIBUTE_CHANCES = [100, 95, 90, 80, 70, 55, 40, 30, 20, 10];
+
+const ATTRIBUTE_REMOVE_COST = 3000;
 
 
 function endBattle(player) {
@@ -266,6 +268,7 @@ function reviveIfRespawnReady(player){
   return true;
 }
 
+
 function buildAttributeButtons(){
   return [
     new ActionRowBuilder().addComponents(
@@ -276,6 +279,31 @@ function buildAttributeButtons(){
       new ButtonBuilder().setCustomId('attr_dark').setLabel('🌑 어둠').setStyle(ButtonStyle.Secondary),
     )
   ];
+}
+
+function buildAttributeRemoveButtons(player){
+  const buttons = [];
+
+  if(player.attributes.화염 > 0)
+    buttons.push(new ButtonBuilder().setCustomId('attr_remove_화염').setLabel('🔥 화염').setStyle(ButtonStyle.Danger));
+
+  if(player.attributes.얼음 > 0)
+    buttons.push(new ButtonBuilder().setCustomId('attr_remove_얼음').setLabel('❄️ 얼음').setStyle(ButtonStyle.Danger));
+
+  if(player.attributes.번개 > 0)
+    buttons.push(new ButtonBuilder().setCustomId('attr_remove_번개').setLabel('⚡ 번개').setStyle(ButtonStyle.Danger));
+
+  if(player.attributes.자연 > 0)
+    buttons.push(new ButtonBuilder().setCustomId('attr_remove_자연').setLabel('🌿 자연').setStyle(ButtonStyle.Danger));
+
+  if(player.attributes.어둠 > 0)
+    buttons.push(new ButtonBuilder().setCustomId('attr_remove_어둠').setLabel('🌑 어둠').setStyle(ButtonStyle.Danger));
+
+  if(buttons.length === 0){
+    return [];
+  }
+
+  return [new ActionRowBuilder().addComponents(buttons)];
 }
 
 
@@ -1555,9 +1583,12 @@ function buildTownButtons(player){
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 장비강화').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('attribute_enhance').setLabel('✨ 속성강화').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
     ),
+  new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('attribute_enhance').setLabel('✨ 속성강화').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('attribute_remove').setLabel('🗑️ 속성삭제').setStyle(ButtonStyle.Danger),
+
   ];
 }
 
@@ -2738,6 +2769,8 @@ if (id.startsWith('attr_')) {
     return;
   }
 
+
+
   await saveData(gameData);
 
   await interaction.reply({
@@ -2748,6 +2781,59 @@ if (id.startsWith('attr_')) {
 }
 
  
+if (id === 'attribute_remove') {
+  const total = Object.values(player.attributes || {}).reduce((a, c) => a + c, 0);
+
+  if(total <= 0){
+    await interaction.reply({
+      content: '삭제할 속성이 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  await interaction.reply({
+    content: `🗑️ 삭제할 속성을 선택하세요.\n비용: ${ATTRIBUTE_REMOVE_COST}G`,
+    components: buildAttributeRemoveButtons(player),
+    ephemeral: true
+  });
+  return;
+}
+
+
+if (id.startsWith('attr_remove_')) {
+  const key = id.replace('attr_remove_', '');
+
+  if((player.attributes[key] || 0) <= 0){
+    await interaction.reply({
+      content: '해당 속성이 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if(player.gold < ATTRIBUTE_REMOVE_COST){
+    await interaction.reply({
+      content: `❌ 골드가 부족합니다. (${ATTRIBUTE_REMOVE_COST}G 필요)`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.gold -= ATTRIBUTE_REMOVE_COST;
+  player.attributes[key] = 0;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: `🗑️ ${key} 속성 삭제 완료! (-${ATTRIBUTE_REMOVE_COST}G)`,
+    ephemeral: true
+  });
+  return;
+}
+
+
+
 if (id.startsWith('use_')) {
   const key = id.replace('use_', '');
 
