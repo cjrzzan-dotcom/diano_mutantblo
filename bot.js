@@ -2747,44 +2747,7 @@ if (id.startsWith('attr_')) {
   return;
 }
 
-  if((player.attributes[key] || 0) >= ATTRIBUTE_MAX){
-    await interaction.reply({
-      content: `❌ ${key} 속성은 최대 +${ATTRIBUTE_MAX}입니다.`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  if ((player.stones[key] || 0) <= 0) {
-    await interaction.reply({
-      content: `❌ ${key} 속성석이 부족합니다.`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  player.stones[key] -= 1;
-  player.attributes[key] = (player.attributes[key] || 0) + 1;
-
-  await saveData(gameData);
-
-  await interaction.reply({
-    content:
-`✨ ${key} 속성 강화 성공!
-
-현재 속성:
-🔥 ${player.attributes.화염 || 0}
-❄️ ${player.attributes.얼음 || 0}
-⚡ ${player.attributes.번개 || 0}
-🌿 ${player.attributes.자연 || 0}
-🌑 ${player.attributes.어둠 || 0}
-
-(속성당 최대 +${ATTRIBUTE_MAX})`,
-    ephemeral: true
-  });
-  return;
-}
-
+ 
 if (id.startsWith('use_')) {
   const key = id.replace('use_', '');
 
