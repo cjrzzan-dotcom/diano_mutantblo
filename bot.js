@@ -427,6 +427,7 @@ const DUNGEON_CHANNELS_PROD = {
   '1487953176677060780': '지옥의심장부',
   '1487953322160816148': '지옥의왕좌',
 '1490976926762926100': '드높은천상',
+'1491290801987391488': '깊은심연의숲',
 };
 
 const DUNGEON_CHANNELS_TEST = {
@@ -455,6 +456,7 @@ const DUNGEON_CHANNELS = MODE === 'prod'
 
 const DISPLAY_NAMES = {
   '초심자의숲': '초심자의 숲',
+  '깊은심연의숲': '깊은심연의숲',
   '오색룡의둥지': '오색룡의 둥지',
   '지옥의관문': '지옥의 관문',
   '지옥의심장부': '지옥의 심장부',
@@ -534,17 +536,25 @@ const DUNGEONS = {
     { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 24 },
     { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 45 },
   ]},
+  '깊은심연의숲': { type: 'random', autoAllowed: true, monsters: [
+    { name: '오크', hp: 52, atk: 14, def: 2, gold: [16,24], xp: 16 },
+    { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 24 },
+    { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 45 },
+    { name: '오크대장', hp: 120, atk: 22, def: 6, gold: [50,80], xp: 45 }, },
+    { name: '오우거대장', hp: 150, atk: 22, def: 8, gold: [50,80], xp: 45 }, },
+    { name: '심연의드래곤', hp: 180, atk: 25, def: 10, gold: [50,80], xp: 45 }, },
+  ]},
   '오색룡의둥지': { type: 'random', autoAllowed: true, monsters: [
-    { name: '번개드래곤', hp: 350, atk:  40, def: 10, gold: [35,55], xp: 35 },
-    { name: '얼음드래곤', hp: 400, atk: 42, def: 12, gold: [35,58], xp: 36 },
-    { name: '붉은화염드래곤', hp: 450, atk: 44, def: 14, gold: [40,62], xp: 38 },
-    { name: '푸른화염드래곤', hp: 500, atk: 46, def: 14, gold: [42,66], xp: 40 },
-    { name: '어둠드래곤', hp: 550, atk: 46, def: 14, gold: [45,70], xp: 42 },
-    { name: '좀비드래곤', hp: 800, atk: 50, def: 15, gold: [60,90], xp: 52 },
-    { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [85,120], xp: 65 },
-    { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [90,130], xp: 70 },
-    { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [100,150], xp: 80 },
-    { name: '암흑의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [100,150], xp: 100 },
+    { name: '번개드래곤', hp: 350, atk:  40, def: 10, gold: [80,100], xp: 50 },
+    { name: '얼음드래곤', hp: 400, atk: 42, def: 12, gold: [80,100], xp: 50 },
+    { name: '붉은화염드래곤', hp: 450, atk: 44, def: 14, gold: [80,100], xp: 50 },
+    { name: '푸른화염드래곤', hp: 500, atk: 46, def: 14, gold: [80,100], xp: 50 },
+    { name: '어둠드래곤', hp: 550, atk: 46, def: 14, gold: [80,100], xp: 50 },
+    { name: '좀비드래곤', hp: 800, atk: 50, def: 15, gold: [100,120], xp: 52 },
+    { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [120,140], xp: 65 },
+    { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [140,150], xp: 70 },
+    { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [150,200], xp: 80 },
+    { name: '암흑의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [200,300], xp: 100 },
     { name: '창조 드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
     { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
     { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
@@ -730,6 +740,25 @@ function getRandomMonster(dungeonKey) {
       base = monsters[5]; // 드래곤
     }
   }
+
+
+else if (dungeonKey === '깊은심연의숲') {
+  const roll = Math.random() * 100;
+
+  if (roll < 25) {
+    base = monsters[0]; // 오크
+  } else if (roll < 50) {
+    base = monsters[1]; // 오우거
+  } else if (roll < 70) {
+    base = monsters[2]; // 드래곤
+  } else if (roll < 85) {
+    base = monsters[3]; // 오크대장
+  } else if (roll < 95) {
+    base = monsters[4]; // 오우거대장
+  } else {
+    base = monsters[5]; // 심연의드래곤
+  }
+}
 
   // =========================
   // 오색룡의 둥지 확률
@@ -926,8 +955,12 @@ function getMaterialDrops(monsterName){
     case '슬라임': if(chance(45)) drops.push(['슬라임젤리',1]); break;
     case '늑대': if(chance(40)) drops.push(['늑대가죽',1]); break;
     case '고블린': if(chance(35)) drops.push(['고블린뼈조각',1]); break;
+    case '오크': if(chance(30)) drops.push(['오우거가죽',1]); break;
     case '오우거': if(chance(30)) drops.push(['오우거가죽',1]); break;
     case '드래곤': if(chance(30)) drops.push(['작은 용비늘',1]); break;
+    case '오크대장': if(chance(35)) drops.push(['오우거가죽',2]); break;
+    case '오우거대장': if(chance(35)) drops.push(['고급장비조각',2]); break;
+    case '심연의드래곤': drops.push(['작은 용비늘',2]); if(chance(35)) drops.push(['드래곤 비늘',1]); break;
   }
 
   const dragonSet = ['번개드래곤','얼음드래곤','붉은화염드래곤','푸른화염드래곤','어둠드래곤','좀비드래곤','메탈드래곤','대독드래곤','빛의 군주 드래곤','암흑의 군주 드래곤','창조 드래곤','에인절라스드래곤','요리사응구드래곤','메이드빵게드래곤'];
