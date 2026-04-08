@@ -1588,7 +1588,7 @@ function buildTownButtons(player){
   new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('attribute_enhance').setLabel('✨ 속성강화').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('attribute_remove').setLabel('🗑️ 속성삭제').setStyle(ButtonStyle.Danger),
-
+   ),
   ];
 }
 
