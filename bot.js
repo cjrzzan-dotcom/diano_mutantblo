@@ -646,11 +646,14 @@ function getPlayer(userId) {
 }
 
 
-function getDungeonByChannel(channelId){
-  return DUNGEON_CHANNELS[channelId] || null;
-}
 function getRandomMonster(dungeonKey) {
-  let base;
+  const dungeon = DUNGEONS[dungeonKey];
+  if (!dungeon || !Array.isArray(dungeon.monsters) || dungeon.monsters.length === 0) {
+    return null;
+  }
+
+  let base = null;
+  const monsters = dungeon.monsters;
 
   // =========================
   // 초심자의 숲 확률
@@ -659,199 +662,94 @@ function getRandomMonster(dungeonKey) {
     const roll = Math.random() * 100;
 
     if (roll < 40) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '슬라임');
+      base = monsters[0]; // 슬라임
     } else if (roll < 70) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '늑대');
+      base = monsters[1]; // 늑대
     } else if (roll < 82) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '고블린');
+      base = monsters[2]; // 고블린
     } else if (roll < 92) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '오크');
+      base = monsters[3]; // 오크
     } else if (roll < 97) {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '오우거');
+      base = monsters[4]; // 오우거
     } else {
-      base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '드래곤');
+      base = monsters[5]; // 드래곤
     }
   }
-
-// =========================
-// 오색룡의 둥지 확률 (밸런스 수정)
-// =========================
-else if (dungeonKey === '오색룡의둥지') {
-  const roll = Math.random() * 100;
-
-  if (roll < 7) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '좀비드래곤');
-
-  } else if (roll < 11) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '메탈드래곤');
-
-  } else if (roll < 15) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '대독드래곤');
-
-  } else if (roll < 18) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '빛의 군주 드래곤');
-
-  } else if (roll < 20) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '암흑의 군주 드래곤');
-
-  } else if (roll < 21) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '창조 드래곤');
-
-  } else if (roll < 21.3) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '요리사응구드래곤');
-
-  } else if (roll < 21.8) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '메이드빵게드래곤');
-
-  } else if (roll < 21.9) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '에인절라스드래곤');
-
-  } else {
-    const dragons = [
-      '번개드래곤',
-      '얼음드래곤',
-      '붉은화염드래곤',
-      '푸른화염드래곤',
-      '어둠드래곤'
-    ];
-    const pickName = dragons[Math.floor(Math.random() * dragons.length)];
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === pickName);
-  }
-}
-
-  // =========================
-  // 나머지 던전
-  // =========================
-  else {
-    base = pick(DUNGEONS[dungeonKey].monsters);
-  }
-if (!base) {
-  console.log('base 없음, fallback 사용. dungeonKey =', dungeonKey);
-  base = pick(DUNGEONS[dungeonKey].monsters);
-}
-
-  return {
-    ...base,
-    currentHp: base.hp,
-    element: pick(ELEMENTS),
-  };
-
-
-
-}
-function getWaveMonster(dungeonKey, idx){
-  const dungeon = DUNGEONS[dungeonKey];
-  if(!dungeon) return null;
-
-  let base = null;
-
- if (dungeonKey === '드높은천상') {
-  const roll = Math.random() * 100;
-
-  if (roll < 45) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '아우리엘');
-
-  } else if (roll < 84.9) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '이테리엘');
-
-  } else if (roll < 94.9) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '말티엘');
-
-  } else if (roll < 99.9) {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '임페리우스');
-
-  } else {
-    base = DUNGEONS[dungeonKey].monsters.find(m => m.name === '티리엘');
-  }
-}
 
   // =========================
   // 오색룡의 둥지 확률
   // =========================
-else  if (dungeonKey === '오색룡의둥지') {
+  else if (dungeonKey === '오색룡의둥지') {
     const roll = Math.random() * 100;
 
     if (roll < 7) {
-      base = dungeon.monsters.find(m => m.name === '좀비드래곤');
-
+      base = monsters.find(m => m.name === '좀비드래곤');
     } else if (roll < 11) {
-      base = dungeon.monsters.find(m => m.name === '메탈드래곤');
-
+      base = monsters.find(m => m.name === '메탈드래곤');
     } else if (roll < 15) {
-      base = dungeon.monsters.find(m => m.name === '대독드래곤');
-
+      base = monsters.find(m => m.name === '대독드래곤');
     } else if (roll < 18) {
-      base = dungeon.monsters.find(m => m.name === '빛의 군주 드래곤');
-
+      base = monsters.find(m => m.name === '빛의 군주 드래곤');
     } else if (roll < 20) {
-      base = dungeon.monsters.find(m => m.name === '암흑의 군주 드래곤');
-
+      base = monsters.find(m => m.name === '암흑의 군주 드래곤');
     } else if (roll < 21) {
-      base = dungeon.monsters.find(m => m.name === '창조 드래곤');
-
+      base = monsters.find(m => m.name === '창조 드래곤');
     } else if (roll < 21.3) {
-      base = dungeon.monsters.find(m => m.name === '요리사응구드래곤');
-
+      base = monsters.find(m => m.name === '요리사응구드래곤');
     } else if (roll < 21.8) {
-      base = dungeon.monsters.find(m => m.name === '메이드빵게드래곤');
-
+      base = monsters.find(m => m.name === '메이드빵게드래곤');
     } else if (roll < 21.9) {
-      base = dungeon.monsters.find(m => m.name === '에인절라스드래곤');
-
+      base = monsters.find(m => m.name === '에인절라스드래곤');
     } else {
-      const dragons = [
+      const dragonPool = [
         '번개드래곤',
         '얼음드래곤',
         '붉은화염드래곤',
         '푸른화염드래곤',
         '어둠드래곤'
       ];
-      const pickName = dragons[Math.floor(Math.random() * dragons.length)];
-      base = dungeon.monsters.find(m => m.name === pickName);
+      const pickName = pick(dragonPool);
+      base = monsters.find(m => m.name === pickName);
     }
   }
 
   // =========================
-  // 일반 웨이브 던전
+  // 드높은천상 확률
   // =========================
-  else if (Array.isArray(dungeon.waves)) {
-    base = dungeon.waves[idx] || null;
+  else if (dungeonKey === '드높은천상') {
+    const roll = Math.random() * 100;
+
+    if (roll < 45) {
+      base = monsters.find(m => m.name === '아우리엘');
+    } else if (roll < 84.9) {
+      base = monsters.find(m => m.name === '이테리엘');
+    } else if (roll < 94.9) {
+      base = monsters.find(m => m.name === '말티엘');
+    } else if (roll < 99.9) {
+      base = monsters.find(m => m.name === '임페리우스');
+    } else {
+      base = monsters.find(m => m.name === '티리엘');
+    }
   }
 
   // =========================
-  // monsters만 있는 일반 던전
+  // 기타 랜덤 던전
   // =========================
-  else if (Array.isArray(dungeon.monsters)) {
-    base = dungeon.monsters[idx] || dungeon.monsters[0] || null;
+  else {
+    base = pick(monsters);
   }
 
-  if(!base) return null;
+  // 이름 오타/누락 등으로 못 찾았을 때 안전 fallback
+  if (!base) {
+    console.log('base 없음, fallback 사용. dungeonKey =', dungeonKey);
+    base = pick(monsters);
+  }
 
   return {
     ...base,
     currentHp: base.hp,
     element: pick(ELEMENTS),
   };
-}
-
-
-function isAllowedCategory(channel){
-  if(ALLOWED_CATEGORY_IDS.length === 0) return true; // 비어있으면 제한 없음
-  return ALLOWED_CATEGORY_IDS.includes(channel.parentId);
-}
-
-function createRunIfNeeded(player, dungeonKey){
-  if(!player.run || player.run.dungeon !== dungeonKey){
-    player.run = {
-      dungeon: dungeonKey,
-      waveIndex: 0,
-      target: null,
-      nextTarget: getWaveMonster(dungeonKey, 0),
-      kills: 0,
-      lastDrops: [],
-      isDown: false
-    };
-  }
 }
 
 function getFileCandidate(name){
