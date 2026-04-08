@@ -1787,7 +1787,7 @@ function buildIntroPayload(dungeonKey, target){
   }
   const embed = new EmbedBuilder()
     .setTitle(`👁️ ${target.name} 등장`)
-    .setDescription(`던전: ${DISPLAY_NAMES[dungeonKey]}\n속성: ${target.element}\n\n1초 후 전투를 시작합니다...`)
+    .setDescription(`던전: ${DISPLAY_NAMES[dungeonKey]}\n속성: ${target.element}\n\n`)
     .setColor(0x550000);
   const img = buildImageAttachment(target.name);
   if(img){
