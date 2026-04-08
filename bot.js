@@ -1041,25 +1041,33 @@ function handleNoReviveDeath(player){
   player.hp = player.maxHp;
   player.respawnAt = Date.now() + 3*60*1000;
 }
+
 function getEnhancePreviewText(player, item){
   if(!item) return '선택한 아이템이 없습니다.';
 
   const goldCosts = [100, 150, 250, 400, 700, 1000, 1500, 2200, 3000, 4500];
-  const chances =   [100, 95, 90, 80, 70, 55, 40, 30, 20, 10];
+  const chances   = [100, 95, 90, 80, 70, 55, 40, 30, 20, 10];
   const maxLevel = 10;
 
   const current = item.enhanceLevel || 0;
 
   if(current >= maxLevel){
-    return `선택 아이템: ${item.name}${getItemStatText(item)}\n현재 강화: +${current}\n최대 강화입니다.`;
+    return [
+      `선택 아이템: ${item.name}${getEnhanceLevelText(item)}${getItemStatText(item)}`,
+      `현재 강화: +${current}`,
+      `최대 강화입니다.`
+    ].join('\n');
   }
 
+  const failText = current >= 7 ? '실패 시 1단계 하락' : '실패 시 하락 없음';
+
   return [
-    `선택 아이템: ${item.name}${getItemStatText(item)}`,
+    `선택 아이템: ${item.name}${getEnhanceLevelText(item)}${getItemStatText(item)}`,
     `현재 강화: +${current}`,
     `다음 강화: +${current + 1}`,
     `비용: ${goldCosts[current]}G`,
-    `성공 확률: ${chances[current]}%`
+    `성공 확률: ${chances[current]}%`,
+    failText
   ].join('\n');
 }
 
@@ -1314,8 +1322,8 @@ function tryEnhanceItem(player, item){
 
   const current = item.enhanceLevel;
 
-  const goldCosts = [100,150,250,400,700,1000,1500,2200,3000,4500];
-  const chances   = [1.00,0.95,0.90,0.80,0.70,0.55,0.40,0.30,0.20,0.10];
+  const goldCosts = [100, 150, 250, 400, 700, 1000, 1500, 2200, 3000, 4500];
+  const chances   = [1.00, 0.95, 0.90, 0.80, 0.70, 0.55, 0.40, 0.30, 0.20, 0.10];
   const maxLevel = 10;
 
   if(current >= maxLevel) return '이미 최대 강화입니다.';
@@ -1324,25 +1332,45 @@ function tryEnhanceItem(player, item){
   const successChance = chances[current];
 
   if(player.gold < needGold){
-    return `골드 부족 (${needGold}G 필요)`;
+    return `골드가 부족합니다. (${needGold}G 필요)`;
   }
 
   player.gold -= needGold;
 
-  if(Math.random() > successChance){
-    return `❌ ${item.name} 강화 실패...`;
+  // 성공
+  if(Math.random() <= successChance){
+    item.enhanceLevel += 1;
+
+    if(item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 3;
+    if(item.type === 'armor') item.defBonus = (item.defBonus || 0) + 3;
+    if(item.type === 'ring'){
+      const p = pick(['critChanceBonus', 'critDamageBonus', 'dodgeBonus']);
+      item[p] = (item[p] || 0) + 2;
+    }
+
+    return `🔨 ${item.name} 강화 성공! (+${item.enhanceLevel})`;
   }
 
-  item.enhanceLevel += 1;
+  // 실패
+  if(current >= 7){
+    item.enhanceLevel -= 1;
 
-  if(item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
-  if(item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
-  if(item.type === 'ring'){
-    const p = pick(['critChanceBonus','critDamageBonus','dodgeBonus']);
-    item[p] = (item[p] || 0) + 1;
+    if(item.type === 'weapon') item.atkBonus = Math.max(0, (item.atkBonus || 0) - 3);
+    if(item.type === 'armor') item.defBonus = Math.max(0, (item.defBonus || 0) - 3);
+    if(item.type === 'ring'){
+      const stats = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
+      const candidates = stats.filter(k => (item[k] || 0) >= 2);
+
+      if(candidates.length > 0){
+        const p = pick(candidates);
+        item[p] = Math.max(0, (item[p] || 0) - 2);
+      }
+    }
+
+    return `❌ ${item.name} 강화 실패... (+${current} → +${item.enhanceLevel} 하락)`;
   }
 
-  return `🔨 ${item.name} 강화 성공! (+${item.enhanceLevel})`;
+  return `❌ ${item.name} 강화 실패...`;
 }
 
 function equipmentText(player){
