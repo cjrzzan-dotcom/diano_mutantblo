@@ -1195,10 +1195,6 @@ if(chance(getCritChance(player))){
 
 damage = Math.max(1, Math.floor(damage));
 
-if(enhanceBonusDamage > 0){
-  result.logs.push(`✨ 장비 속성강화 보너스 발동! ${target.element} 추가피해 +${enhanceBonusDamage}`);
-}
-
 target.currentHp -= damage;
 result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
