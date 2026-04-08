@@ -343,6 +343,29 @@ const GRADE_SELL_PRICE = {
   legendary: 2000
 };
 
+
+function createRunIfNeeded(player, dungeonKey){
+  if(!player.run || player.run.dungeon !== dungeonKey){
+    player.run = {
+      dungeon: dungeonKey,
+      waveIndex: 0,
+      target: null,
+      nextTarget: null,
+      kills: 0,
+      lastDrops: [],
+      isDown: false
+    };
+
+    const dungeon = DUNGEONS[dungeonKey];
+
+    if(dungeon?.type === 'random'){
+      player.run.nextTarget = getRandomMonster(dungeonKey);
+    } else if(dungeon?.type === 'wave'){
+      player.run.nextTarget = getWaveMonster(dungeonKey, 0);
+    }
+  }
+}
+
 function getItemSellPrice(item){
   if(!item) return 0;
 
