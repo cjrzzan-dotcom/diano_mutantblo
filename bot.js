@@ -2059,7 +2059,6 @@ if(command === '!자동'){
     player.xp = beforeXp + reducedXp;
 
     if(player.run?.lastDrops?.length){
-      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.8);
       dropLines = [...player.run.lastDrops];
     }
 
