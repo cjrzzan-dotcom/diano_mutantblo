@@ -1380,11 +1380,11 @@ function tryEnhanceItem(player, item){
 
   item.enhanceLevel += 1;
 
-  if(item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 3;
-  if(item.type === 'armor') item.defBonus = (item.defBonus || 0) + 3;
+  if(item.type === 'weapon') item.atkBonus = (item.atkBonus || 0) + 1;
+  if(item.type === 'armor') item.defBonus = (item.defBonus || 0) + 1;
   if(item.type === 'ring'){
     const p = pick(['critChanceBonus','critDamageBonus','dodgeBonus']);
-    item[p] = (item[p] || 0) + 2;
+    item[p] = (item[p] || 0) + 1;
   }
 
   return `🔨 ${item.name} 강화 성공! (+${item.enhanceLevel})`;
