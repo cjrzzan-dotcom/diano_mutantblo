@@ -1047,32 +1047,6 @@ function getEnhancePreviewText(player, item){
   ].join('\n');
 }
 
-function getTotalEquippedElementEnhance(player){
-  const total = {};
-
-  const equippedItems = [
-    player.equipment?.weapon,
-    player.equipment?.armor,
-    player.equipment?.ring
-  ].filter(Boolean);
-
-  for(const item of equippedItems){
-    const enhanceMap = item.elementEnhance || {};
-    for(const [elem, value] of Object.entries(enhanceMap)){
-      total[elem] = (total[elem] || 0) + value;
-    }
-  }
-
-  return total;
-}
-
-
-function getElementEnhanceBonusDamage(player){
-  const totalEnhance = getTotalEquippedElementEnhance(player);
-  return Object.values(totalEnhance).reduce((sum, value) => sum + value, 0);
-}
-
-
 
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
@@ -1175,7 +1149,6 @@ function performAttack(player, dungeonKey){
 const target = player.run.target;
 const mult = getElementMultiplier(player.attributes, target.element);
 const attrBonus = getAttributeBonus(player.attributes);
-const enhanceBonusDamage = getElementEnhanceBonusDamage(player);
 
 let damage = (getAttackPower(player) * mult) + attrBonus - target.def + enhanceBonusDamage;
 let isCrit = false;
