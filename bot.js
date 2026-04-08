@@ -1829,7 +1829,6 @@ if (!gameData) gameData = {};
 client.on('messageCreate', async (message)=>{
 console.log('메시지 받음:', message.content, message.channel.id);
   if(message.author.bot) return;
-  if(!isAllowedCategory(message.channel)) return;
   if(!message.content.startsWith('!')) return;
 
   const parts = message.content.trim().split(/\s+/);
