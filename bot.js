@@ -213,7 +213,8 @@ const AUTO_HUNT_TURNS = 500;
 
 
 const ATTRIBUTE_MAX = 10;
-
+const ATTRIBUTE_GOLD_COSTS = [100, 150, 250, 400, 700, 1000, 1500, 2200, 3000, 4500];
+const ATTRIBUTE_CHANCES = [100, 95, 90, 80, 70, 55, 40, 30, 20, 10];
 
 
 function endBattle(player) {
@@ -263,6 +264,18 @@ function reviveIfRespawnReady(player){
   player.hp = Math.max(1, Math.floor(player.maxHp));
   player.respawnAt = 0;
   return true;
+}
+
+function buildAttributeButtons(){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('attr_fire').setLabel('🔥 화염').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId('attr_ice').setLabel('❄️ 얼음').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('attr_lightning').setLabel('⚡ 번개').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('attr_nature').setLabel('🌿 자연').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('attr_dark').setLabel('🌑 어둠').setStyle(ButtonStyle.Secondary),
+    )
+  ];
 }
 
 
@@ -1530,22 +1543,26 @@ function getItemStatText(item){
   return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
+
+
 function buildTownButtons(player){
   return [
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('shop').setLabel('🏪 상점').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('craft_list').setLabel('🛠️ 제작').setStyle(ButtonStyle.Primary),
-
-  
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 강화').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 장비강화').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('attribute_enhance').setLabel('✨ 속성강화').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
     ),
   ];
 }
+
+
+
 
 
 function buildTownPayload(player, extraText=''){
@@ -1966,15 +1983,47 @@ if(command === '!강화'){
     .filter(([,v]) => v > 0)
     .map(([k]) => k);
 
-  if((player.attributes[arg] || 0) <= 0 && active.length >= 2){
+  const current = player.attributes[arg] || 0;
+
+  if(current <= 0 && active.length >= 2){
     await message.reply('속성은 최대 2개까지만 강화할 수 있습니다.');
     return;
   }
 
-  if((player.attributes[arg] || 0) >= ATTRIBUTE_MAX){
+  if(current >= ATTRIBUTE_MAX){
     await message.reply(`❌ ${arg} 속성은 최대 +${ATTRIBUTE_MAX}입니다.`);
     return;
   }
+
+  if((player.stones[arg] || 0) < 1){
+    await message.reply(`${arg}석이 부족합니다.`);
+    return;
+  }
+
+  const needGold = ATTRIBUTE_GOLD_COSTS[current];
+  const chance = ATTRIBUTE_CHANCES[current];
+
+  if(player.gold < needGold){
+    await message.reply(`❌ 골드가 부족합니다. (${needGold}G 필요)`);
+    return;
+  }
+
+  player.stones[arg] -= 1;
+  player.gold -= needGold;
+
+  const success = Math.random() * 100 < chance;
+
+  if(success){
+    player.attributes[arg] = current + 1;
+    await saveData(gameData);
+    await message.reply(`💎 ${arg} 강화 성공! 현재 ${arg}+${player.attributes[arg]} / 최대 ${ATTRIBUTE_MAX} (성공률 ${chance}%)`);
+    return;
+  }
+
+  await saveData(gameData);
+  await message.reply(`❌ ${arg} 강화 실패... (${arg}석 1개, ${needGold}G 소모 / 성공률 ${chance}%)`);
+  return;
+}
 
   if((player.stones[arg] || 0) < 1){
     await message.reply(`${arg}석이 부족합니다.`);
@@ -2223,6 +2272,34 @@ if (id === 'status') {
     });
     return;
   }
+
+if (id === 'attribute_enhance') {
+  await interaction.reply({
+    content:
+`✨ 속성 강화
+
+보유 속성석:
+🔥 화염 ${player.stones.화염 || 0}
+❄️ 얼음 ${player.stones.얼음 || 0}
+⚡ 번개 ${player.stones.번개 || 0}
+🌿 자연 ${player.stones.자연 || 0}
+🌑 어둠 ${player.stones.어둠 || 0}
+
+현재 속성:
+🔥 ${player.attributes.화염 || 0}
+❄️ ${player.attributes.얼음 || 0}
+⚡ ${player.attributes.번개 || 0}
+🌿 ${player.attributes.자연 || 0}
+🌑 ${player.attributes.어둠 || 0}
+
+속성은 최대 2개 / 속성당 최대 +${ATTRIBUTE_MAX}`,
+    components: buildAttributeButtons(),
+    ephemeral: true
+  });
+  return;
+}
+
+
 
   if (id === 'shop') {
     await interaction.reply({
@@ -2495,68 +2572,48 @@ if (id === 'enhance_equipped_ring') {
   return;
 }
 
+if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
+  const craftId = id.replace('craft_', '');
+  const res = tryCraft(player, craftId);
+  await saveData(gameData);
+  await interaction.reply({
+    content: res.text,
+    ephemeral: true
+  });
+  return;
+}
 
-    const elem = id.replace('enhance_elem_', '');
-    const item = getEnhanceTargetItem(player);
+if (id.startsWith('equip_')) {
+  const idx = Number(id.replace('equip_', ''));
+  const text = equipItemByIndex(player, idx);
+  await saveData(gameData);
+  await interaction.reply({
+    content: `${text}\n\n${equipmentText(player)}`,
+    ephemeral: true
+  });
+  return;
+}
 
-    if (!item) {
-      await interaction.reply({
-        content: '선택한 아이템이 없습니다.',
-        ephemeral: true
-      });
-      return;
-    }
+if (id === 'stat_atk' || id === 'stat_crit' || id === 'stat_critdmg' || id === 'stat_dodge') {
+  const map = {
+    stat_atk: 'atk',
+    stat_crit: 'critChance',
+    stat_critdmg: 'critDamage',
+    stat_dodge: 'dodge'
+  };
 
-    const text = tryEnhanceItem(player, item, elem);
-    await saveData(gameData);
+  const text = tryUpgradeStat(player, map[id]);
+  await saveData(gameData);
 
-    await interaction.reply({
-      content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
-      ephemeral: true
-    });
-    return;
-  }
+  await interaction.reply({
+    content: `${text}\n\n${buildFullStatusText(player)}`,
+    components: buildStatusButtons(player),
+    ephemeral: true
+  });
+  return;
+}
 
-  if (id.startsWith('craft_') && id !== 'craft_list') {
-    const craftId = id.replace('craft_', '');
-    const res = tryCraft(player, craftId);
-    await saveData(gameData);
-    await interaction.reply({
-      content: res.text,
-      ephemeral: true
-    });
-    return;
-  }
-
-  if (id.startsWith('equip_')) {
-    const idx = Number(id.replace('equip_', ''));
-    const text = equipItemByIndex(player, idx);
-    await saveData(gameData);
-    await interaction.reply({
-      content: `${text}\n\n${equipmentText(player)}`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  if (id === 'stat_atk' || id === 'stat_crit' || id === 'stat_critdmg' || id === 'stat_dodge') {
-    const map = {
-      stat_atk: 'atk',
-      stat_crit: 'critChance',
-      stat_critdmg: 'critDamage',
-      stat_dodge: 'dodge'
-    };
-    const text = tryUpgradeStat(player, map[id]);
-    await saveData(gameData);
-    await interaction.reply({
-      content: `${text}\n\n${buildFullStatusText(player)}`,
-      components: buildStatusButtons(player),
-      ephemeral: true
-    });
-    return;
-  }
-
-  // 던전 전용 버튼만 여기서 막기
+// 던전 전용 버튼만 여기서 막기
 const dungeonOnlyButtons = [
   'attack',
   'revive',
@@ -2567,8 +2624,7 @@ const dungeonOnlyButtons = [
   'use_elixir'
 ];
 
-const isDungeonOnlyButton =
-  dungeonOnlyButtons.includes(id);
+const isDungeonOnlyButton = dungeonOnlyButtons.includes(id);
 
 if (isDungeonOnlyButton && !dungeonKey) {
   await interaction.reply({
@@ -2600,11 +2656,17 @@ if (id === 'revive') {
   player.reviveTickets -= 1;
   player.hp = Math.max(1, Math.floor(player.maxHp));
   player.run.isDown = false;
-  player.respawnAt = 0; // 이거 추가
+  player.respawnAt = 0;
+
   await saveData(gameData);
 
   await interaction.update(
-    buildBattlePayload(player, interaction.channelId, player.run.dungeon, '💖 부활권 사용! 부활했습니다.')
+    buildBattlePayload(
+      player,
+      interaction.channelId,
+      player.run.dungeon,
+      '💖 부활권 사용! 부활했습니다.'
+    )
   );
   return;
 }
@@ -2625,13 +2687,77 @@ if (id.startsWith('attr_')) {
     .filter(([,v]) => v > 0)
     .map(([k]) => k);
 
-  if((player.attributes[key] || 0) <= 0 && active.length >= 2){
+  const current = player.attributes[key] || 0;
+
+  if(current <= 0 && active.length >= 2){
     await interaction.reply({
       content: '속성은 최대 2개까지만 강화할 수 있습니다.',
       ephemeral: true
     });
     return;
   }
+
+  if(current >= ATTRIBUTE_MAX){
+    await interaction.reply({
+      content: `❌ ${key} 속성은 최대 +${ATTRIBUTE_MAX}입니다.`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  if((player.stones[key] || 0) <= 0){
+    await interaction.reply({
+      content: `❌ ${key} 속성석이 부족합니다.`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  const needGold = ATTRIBUTE_GOLD_COSTS[current];
+  const chance = ATTRIBUTE_CHANCES[current];
+
+  if(player.gold < needGold){
+    await interaction.reply({
+      content: `❌ 골드가 부족합니다. (${needGold}G 필요)`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.stones[key] -= 1;
+  player.gold -= needGold;
+
+  const success = Math.random() * 100 < chance;
+
+  if(success){
+    player.attributes[key] = current + 1;
+    await saveData(gameData);
+
+    await interaction.reply({
+      content:
+`✨ ${key} 속성 강화 성공!
+
+현재 속성:
+🔥 ${player.attributes.화염 || 0}
+❄️ ${player.attributes.얼음 || 0}
+⚡ ${player.attributes.번개 || 0}
+🌿 ${player.attributes.자연 || 0}
+🌑 ${player.attributes.어둠 || 0}
+
+(소모: ${key}석 1개, ${needGold}G / 성공률: ${chance}%)`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: `❌ ${key} 속성 강화 실패... (소모: ${key}석 1개, ${needGold}G / 성공률: ${chance}%)`,
+    ephemeral: true
+  });
+  return;
+}
 
   if((player.attributes[key] || 0) >= ATTRIBUTE_MAX){
     await interaction.reply({
