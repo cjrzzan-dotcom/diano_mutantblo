@@ -1150,7 +1150,7 @@ const target = player.run.target;
 const mult = getElementMultiplier(player.attributes, target.element);
 const attrBonus = getAttributeBonus(player.attributes);
 
-let damage = (getAttackPower(player) * mult) + attrBonus - target.def + enhanceBonusDamage;
+let damage = (getAttackPower(player) * mult) + attrBonus - target.def;
 let isCrit = false;
 
 
