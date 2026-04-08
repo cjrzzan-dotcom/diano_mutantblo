@@ -1954,7 +1954,7 @@ if(command === '!강화'){
   return;
 }
 
- if(command === '!자동'){
+if(command === '!자동'){
 
   if(Date.now() < player.respawnAt){
     const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
@@ -1962,22 +1962,21 @@ if(command === '!강화'){
     return;
   }
 
-refreshAutoHuntCharges(player);
+  refreshAutoHuntCharges(player);
 
-if (player.autoHuntCharges <= 0) {
-  const remainMs = getNextAutoHuntChargeRemain(player);
-  const remainMin = Math.floor(remainMs / 60000);
-  const remainSec = Math.floor((remainMs % 60000) / 1000);
+  if (player.autoHuntCharges <= 0) {
+    const remainMs = getNextAutoHuntChargeRemain(player);
+    const remainMin = Math.floor(remainMs / 60000);
+    const remainSec = Math.floor((remainMs % 60000) / 1000);
 
-  await message.reply(
-    `자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`
-  );
-  return;
-}
+    await message.reply(
+      `자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`
+    );
+    return;
+  }
 
-player.autoHuntCharges -= 1;
-
-await saveData(gameData);
+  player.autoHuntCharges -= 1;
+  await saveData(gameData);
 
   if(!dungeonKey){
     await message.reply('이 명령어는 던전 채널에서만 가능합니다.');
@@ -1994,36 +1993,56 @@ await saveData(gameData);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
+  // 1) 먼저 등장 이미지
   const introMsg = await message.reply(
     buildIntroPayload(dungeonKey, introTarget)
   );
 
+  // 2) 1초 대기
   await sleep(INTRO_DELAY_MS);
 
   const logs = ['🤖 자동사냥 시작'];
   let dropLines = null;
 
-  for(let i=0;i<5;i++){
+  for(let i = 0; i < AUTO_HUNT_TURNS; i++){
     if(!player.run) break;
     if(player.run.isDown) break;
 
     if(player.run.target && player.run.nextTarget){
       player.run.target = player.run.nextTarget;
       player.run.nextTarget = null;
-      logs.push(`\n[${i+1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
+      logs.push(`\n[${i+1}턴]\n👁️ ${player.run.target.name} 등장! (${player.run.target.element})`);
       continue;
     }
-    let result = performAttack(player, dungeonKey);
-result = applyAutoHuntPenalty(result);
+
+    const beforeGold = player.gold;
+    const beforeXp = player.xp;
+
+    const result = performAttack(player, dungeonKey);
     logs.push(`\n[${i+1}턴]\n${result.logs.join('\n')}`);
 
+    const gainedGold = Math.max(0, player.gold - beforeGold);
+    const gainedXp = Math.max(0, player.xp - beforeXp);
+
+    const reducedGold = Math.floor(gainedGold * 0.8);
+    const reducedXp = Math.floor(gainedXp * 0.8);
+
+    player.gold = beforeGold + reducedGold;
+    player.xp = beforeXp + reducedXp;
+
     if(player.run?.lastDrops?.length){
+      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.8);
       dropLines = [...player.run.lastDrops];
     }
+
+    logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
+
     if(Date.now() < player.respawnAt) break;
   }
+
   await saveData(gameData);
 
+  // 3) 전투 로그 UI로 전환
   await introMsg.edit(
     buildBattlePayload(
       player,
@@ -2032,12 +2051,14 @@ result = applyAutoHuntPenalty(result);
       logs.join('\n')
     )
   );
-if(dropLines){
-  await introMsg.followUp({
-    content: `🎁 드랍템\n${dropLines.join('\n')}`,
-    ephemeral: true
-  });
-}
+
+  if(dropLines){
+    await introMsg.followUp({
+      content: `🎁 드랍템\n${dropLines.join('\n')}`,
+      ephemeral: true
+    });
+  }
+
   return;
 }
 
@@ -2156,15 +2177,24 @@ if (id.startsWith('private_start_')) {
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
+  // 1) 먼저 이미지/등장 연출
   await interaction.reply({
-    ...buildBattlePayload(
+    ...buildIntroPayload(startKey, introTarget),
+    ephemeral: true
+  });
+
+  // 2) 1초 대기
+  await sleep(INTRO_DELAY_MS);
+
+  // 3) 전투 UI로 전환
+  await interaction.editReply(
+    buildBattlePayload(
       player,
       interaction.channelId,
       startKey,
-      `전투 시작!\n\n${introTarget ? `${introTarget.name} 등장!` : ''}`
-    ),
-    ephemeral: true
-  });
+      '전투 시작!'
+    )
+  );
 
   return;
 }
@@ -2785,8 +2815,25 @@ if (id === 'auto') {
   createRunIfNeeded(player, dungeonKey);
   await saveData(gameData);
 
+  const introTarget = player.run?.target || player.run?.nextTarget;
+
+  // =========================
+  // 1) 이미지 먼저 출력
+  // =========================
+  await interaction.update(
+    buildIntroPayload(dungeonKey, introTarget)
+  );
+
+  // =========================
+  // 2) 1초 대기
+  // =========================
+  await sleep(INTRO_DELAY_MS);
+
   const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
 
+  // =========================
+  // 3) 자동 전투 루프
+  // =========================
   for (let i = 0; i < AUTO_HUNT_TURNS; i++) {
     if (!player.run) break;
     if (player.run.isDown) break;
@@ -2795,7 +2842,8 @@ if (id === 'auto') {
       player.run.lastDrops = [];
       player.run.target = player.run.nextTarget;
       player.run.nextTarget = null;
-      logs.push(`\n[${i + 1}턴]\n✨ 다음 몬스터 매칭: ${player.run.target.name}`);
+
+      logs.push(`\n[${i + 1}턴]\n👁️ ${player.run.target.name} 등장! (${player.run.target.element})`);
       continue;
     }
 
@@ -2825,22 +2873,41 @@ if (id === 'auto') {
 
   await saveData(gameData);
 
-  await interaction.update(
-    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+  // =========================
+  // 4) 전투 로그 UI 출력
+  // =========================
+  await interaction.editReply(
+    buildBattlePayload(
+      player,
+      interaction.channelId,
+      dungeonKey,
+      logs.join('\n')
+    )
   );
+
   return;
 }
 
 if (id === 'attack') {
   if (!player.run) createRunIfNeeded(player, dungeonKey);
 
+  // 다음 몬스터 등장 시: 이미지 먼저 → 1초 뒤 전투창
   if (!player.run.target && player.run.nextTarget) {
     player.run.lastDrops = [];
     player.run.target = player.run.nextTarget;
     player.run.nextTarget = null;
     await saveData(gameData);
 
+    // 1) 먼저 등장 이미지
     await interaction.update(
+      buildIntroPayload(dungeonKey, player.run.target)
+    );
+
+    // 2) 1초 대기
+    await sleep(INTRO_DELAY_MS);
+
+    // 3) 전투 UI
+    await interaction.editReply(
       buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
     );
     return;
