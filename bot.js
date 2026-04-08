@@ -1226,8 +1226,6 @@ if(target.currentHp <= 0){
     return result;
   }
 
-  return result;
-}
 
     player.run.waveIndex += 1;
     const next = getWaveMonster(dungeonKey, player.run.waveIndex);
