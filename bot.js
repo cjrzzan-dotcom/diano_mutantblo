@@ -867,19 +867,6 @@ function getAttackPower(player){
   return player.baseAtk + player.stats.atk * 1 + eq.atk;
 }
 
-
-  const map = item.elementEnhance;
-  const parts = [];
-
-  if(map.화염) parts.push(`🔥${map.화염}`);
-  if(map.얼음) parts.push(`❄️${map.얼음}`);
-  if(map.번개) parts.push(`⚡${map.번개}`);
-  if(map.자연) parts.push(`🌿${map.자연}`);
-  if(map.어둠) parts.push(`🌑${map.어둠}`);
-
-  return parts.length ? ` [${parts.join(' ')}]` : '';
-}
-
 function getDefensePower(player){
   const eq = getEquippedBonuses(player);
   return player.baseDef + Math.floor(player.level / 3) + eq.def;
@@ -948,13 +935,11 @@ function getMaterialDrops(monsterName){
     case '창조 드래곤': if(chance(50)) drops.push(['빛의 조각',3]); break;
     case '에인절라스드래곤': drops.push(['부활권',5]); break;
     case '티리엘': drops.push(['천상의 조각',1]); break;
-
+}
 const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','티리엘'];
 
 if(heavenSet.includes(monsterName)){
   if(chance(40)) drops.push(['천상석',1]);
-}
-
 
   }
 
