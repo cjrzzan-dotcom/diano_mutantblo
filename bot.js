@@ -540,9 +540,9 @@ const DUNGEONS = {
     { name: '오크', hp: 52, atk: 14, def: 2, gold: [16,24], xp: 16 },
     { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 24 },
     { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 45 },
-    { name: '오크대장', hp: 120, atk: 22, def: 6, gold: [50,80], xp: 45 }, },
-    { name: '오우거대장', hp: 150, atk: 22, def: 8, gold: [50,80], xp: 45 }, },
-    { name: '심연의드래곤', hp: 180, atk: 25, def: 10, gold: [50,80], xp: 45 }, },
+    { name: '오크전사', hp: 120, atk: 22, def: 6, gold: [50,80], xp: 45 }, 
+    { name: '오우거전사', hp: 150, atk: 22, def: 8, gold: [50,80], xp: 45 }, 
+    { name: '심연의드래곤', hp: 180, atk: 25, def: 10, gold: [50,80], xp: 45 }, 
   ]},
   '오색룡의둥지': { type: 'random', autoAllowed: true, monsters: [
     { name: '번개드래곤', hp: 350, atk:  40, def: 10, gold: [80,100], xp: 50 },
@@ -752,9 +752,9 @@ else if (dungeonKey === '깊은심연의숲') {
   } else if (roll < 70) {
     base = monsters[2]; // 드래곤
   } else if (roll < 85) {
-    base = monsters[3]; // 오크대장
+    base = monsters[3]; // 오크전사
   } else if (roll < 95) {
-    base = monsters[4]; // 오우거대장
+    base = monsters[4]; // 오우거전사
   } else {
     base = monsters[5]; // 심연의드래곤
   }
@@ -958,8 +958,8 @@ function getMaterialDrops(monsterName){
     case '오크': if(chance(30)) drops.push(['오우거가죽',1]); break;
     case '오우거': if(chance(30)) drops.push(['오우거가죽',1]); break;
     case '드래곤': if(chance(30)) drops.push(['작은 용비늘',1]); break;
-    case '오크대장': if(chance(35)) drops.push(['오우거가죽',2]); break;
-    case '오우거대장': if(chance(35)) drops.push(['고급장비조각',2]); break;
+    case '오크전사': if(chance(35)) drops.push(['오우거가죽',2]); break;
+    case '오우거전사': if(chance(35)) drops.push(['고급장비조각',2]); break;
     case '심연의드래곤': drops.push(['작은 용비늘',2]); if(chance(35)) drops.push(['드래곤 비늘',1]); break;
   }
 
