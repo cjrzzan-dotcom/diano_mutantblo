@@ -344,6 +344,22 @@ const GRADE_SELL_PRICE = {
 };
 
 
+function getWaveMonster(dungeonKey, idx){
+  const dungeon = DUNGEONS[dungeonKey];
+  if(!dungeon) return null;
+  if(!Array.isArray(dungeon.waves)) return null;
+
+  const base = dungeon.waves[idx];
+  if(!base) return null;
+
+  return {
+    ...base,
+    currentHp: base.hp,
+    element: pick(ELEMENTS),
+  };
+}
+
+
 function createRunIfNeeded(player, dungeonKey){
   if(!player.run || player.run.dungeon !== dungeonKey){
     player.run = {
@@ -1171,24 +1187,47 @@ damage = Math.max(1, Math.floor(damage));
 target.currentHp -= damage;
 result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
-  if(target.currentHp <= 0){
-    target.currentHp = 0;
-    result.killedTarget = { ...target };
-    result.logs.push(makeKillLine(target.name));
 
-    const drops = grantDrops(player, target);
-    result.levelUps = drops.levelUps;
-    player.run.lastDrops = drops.lines;
-    result.logs.push(...drops.lines);
-    player.run.kills += 1;
+if(target.currentHp <= 0){
+  target.currentHp = 0;
+  result.killedTarget = { ...target };
+  result.logs.push(makeKillLine(target.name));
 
-    const dungeon = DUNGEONS[dungeonKey];
+  const drops = grantDrops(player, target);
+  result.levelUps = drops.levelUps;
+  player.run.lastDrops = drops.lines;
+  result.logs.push(...drops.lines);
+  player.run.kills += 1;
 
-    if(dungeon.type === 'random'){
+  const dungeon = DUNGEONS[dungeonKey];
+
+  // 현재 타겟 제거
+  player.run.target = null;
+
+  // 랜덤 던전이면 전투 종료
+  if(dungeon.type === 'random'){
+    endBattle(player);
+    result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
+    return result;
+  }
+
+  // 웨이브 던전이면 다음 웨이브 지정
+  if(dungeon.type === 'wave'){
+    player.run.waveIndex += 1;
+    player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
+
+    if(player.run.nextTarget){
+      result.logs.push(`✨ 다음 몬스터 매칭 예정: ${player.run.nextTarget.name}`);
+    } else {
+      result.logs.push('🏆 모든 웨이브를 클리어했습니다!');
       endBattle(player);
-      result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
-      return result;
     }
+
+    return result;
+  }
+
+  return result;
+}
 
     player.run.waveIndex += 1;
     const next = getWaveMonster(dungeonKey, player.run.waveIndex);
