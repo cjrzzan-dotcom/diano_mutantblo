@@ -211,6 +211,9 @@ const AUTO_HUNT_CHARGE_MS = 1 * 60 * 1000; // 1분
 const AUTO_HUNT_MAX_CHARGES = 50;
 const AUTO_HUNT_TURNS = 500;
 
+const args = message.content.trim().split(/\s+/);
+const command = args[0];
+
 
 function endBattle(player) {
   player.run = null;
