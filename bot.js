@@ -212,13 +212,6 @@ const AUTO_HUNT_MAX_CHARGES = 50;
 const AUTO_HUNT_TURNS = 500;
 
 
-const ATTRIBUTE_MAX = 10;
-const ATTRIBUTE_GOLD_COSTS = [100, 150, 250, 400, 700, 1000, 1500, 2200, 3000, 4500];
-const ATTRIBUTE_CHANCES = [100, 95, 90, 80, 70, 55, 40, 30, 20, 10];
-
-const ATTRIBUTE_REMOVE_COST = 3000;
-
-
 function endBattle(player) {
   player.run = null;
 }
@@ -317,7 +310,6 @@ function getWaveMonster(dungeonKey, idx){
   return {
     ...base,
     currentHp: base.hp,
-    element: pick(ELEMENTS),
   };
 }
 
@@ -355,7 +347,6 @@ function getItemSellPrice(item){
   const critDmg = item.critDamageBonus || 0;
   const dodge = item.dodgeBonus || 0;
 
-  const enhanceMap = item.elementEnhance || {};
   const enhanceTotal = Object.values(enhanceMap).reduce((a, b) => a + (b || 0), 0);
 
 
@@ -641,8 +632,6 @@ function getDefaultPlayer(userId){
     gold: 100,
     reviveTickets: 0,
     respawnAt: 0,
-    stones: { 화염:0, 얼음:0, 번개:0, 자연:0, 어둠:0 },
-    attributes: {},
     potions: { small:2, mid:1, big:0, elixir:0 },
     materials: blankMaterials(),
     inventory: [],
@@ -791,7 +780,7 @@ else if (dungeonKey === '깊은심연의숲') {
   return {
     ...base,
     currentHp: base.hp,
-    element: pick(ELEMENTS),
+   
   };
 }
 
@@ -980,11 +969,6 @@ function grantDrops(player, monster){
   player.gold += gold;
   lines.push(`💰 골드 +${gold}`);
 
-  if(chance(15)){
-    player.stones[monster.element] += 1;
-    lines.push(`💎 ${monster.element}석 +1`);
-  }
-
 for(const [name, amount] of getMaterialDrops(monster.name)){
   if(name === '부활권'){
     player.reviveTickets += amount;
@@ -1136,7 +1120,7 @@ function performAttack(player, dungeonKey){
     if(player.run.nextTarget){
       player.run.target = player.run.nextTarget;
       player.run.nextTarget = null;
-      result.logs.push(`✨ 다음 몬스터 매칭: ${player.run.target.name} (${player.run.target.element})`);
+      result.logs.push(`✨ 다음 몬스터 매칭: ${player.run.target.name}`);
       return result;
     }
     result.logs.push('현재 매칭 가능한 몬스터가 없습니다.');
@@ -1265,7 +1249,6 @@ function createCraftItem(recipe){
     critChanceBonus: 0,
     critDamageBonus: 0,
     dodgeBonus: 0,
-    elementEnhance: {},
   };
 
   if (recipe.ringRandom) {
@@ -1973,38 +1956,6 @@ if(command === '!제작목록'){
   }
 
 
-if (command === '!전체속성초기화') {
-  const ADMIN_ID = '335720453408817166';
-  if (message.author.id !== ADMIN_ID) {
-    await message.reply('❌ 관리자만 사용할 수 있습니다.');
-    return;
-  }
-
-  let count = 0;
-
-  for (const userId of Object.keys(gameData || {})) {
-    const p = getPlayer(userId);
-
-    if (!p || typeof p !== 'object') continue;
-
-    p.attributes = {
-      화염: 0,
-      얼음: 0,
-      번개: 0,
-      자연: 0,
-      어둠: 0
-    };
-
-    count++;
-  }
-
-  await saveData(gameData);
-
-  await message.reply(`🧹 전체 유저 속성 초기화 완료 (${count}명)`);
-  console.log(`[전체속성초기화 완료] ${count}명`);
-  return;
-}
-
 
 if(command === '!자동'){
 
@@ -2063,7 +2014,7 @@ if(command === '!자동'){
     if(player.run.target && player.run.nextTarget){
       player.run.target = player.run.nextTarget;
       player.run.nextTarget = null;
-      logs.push(`\n[${i+1}턴]\n👁️ ${player.run.target.name} 등장! (${player.run.target.element})`);
+      logs.push(`\n[${i+1}턴]\n👁️ ${player.run.target.name} 등장! `);
       continue;
     }
 
@@ -2730,7 +2681,7 @@ if (id === 'auto') {
       player.run.target = player.run.nextTarget;
       player.run.nextTarget = null;
 
-      logs.push(`\n[${i + 1}턴]\n👁️ ${player.run.target.name} 등장! (${player.run.target.element})`);
+      logs.push(`\n[${i + 1}턴]\n👁️ ${player.run.target.name} 등장! `);
       continue;
     }
 
