@@ -2043,19 +2043,38 @@ if(command === '!강화'){
   return;
 }
 
-if(command === '!전체속성초기화'){
+if (command === '!전체속성초기화') {
+
+  const ADMIN_ID = '너디스코드아이디'; // 👉 여기에 너 ID 넣어
+
+  if (message.author.id !== ADMIN_ID) {
+    await message.reply('❌ 관리자만 사용할 수 있습니다.');
+    return;
+  }
+
+  let count = 0;
+
   for (const id in gameData.players) {
     const p = gameData.players[id];
+
     if (!p.attributes) p.attributes = {};
 
-    for (const key of ELEMENTS) {
-      p.attributes[key] = 0;
-    }
+    p.attributes = {
+      화염: 0,
+      얼음: 0,
+      번개: 0,
+      자연: 0,
+      어둠: 0
+    };
+
+    count++;
   }
 
   await saveData(gameData);
 
-  await message.reply('🧹 모든 유저의 속성이 0으로 초기화되었습니다.');
+  await message.reply(`🧹 전체 유저 속성 초기화 완료 (${count}명)`);
+
+  console.log(`[전체속성초기화 완료] ${count}명`);
   return;
 }
 
