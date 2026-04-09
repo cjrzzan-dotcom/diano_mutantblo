@@ -368,6 +368,48 @@ const TEMP_DROP_DELETE_MS = 5000;
 const TOWN_CHANNEL_ID = '1487955862940024862';
 
 
+
+const MATERIAL_PRICES = {
+  '슬라임젤리': 30,
+  '늑대가죽': 30,
+  '고블린뼈조각': 30,
+  '오우거가죽': 30,
+  '작은 용비늘': 30,
+
+  '낡은장비조각': 50,
+
+  '드래곤 비늘': 100,
+  '드래곤 발톱': 100,
+  '번개조각': 100,
+  '얼음조각': 100,
+  '붉은화염조각': 100,
+  '푸른화염조각': 100,
+  '어둠조각': 100,
+
+  '좀비드래곤의 피': 150,
+
+  '메탈조각': 200,
+
+  '좀비드래곤의 가죽': 300,
+
+  '빛의 조각': 350,
+
+  '암흑의 조각': 400,
+
+  '도살자의 도끼조각': 450,
+  '레오릭왕의 뼈조각': 450,
+  '악마의 정수': 450,
+  '악마의살점': 450,
+
+  '릴리트의 뿔': 500,
+  '고급장비조각': 500,
+  '천상석': 500,
+
+  '디아블로의 뿔': 700,
+
+  '천상의 조각': 1000
+};
+
 const DUNGEON_CHANNELS_PROD = {
   '1487952892852965426': '초심자의숲',
   '1487952924092010667': '오색룡의둥지',
@@ -2555,6 +2597,49 @@ if (isDungeonOnlyButton && !dungeonKey) {
     content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
     ephemeral: true
   });
+  return;
+}
+
+if (command === '!판매') {
+  if (!player.materials) player.materials = {};
+
+  if (args.length < 3) {
+    await message.reply('사용법: !판매 재료이름 갯수');
+    return;
+  }
+
+  const amount = Number(args[args.length - 1]);
+  const matName = args.slice(1, -1).join(' ').trim();
+
+  if (!matName || Number.isNaN(amount) || amount <= 0) {
+    await message.reply('사용법: !판매 재료이름 갯수');
+    return;
+  }
+
+  const unitPrice = MATERIAL_PRICES[matName];
+  if (!unitPrice) {
+    await message.reply(`❌ ${matName}은(는) 판매할 수 없는 재료입니다.`);
+    return;
+  }
+
+  const have = player.materials[matName] || 0;
+  if (have < amount) {
+    await message.reply(`❌ ${matName}이 부족합니다. (보유: ${have}개)`);
+    return;
+  }
+
+  const totalPrice = unitPrice * amount;
+
+  player.materials[matName] -= amount;
+  player.gold += totalPrice;
+
+  await saveData(gameData);
+
+  await message.reply(
+    `💰 ${matName} ${amount}개 판매 완료! (+${totalPrice}G)\n` +
+    `현재 보유: ${player.materials[matName]}개\n` +
+    `현재 골드: ${player.gold}G`
+  );
   return;
 }
 
