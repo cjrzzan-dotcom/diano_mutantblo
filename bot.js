@@ -2059,6 +2059,10 @@ if(command === '!전체속성초기화'){
   return;
 }
 
+if(command === '!속성확인'){
+  await message.reply(JSON.stringify(player.attributes, null, 2));
+}
+
 
 if(command === '!자동'){
 
