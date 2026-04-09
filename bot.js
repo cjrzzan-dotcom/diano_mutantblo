@@ -1927,6 +1927,41 @@ console.log('메시지 받음:', message.content, message.channel.id);
   const arg = parts[1];
   const player = getPlayer(message.author.id);
 
+if (command === '!판매') {
+  if (!player.materials) player.materials = {};
+
+  if (args.length < 3) {
+    await message.reply('사용법: !판매 재료이름 갯수');
+    return;
+  }
+
+  const amount = Number(args[args.length - 1]);
+  const matName = args.slice(1, -1).join(' ').trim();
+
+  const unitPrice = MATERIAL_PRICES[matName];
+  if (!unitPrice) {
+    await message.reply(`❌ ${matName}은(는) 판매 불가`);
+    return;
+  }
+
+  const have = player.materials[matName] || 0;
+  if (have < amount) {
+    await message.reply(`❌ ${matName} 부족 (${have}개 보유)`);
+    return;
+  }
+
+  const total = unitPrice * amount;
+
+  player.materials[matName] -= amount;
+  player.gold += total;
+
+  await saveData(gameData);
+
+  await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
+  return;
+}
+
+
 if(command === '!가방'){
     console.log("📦 !가방 분기 들어옴");
     await saveData(gameData);
@@ -2140,39 +2175,6 @@ client.on('interactionCreate', async (interaction) => {
   const player = getPlayer(interaction.user.id);
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
-
-if (command === '!판매') {
-  if (!player.materials) player.materials = {};
-
-  if (args.length < 3) {
-    await message.reply('사용법: !판매 재료이름 갯수');
-    return;
-  }
-
-  const amount = Number(args[args.length - 1]);
-  const matName = args.slice(1, -1).join(' ').trim();
-
-  const unitPrice = MATERIAL_PRICES[matName];
-  if (!unitPrice) {
-    await message.reply(`❌ ${matName}은(는) 판매할 수 없습니다.`);
-    return;
-  }
-
-  const have = player.materials[matName] || 0;
-  if (have < amount) {
-    await message.reply(`❌ ${matName} 부족 (${have}개 보유)`);
-    return;
-  }
-
-  const total = unitPrice * amount;
-
-  player.materials[matName] -= amount;
-  player.gold += total;
-
-  await saveData(gameData);
-
-  await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
-}
 
 
 const revived = reviveIfRespawnReady(player);
