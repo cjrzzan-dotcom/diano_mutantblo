@@ -2045,7 +2045,7 @@ if(command === '!강화'){
 
 if (command === '!전체속성초기화') {
 
-  const ADMIN_ID = '너디스코드아이디'; // 👉 여기에 너 ID 넣어
+  const ADMIN_ID = '335720453408817166'; // 👉 여기에 너 ID 넣어
 
   if (message.author.id !== ADMIN_ID) {
     await message.reply('❌ 관리자만 사용할 수 있습니다.');
