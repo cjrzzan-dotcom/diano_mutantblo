@@ -2396,28 +2396,28 @@ if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
 }
 
 
-
-
-
 if (id === 'enhance_view') {
+  await interaction.deferReply({ ephemeral: true });
+
   player.selectedEnhanceTarget = null;
   await saveData(gameData);
-  await interaction.reply({
+
+  await interaction.editReply({
     content: `🔨 강화할 아이템을 선택하세요.\n\n${inventoryText(player)}\n\n강화는 골드만 소모됩니다.`,
-    components: buildEnhanceItemButtons(player),
-    ephemeral: true
+    components: buildEnhanceItemButtons(player)
   });
   return;
 }
 
 if (id.startsWith('enhance_item_')) {
+  await interaction.deferReply({ ephemeral: true });
+
   const idx = Number(id.replace('enhance_item_', ''));
   const item = player.inventory[idx];
 
   if (!item) {
-    await interaction.reply({
-      content: '선택한 아이템이 없습니다.',
-      ephemeral: true
+    await interaction.editReply({
+      content: '선택한 아이템이 없습니다.'
     });
     return;
   }
@@ -2425,20 +2425,20 @@ if (id.startsWith('enhance_item_')) {
   const text = tryEnhanceItem(player, item);
   await saveData(gameData);
 
-  await interaction.reply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
-    ephemeral: true
+  await interaction.editReply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
   });
   return;
 }
 
 if (id === 'enhance_equipped_weapon') {
+  await interaction.deferReply({ ephemeral: true });
+
   const item = player.equipment.weapon;
 
   if (!item) {
-    await interaction.reply({
-      content: '착용 무기가 없습니다.',
-      ephemeral: true
+    await interaction.editReply({
+      content: '착용 무기가 없습니다.'
     });
     return;
   }
@@ -2446,20 +2446,20 @@ if (id === 'enhance_equipped_weapon') {
   const text = tryEnhanceItem(player, item);
   await saveData(gameData);
 
-  await interaction.reply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
-    ephemeral: true
+  await interaction.editReply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
   });
   return;
 }
 
 if (id === 'enhance_equipped_armor') {
+  await interaction.deferReply({ ephemeral: true });
+
   const item = player.equipment.armor;
 
   if (!item) {
-    await interaction.reply({
-      content: '착용 갑옷이 없습니다.',
-      ephemeral: true
+    await interaction.editReply({
+      content: '착용 갑옷이 없습니다.'
     });
     return;
   }
@@ -2467,20 +2467,20 @@ if (id === 'enhance_equipped_armor') {
   const text = tryEnhanceItem(player, item);
   await saveData(gameData);
 
-  await interaction.reply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
-    ephemeral: true
+  await interaction.editReply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
   });
   return;
 }
 
 if (id === 'enhance_equipped_ring') {
+  await interaction.deferReply({ ephemeral: true });
+
   const item = player.equipment.ring;
 
   if (!item) {
-    await interaction.reply({
-      content: '착용 반지가 없습니다.',
-      ephemeral: true
+    await interaction.editReply({
+      content: '착용 반지가 없습니다.'
     });
     return;
   }
@@ -2488,12 +2488,17 @@ if (id === 'enhance_equipped_ring') {
   const text = tryEnhanceItem(player, item);
   await saveData(gameData);
 
-  await interaction.reply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`,
-    ephemeral: true
+  await interaction.editReply({
+    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
   });
   return;
 }
+
+
+
+
+
+
 
 if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
   const craftId = id.replace('craft_', '');
