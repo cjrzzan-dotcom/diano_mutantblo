@@ -2044,17 +2044,18 @@ if(command === '!강화'){
 }
 
 if (command === '!전체속성초기화') {
-  const ADMIN_ID = '너디스코드아이디';
+  const ADMIN_ID = '335720453408817166';
   if (message.author.id !== ADMIN_ID) {
     await message.reply('❌ 관리자만 사용할 수 있습니다.');
     return;
   }
 
-  const playerIds = Object.keys(data.players || {});
   let count = 0;
 
-  for (const id of playerIds) {
-    const p = getPlayer(id);
+  for (const userId of Object.keys(gameData || {})) {
+    const p = getPlayer(userId);
+
+    if (!p || typeof p !== 'object') continue;
 
     p.attributes = {
       화염: 0,
@@ -2067,7 +2068,7 @@ if (command === '!전체속성초기화') {
     count++;
   }
 
-  await saveData(data);
+  await saveData(gameData);
 
   await message.reply(`🧹 전체 유저 속성 초기화 완료 (${count}명)`);
   console.log(`[전체속성초기화 완료] ${count}명`);
