@@ -1315,6 +1315,59 @@ function canCraft(player, recipe){
   }
   return true;
 }
+
+function createCraftItem(recipe){
+  const rarity = rollRarity();
+  const item = {
+    name: `${rarity.icon} ${recipe.label}`,
+    type: recipe.type,
+    rarity: rarity.key,
+    rarityLabel: rarity.label,
+    atkBonus: recipe.base.atk + rarity.atk,
+    defBonus: recipe.base.def + rarity.def,
+    critChanceBonus: 0,
+    critDamageBonus: 0,
+    dodgeBonus: 0,
+    elementEnhance: {},
+  };
+
+  if (recipe.ringRandom) {
+    Object.assign(item, createRingStats(recipe.id));
+  }
+
+  return item;
+}
+
+function createRingStats(recipeId){
+  const isLilith = recipeId === 'lilith_ring';
+
+  const pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
+  const count = isLilith ? rand(2, 3) : rand(1, 3);
+
+  const picked = [];
+  while (picked.length < count) {
+    const k = pick(pool);
+    if (!picked.includes(k)) picked.push(k);
+  }
+
+  const out = {
+    critChanceBonus: 0,
+    critDamageBonus: 0,
+    dodgeBonus: 0,
+    atkBonus: 0
+  };
+
+  for (const k of picked) {
+    out[k] = isLilith ? rand(4, 8) : rand(2, 5);
+  }
+
+  if (isLilith) {
+    out.atkBonus = rand(10, 18);
+  }
+
+  return out;
+}
+
 function tryCraft(player, craftId){
   const recipe = CRAFT_BY_ID[craftId];
   if(!recipe) return { ok:false, text:'없는 제작식입니다.' };
