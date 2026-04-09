@@ -2043,6 +2043,23 @@ if(command === '!강화'){
   return;
 }
 
+if(command === '!전체속성초기화'){
+  for (const id in gameData.players) {
+    const p = gameData.players[id];
+    if (!p.attributes) p.attributes = {};
+
+    for (const key of ELEMENTS) {
+      p.attributes[key] = 0;
+    }
+  }
+
+  await saveData(gameData);
+
+  await message.reply('🧹 모든 유저의 속성이 0으로 초기화되었습니다.');
+  return;
+}
+
+
 if(command === '!자동'){
 
   if(Date.now() < player.respawnAt){
