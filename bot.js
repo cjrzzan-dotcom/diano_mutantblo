@@ -269,44 +269,6 @@ function reviveIfRespawnReady(player){
 }
 
 
-function buildAttributeButtons(){
-  return [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('attr_fire').setLabel('🔥 화염').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId('attr_ice').setLabel('❄️ 얼음').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('attr_lightning').setLabel('⚡ 번개').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('attr_nature').setLabel('🌿 자연').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('attr_dark').setLabel('🌑 어둠').setStyle(ButtonStyle.Secondary),
-    )
-  ];
-}
-
-function buildAttributeRemoveButtons(player){
-  const buttons = [];
-
-  if(player.attributes.화염 > 0)
-    buttons.push(new ButtonBuilder().setCustomId('attr_remove_화염').setLabel('🔥 화염').setStyle(ButtonStyle.Danger));
-
-  if(player.attributes.얼음 > 0)
-    buttons.push(new ButtonBuilder().setCustomId('attr_remove_얼음').setLabel('❄️ 얼음').setStyle(ButtonStyle.Danger));
-
-  if(player.attributes.번개 > 0)
-    buttons.push(new ButtonBuilder().setCustomId('attr_remove_번개').setLabel('⚡ 번개').setStyle(ButtonStyle.Danger));
-
-  if(player.attributes.자연 > 0)
-    buttons.push(new ButtonBuilder().setCustomId('attr_remove_자연').setLabel('🌿 자연').setStyle(ButtonStyle.Danger));
-
-  if(player.attributes.어둠 > 0)
-    buttons.push(new ButtonBuilder().setCustomId('attr_remove_어둠').setLabel('🌑 어둠').setStyle(ButtonStyle.Danger));
-
-  if(buttons.length === 0){
-    return [];
-  }
-
-  return [new ActionRowBuilder().addComponents(buttons)];
-}
-
-
 function refreshAutoHuntCharges(player) {
   if (player.autoHuntCharges == null) player.autoHuntCharges = 0;
   if (!player.autoHuntLastChargeAt) player.autoHuntLastChargeAt = Date.now();
@@ -398,7 +360,6 @@ function getItemSellPrice(item){
 
 
 
-
   const statValue =
     atk * 8 +
     def * 8 +
@@ -470,8 +431,6 @@ const SHOP = {
   elixir: { label: '🧪 엘릭서', heal: 99999, price: 3000 },
 };
 
-const ELEMENTS = ['화염', '얼음', '번개', '자연', '어둠'];
-const STRONG = { 화염: '자연', 자연: '번개', 번개: '얼음', 얼음: '화염', 어둠: '무속성' };
 const STAT_CAPS = { critChance: 35, critDamage: 100, dodge: 25 };
 
 const RARITIES = [
@@ -486,7 +445,7 @@ const MATERIALS = [
   '슬라임젤리', '늑대가죽', '고블린뼈조각', '오우거가죽', '작은 용비늘', '낡은장비조각',
   '드래곤 비늘', '드래곤 발톱', '번개조각', '얼음조각', '붉은화염조각', '푸른화염조각', '어둠조각',
   '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각', '암흑의 조각',
-  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','천상의 조각','천상석',
+  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','천상의 조각','천상석',
 ];
 
 const CRAFTS = [
@@ -1538,7 +1497,6 @@ const items = player.inventory && player.inventory.length
   return [
     `💰 골드: ${player.gold}`,
     `💖 부활권: ${player.reviveTickets}`,
-    `💎 속성석: ${Object.entries(player.stones || {}).map(([k,v])=>`${k}${v}`).join(' / ')}`,
     `📦 재료: ${mats}`,
     '',
     `🎒 인벤토리`,
@@ -1552,7 +1510,6 @@ function buildCompactBattleText(player,target,channelId){
     lines.push(`👿 ${target.name}`);
     lines.push(`❤️ ${target.currentHp}/${target.hp}`);
     lines.push(`⚔️ ${target.atk} / 🛡️ ${target.def}`);
-    lines.push(`✨ 속성: ${target.element}`);
     lines.push('━━━━━━━━━━');
   } else {
     lines.push('👿 몬스터 없음');
@@ -1599,10 +1556,6 @@ function buildTownButtons(player){
       new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 장비강화').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
-    ),
-  new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('attribute_enhance').setLabel('✨ 속성강화').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('attribute_remove').setLabel('🗑️ 속성삭제').setStyle(ButtonStyle.Danger),
    ),
   ];
 }
@@ -1865,7 +1818,7 @@ function buildIntroPayload(dungeonKey, target){
   }
   const embed = new EmbedBuilder()
     .setTitle(`👁️ ${target.name} 등장`)
-    .setDescription(`던전: ${DISPLAY_NAMES[dungeonKey]}\n속성: ${target.element}\n\n`)
+    .setDescription(`던전: ${DISPLAY_NAMES[dungeonKey]}`)
     .setColor(0x550000);
   const img = buildImageAttachment(target.name);
   if(img){
@@ -2050,10 +2003,6 @@ if (command === '!전체속성초기화') {
   await message.reply(`🧹 전체 유저 속성 초기화 완료 (${count}명)`);
   console.log(`[전체속성초기화 완료] ${count}명`);
   return;
-}
-
-if(command === '!속성확인'){
-  await message.reply(JSON.stringify(player.attributes, null, 2));
 }
 
 
@@ -2321,32 +2270,6 @@ if (id === 'status') {
     });
     return;
   }
-
-if (id === 'attribute_enhance') {
-  await interaction.reply({
-    content:
-`✨ 속성 강화
-
-보유 속성석:
-🔥 화염 ${player.stones.화염 || 0}
-❄️ 얼음 ${player.stones.얼음 || 0}
-⚡ 번개 ${player.stones.번개 || 0}
-🌿 자연 ${player.stones.자연 || 0}
-🌑 어둠 ${player.stones.어둠 || 0}
-
-현재 속성:
-🔥 ${player.attributes.화염 || 0}
-❄️ ${player.attributes.얼음 || 0}
-⚡ ${player.attributes.번개 || 0}
-🌿 ${player.attributes.자연 || 0}
-🌑 ${player.attributes.어둠 || 0}
-
-속성은 최대 2개 / 속성당 최대 +${ATTRIBUTE_MAX}`,
-    components: buildAttributeButtons(),
-    ephemeral: true
-  });
-  return;
-}
 
 
 
@@ -2720,147 +2643,9 @@ if (id === 'revive') {
   return;
 }
 
-if (id.startsWith('attr_')) {
-  const map = {
-    attr_fire: '화염',
-    attr_ice: '얼음',
-    attr_lightning: '번개',
-    attr_nature: '자연',
-    attr_dark: '어둠'
-  };
-
-  const key = map[id];
-  if (!key) return;
-
-  const active = Object.entries(player.attributes)
-    .filter(([,v]) => v > 0)
-    .map(([k]) => k);
-
-  const current = player.attributes[key] || 0;
-
-  if(current <= 0 && active.length >= 2){
-    await interaction.reply({
-      content: '속성은 최대 2개까지만 강화할 수 있습니다.',
-      ephemeral: true
-    });
-    return;
-  }
-
-  if(current >= ATTRIBUTE_MAX){
-    await interaction.reply({
-      content: `❌ ${key} 속성은 최대 +${ATTRIBUTE_MAX}입니다.`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  if((player.stones[key] || 0) <= 0){
-    await interaction.reply({
-      content: `❌ ${key} 속성석이 부족합니다.`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  const needGold = ATTRIBUTE_GOLD_COSTS[current];
-  const chance = ATTRIBUTE_CHANCES[current];
-
-  if(player.gold < needGold){
-    await interaction.reply({
-      content: `❌ 골드가 부족합니다. (${needGold}G 필요)`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  player.stones[key] -= 1;
-  player.gold -= needGold;
-
-  const success = Math.random() * 100 < chance;
-
-  if(success){
-    player.attributes[key] = current + 1;
-    await saveData(gameData);
-
-    await interaction.reply({
-      content:
-`✨ ${key} 속성 강화 성공!
-
-현재 속성:
-🔥 ${player.attributes.화염 || 0}
-❄️ ${player.attributes.얼음 || 0}
-⚡ ${player.attributes.번개 || 0}
-🌿 ${player.attributes.자연 || 0}
-🌑 ${player.attributes.어둠 || 0}
-
-(소모: ${key}석 1개, ${needGold}G / 성공률: ${chance}%)`,
-      ephemeral: true
-    });
-    return;
-  }
-
-
 
   await saveData(gameData);
 
-  await interaction.reply({
-    content: `❌ ${key} 속성 강화 실패... (소모: ${key}석 1개, ${needGold}G / 성공률: ${chance}%)`,
-    ephemeral: true
-  });
-  return;
-}
-
- 
-if (id === 'attribute_remove') {
-  const total = Object.values(player.attributes || {}).reduce((a, c) => a + c, 0);
-
-  if(total <= 0){
-    await interaction.reply({
-      content: '삭제할 속성이 없습니다.',
-      ephemeral: true
-    });
-    return;
-  }
-
-  await interaction.reply({
-    content: `🗑️ 삭제할 속성을 선택하세요.\n비용: ${ATTRIBUTE_REMOVE_COST}G`,
-    components: buildAttributeRemoveButtons(player),
-    ephemeral: true
-  });
-  return;
-}
-
-
-if (id.startsWith('attr_remove_')) {
-  const key = id.replace('attr_remove_', '');
-
-  if((player.attributes[key] || 0) <= 0){
-    await interaction.reply({
-      content: '해당 속성이 없습니다.',
-      ephemeral: true
-    });
-    return;
-  }
-
-  if(player.gold < ATTRIBUTE_REMOVE_COST){
-    await interaction.reply({
-      content: `❌ 골드가 부족합니다. (${ATTRIBUTE_REMOVE_COST}G 필요)`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  player.gold -= ATTRIBUTE_REMOVE_COST;
-  player.attributes[key] = 0;
-
-  await saveData(gameData);
-
-  await interaction.reply({
-    content: `🗑️ ${key} 속성 삭제 완료! (-${ATTRIBUTE_REMOVE_COST}G)`,
-    ephemeral: true
-  });
-  return;
-}
 
 
 
