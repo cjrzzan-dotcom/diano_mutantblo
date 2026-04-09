@@ -924,21 +924,6 @@ function getDodge(player){
   const eq = getEquippedBonuses(player);
   return round1(Math.min(STAT_CAPS.dodge, player.stats.dodge + eq.dodge));
 }
-function getAttributeBonus(attrs){
-  return Object.values(attrs).reduce((a,c)=>a+c,0);
-}
-function getElementMultiplier(playerAttrs, monsterElement){
-  const attrs = Object.keys(playerAttrs).slice(0,2);
-  if(!attrs.length) return 1.0;
-  let strong = false, weak = false;
-  for(const a of attrs){
-    if(STRONG[a] === monsterElement) strong = true;
-    if(STRONG[monsterElement] === a) weak = true;
-  }
-  if(strong) return 1.2;
-  if(weak) return 0.8;
-  return 1.0;
-}
 
 function grantMaterial(player, name, amount, lines){
   player.materials[name] = (player.materials[name] || 0) + amount;
@@ -1200,18 +1185,11 @@ function performAttack(player, dungeonKey){
   }
 
 const target = player.run.target;
-const mult = getElementMultiplier(player.attributes, target.element);
-const attrBonus = getAttributeBonus(player.attributes);
 
-let damage = (getAttackPower(player) * mult) + attrBonus - target.def;
+
+let damage = getAttackPower(player) - target.def;
 let isCrit = false;
 
-
-if (mult > 1) {
-  result.logs.push(`🔥 속성 우위! 데미지 ${mult}배 적용`);
-} else if (mult < 1) {
-  result.logs.push(`💧 속성 열세! 데미지 ${mult}배 적용`);
-}
 
 
 if(chance(getCritChance(player))){
@@ -2040,57 +2018,7 @@ if(command === '!제작목록'){
     await message.reply(text);
     return;
   }
-if(command === '!강화'){
-  if(!arg || !ELEMENTS.includes(arg)){
-    await message.reply(`사용법: !강화 ${ELEMENTS.join('|')}`);
-    return;
-  }
 
-  const active = Object.entries(player.attributes)
-    .filter(([,v]) => v > 0)
-    .map(([k]) => k);
-
-  const current = player.attributes[arg] || 0;
-
-  if(current <= 0 && active.length >= 2){
-    await message.reply('속성은 최대 2개까지만 강화할 수 있습니다.');
-    return;
-  }
-
-  if(current >= ATTRIBUTE_MAX){
-    await message.reply(`❌ ${arg} 속성은 최대 +${ATTRIBUTE_MAX}입니다.`);
-    return;
-  }
-
-  if((player.stones[arg] || 0) < 1){
-    await message.reply(`${arg}석이 부족합니다.`);
-    return;
-  }
-
-  const needGold = ATTRIBUTE_GOLD_COSTS[current];
-  const chance = ATTRIBUTE_CHANCES[current];
-
-  if(player.gold < needGold){
-    await message.reply(`❌ 골드가 부족합니다. (${needGold}G 필요)`);
-    return;
-  }
-
-  player.stones[arg] -= 1;
-  player.gold -= needGold;
-
-  const success = Math.random() * 100 < chance;
-
-  if(success){
-    player.attributes[arg] = current + 1;
-    await saveData(gameData);
-    await message.reply(`💎 ${arg} 강화 성공! 현재 ${arg}+${player.attributes[arg]} / 최대 ${ATTRIBUTE_MAX} (성공률 ${chance}%)`);
-    return;
-  }
-
-  await saveData(gameData);
-  await message.reply(`❌ ${arg} 강화 실패... (${arg}석 1개, ${needGold}G 소모 / 성공률 ${chance}%)`);
-  return;
-}
 
 if (command === '!전체속성초기화') {
   const ADMIN_ID = '335720453408817166';
