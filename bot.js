@@ -337,19 +337,16 @@ function createRunIfNeeded(player, dungeonKey){
 }
 
 function getItemSellPrice(item){
-  if(!item) return 0;
+  if (!item) return 0;
 
-  const base = GRADE_SELL_PRICE[item.grade || 'common'] || 50;
+  const base = GRADE_SELL_PRICE[item.grade || item.rarity || 'common'] || 50;
 
   const atk = item.atkBonus || 0;
   const def = item.defBonus || 0;
   const crit = item.critChanceBonus || 0;
   const critDmg = item.critDamageBonus || 0;
   const dodge = item.dodgeBonus || 0;
-
-  const enhanceTotal = Object.values(enhanceMap).reduce((a, b) => a + (b || 0), 0);
-
-
+  const enhanceLevel = item.enhanceLevel || 0;
 
   const statValue =
     atk * 8 +
@@ -358,13 +355,12 @@ function getItemSellPrice(item){
     critDmg * 10 +
     dodge * 12;
 
-  const enhanceValue = enhanceTotal * 25;
+  const enhanceValue = enhanceLevel * 25;
 
   const price = base + statValue + enhanceValue;
 
   return Math.max(10, Math.floor(price));
 }
-
 
 const IMAGE_PATH = path.join(__dirname, 'images');
 const INTRO_DELAY_MS = 1000;
