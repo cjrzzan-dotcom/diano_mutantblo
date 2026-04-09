@@ -1916,55 +1916,55 @@ if (!gameData) gameData = {};
 });
 
 
-client.on('messageCreate', async (message)=>{
-console.log('메시지 받음:', message.content, message.channel.id);
-  if(message.author.bot) return;
-  if(!message.content.startsWith('!')) return;
+client.on('messageCreate', async (message) => {
+  console.log('메시지 받음:', message.content, message.channel.id);
 
-  const parts = message.content.trim().split(/\s+/);
-  const command = parts[0];
-  const arg = parts[1];
+  if (message.author.bot) return;
+  if (!message.content.startsWith('!')) return;
+
   const player = getPlayer(message.author.id);
+  const args = message.content.trim().split(/\s+/);
+  const command = args[0];
+  const arg = args[1];
 
-const args = message.content.trim().split(/\s+/);
-const command = args[0];
+  if (command === '!판매') {
+    if (!player.materials) player.materials = {};
 
+    if (args.length < 3) {
+      await message.reply('사용법: !판매 재료이름 갯수');
+      return;
+    }
 
+    const amount = Number(args[args.length - 1]);
+    const matName = args.slice(1, -1).join(' ').trim();
 
+    if (!matName || Number.isNaN(amount) || amount <= 0) {
+      await message.reply('사용법: !판매 재료이름 갯수');
+      return;
+    }
 
-if (command === '!판매') {
-  if (!player.materials) player.materials = {};
+    const unitPrice = MATERIAL_PRICES[matName];
+    if (!unitPrice) {
+      await message.reply(`❌ ${matName}은(는) 판매 불가`);
+      return;
+    }
 
-  if (args.length < 3) {
-    await message.reply('사용법: !판매 재료이름 갯수');
+    const have = player.materials[matName] || 0;
+    if (have < amount) {
+      await message.reply(`❌ ${matName} 부족 (${have}개 보유)`);
+      return;
+    }
+
+    const total = unitPrice * amount;
+
+    player.materials[matName] -= amount;
+    player.gold += total;
+
+    await saveData(gameData);
+
+    await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
     return;
   }
-
-  const amount = Number(args[args.length - 1]);
-  const matName = args.slice(1, -1).join(' ').trim();
-
-  const unitPrice = MATERIAL_PRICES[matName];
-  if (!unitPrice) {
-    await message.reply(`❌ ${matName}은(는) 판매 불가`);
-    return;
-  }
-
-  const have = player.materials[matName] || 0;
-  if (have < amount) {
-    await message.reply(`❌ ${matName} 부족 (${have}개 보유)`);
-    return;
-  }
-
-  const total = unitPrice * amount;
-
-  player.materials[matName] -= amount;
-  player.gold += total;
-
-  await saveData(gameData);
-
-  await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
-  return;
-}
 
 
 if(command === '!가방'){
