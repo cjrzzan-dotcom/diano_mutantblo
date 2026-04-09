@@ -211,10 +211,6 @@ const AUTO_HUNT_CHARGE_MS = 1 * 60 * 1000; // 1분
 const AUTO_HUNT_MAX_CHARGES = 50;
 const AUTO_HUNT_TURNS = 500;
 
-const args = message.content.trim().split(/\s+/);
-const command = args[0];
-
-
 function endBattle(player) {
   player.run = null;
 }
@@ -1929,6 +1925,12 @@ console.log('메시지 받음:', message.content, message.channel.id);
   const command = parts[0];
   const arg = parts[1];
   const player = getPlayer(message.author.id);
+
+const args = message.content.trim().split(/\s+/);
+const command = args[0];
+
+
+
 
 if (command === '!판매') {
   if (!player.materials) player.materials = {};
