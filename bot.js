@@ -1357,11 +1357,11 @@ function tryEnhanceItem(player, item){
   if(current >= 7){
     item.enhanceLevel -= 1;
 
-    if(item.type === 'weapon') item.atkBonus = Math.max(0, (item.atkBonus || 0) - 3);
-    if(item.type === 'armor') item.defBonus = Math.max(0, (item.defBonus || 0) - 3);
+    if(item.type === 'weapon') item.atkBonus = Math.max(0, (item.atkBonus || 0) - 1);
+    if(item.type === 'armor') item.defBonus = Math.max(0, (item.defBonus || 0) - 1);
     if(item.type === 'ring'){
       const stats = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
-      const candidates = stats.filter(k => (item[k] || 0) >= 2);
+      const candidates = stats.filter(k => (item[k] || 0) >= 1);
 
       if(candidates.length > 0){
         const p = pick(candidates);
