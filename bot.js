@@ -2535,9 +2535,6 @@ if (id === 'enhance_equipped_ring') {
 
 
 
-
-
-
 if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
   const craftId = id.replace('craft_', '');
   const res = tryCraft(player, craftId);
@@ -2611,36 +2608,26 @@ if (command === '!판매') {
   const amount = Number(args[args.length - 1]);
   const matName = args.slice(1, -1).join(' ').trim();
 
-  if (!matName || Number.isNaN(amount) || amount <= 0) {
-    await message.reply('사용법: !판매 재료이름 갯수');
-    return;
-  }
-
   const unitPrice = MATERIAL_PRICES[matName];
   if (!unitPrice) {
-    await message.reply(`❌ ${matName}은(는) 판매할 수 없는 재료입니다.`);
+    await message.reply(`❌ ${matName}은(는) 판매할 수 없습니다.`);
     return;
   }
 
   const have = player.materials[matName] || 0;
   if (have < amount) {
-    await message.reply(`❌ ${matName}이 부족합니다. (보유: ${have}개)`);
+    await message.reply(`❌ ${matName} 부족 (${have}개 보유)`);
     return;
   }
 
-  const totalPrice = unitPrice * amount;
+  const total = unitPrice * amount;
 
   player.materials[matName] -= amount;
-  player.gold += totalPrice;
+  player.gold += total;
 
   await saveData(gameData);
 
-  await message.reply(
-    `💰 ${matName} ${amount}개 판매 완료! (+${totalPrice}G)\n` +
-    `현재 보유: ${player.materials[matName]}개\n` +
-    `현재 골드: ${player.gold}G`
-  );
-  return;
+  await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
 }
 
 if (id === 'revive') {
