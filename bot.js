@@ -861,38 +861,34 @@ function rollRarity(){
   }
   return RARITIES[0];
 }
-function createRingStats(){
-  const count = rand(1,3);
-  const pool = ['critChanceBonus','critDamageBonus','dodgeBonus'];
-  const picked = [];
+function createRingStats(recipeId){
+  const isLilith = recipeId === 'lilith_ring';
 
-  while(picked.length < count){
+  const pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
+  const count = isLilith ? rand(2, 3) : rand(1, 3);
+
+  const picked = [];
+  while (picked.length < count) {
     const k = pick(pool);
-    if(!picked.includes(k)) picked.push(k);
+    if (!picked.includes(k)) picked.push(k);
   }
 
-  const out = { critChanceBonus:0, critDamageBonus:0, dodgeBonus:0 };
-  for(const k of picked) out[k] = rand(2,5);
-  return out;
-}
-function createCraftItem(recipe){
-  const rarity = rollRarity();
-  const item = {
-    name: `${rarity.icon} ${recipe.label}`,
-    type: recipe.type,
-    rarity: rarity.key,
-    rarityLabel: rarity.label,
-    atkBonus: recipe.base.atk + rarity.atk,
-    defBonus: recipe.base.def + rarity.def,
+  const out = {
     critChanceBonus: 0,
     critDamageBonus: 0,
     dodgeBonus: 0,
-    elementEnhance: {},
+    atkBonus: 0
   };
-  if(recipe.ringRandom){
-    Object.assign(item, createRingStats());
+
+  for (const k of picked) {
+    out[k] = isLilith ? rand(4, 8) : rand(2, 5);
   }
-  return item;
+
+  if (isLilith) {
+    out.atkBonus = rand(10, 18);
+  }
+
+  return out;
 }
 
 function getEquippedBonuses(player){
