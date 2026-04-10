@@ -2407,7 +2407,9 @@ client.on('interactionCreate', async (interaction) => {
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
-  // 🔨 강화 메뉴
+  const revived = reviveIfRespawnReady(player);
+  if (revived) await saveData(gameData);
+
   if (id === 'enhance_menu') {
     await interaction.update({
       content: '🔨 강화 메뉴\n원하는 기능을 선택하세요.',
@@ -2416,7 +2418,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // ⚒️ 담금질 선택
   if (id === 'temper_select') {
     await interaction.update({
       content: '⚒️ 담금질할 장비를 선택하세요.\n세계석조각 3개 필요',
@@ -2425,8 +2426,9 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // ⚒️ 실제 담금질 실행
   if (id === 'temper_weapon' || id === 'temper_armor' || id === 'temper_ring') {
+    await interaction.deferUpdate();
+
     let item = null;
 
     if (id === 'temper_weapon') item = player.equipment.weapon;
@@ -2437,14 +2439,13 @@ client.on('interactionCreate', async (interaction) => {
 
     await saveData(gameData);
 
-    await interaction.update({
+    await interaction.editReply({
       content: result,
       components: buildTemperButtons(player),
     });
     return;
   }
 
-  // 💰 판매 처리
   if (id.startsWith('sell_')) {
     const index = Number(id.replace('sell_', ''));
     const item = player.inventory[index];
