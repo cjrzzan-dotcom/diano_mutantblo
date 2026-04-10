@@ -1413,21 +1413,22 @@ function tryEnhanceItem(player, item){
 }
 
 function equipmentText(player){
-const weaponText = player.equipment.weapon
-  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
-  : '없음';
+  const weaponText = player.equipment.weapon
+    ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+    : '없음';
 
-const armorText = player.equipment.armor
-  ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
-  : '없음';
+  const armorText = player.equipment.armor
+    ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+    : '없음';
 
-const ringText = player.equipment.ring
-  ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
-  : '없음';
+  const ringText = player.equipment.ring
+    ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
+    : '없음';
+
   return [
-    `⚔️ 무기: ${weapon}`,
-    `🛡️ 갑옷: ${armor}`,
-    `💍 반지: ${ring}`
+    `⚔️ 무기: ${weaponText}`,
+    `🛡️ 갑옷: ${armorText}`,
+    `💍 반지: ${ringText}`
   ].join('\n');
 }
 function materialsText(player){
@@ -1474,17 +1475,17 @@ function buildFullStatusText(player){
   const baseDodge = player.stats.dodge;
   const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
 
-const weaponText = player.equipment.weapon
-  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhance || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
-  : '없음';
+  const weaponText = player.equipment.weapon
+    ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+    : '없음';
 
-const armorText = player.equipment.armor
-  ? `${player.equipment.armor.name} +${player.equipment.armor.enhance || 0} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
-  : '없음';
+  const armorText = player.equipment.armor
+    ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+    : '없음';
 
-const ringText = player.equipment.ring
-  ? `${player.equipment.ring.name} +${player.equipment.ring.enhance || 0} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
-  : '없음';
+  const ringText = player.equipment.ring
+    ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
+    : '없음';
 
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
@@ -1501,6 +1502,7 @@ const ringText = player.equipment.ring
     `💍 반지: ${ringText}`,
   ].join('\n');
 }
+
 function buildBagText(player){
   const mats = Object.entries(player.materials || {})
     .filter(([,v]) => v > 0)
