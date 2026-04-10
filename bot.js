@@ -254,6 +254,63 @@ function clearBattleMessage(player){
   player.battleChannelId = null;
 }
 
+function randInt(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function tryTemperItem(player, item){
+  if (!item) return '❌ 없는 아이템입니다.';
+  if (!player.materials) player.materials = {};
+
+  if (item.temperCount === undefined) item.temperCount = 0;
+
+  const needMat = 3;
+  const maxTemper = 5;
+  const matName = '세계석조각';
+
+  if (item.temperCount >= maxTemper) {
+    return `❌ ${item.name}은(는) 이미 담금질 최대(${maxTemper}회)입니다.`;
+  }
+
+  if ((player.materials[matName] || 0) < needMat) {
+    return `❌ ${matName}이 부족합니다. (${needMat}개 필요)`;
+  }
+
+  player.materials[matName] -= needMat;
+
+  if (item.type === 'weapon') {
+    const value = randInt(1, 3);
+    item.atkBonus = (item.atkBonus || 0) + value;
+    item.temperCount += 1;
+    return `⚒️ ${item.name} 담금질 성공!\n공격력 +${value}\n(담금질 ${item.temperCount}/5)`;
+  }
+
+  if (item.type === 'armor') {
+    const value = randInt(1, 3);
+    item.defBonus = (item.defBonus || 0) + value;
+    item.temperCount += 1;
+    return `⚒️ ${item.name} 담금질 성공!\n방어력 +${value}\n(담금질 ${item.temperCount}/5)`;
+  }
+
+  if (item.type === 'ring') {
+    const value = randInt(1, 2);
+    item.atkBonus = (item.atkBonus || 0) + value;
+    item.defBonus = (item.defBonus || 0) + value;
+    item.critChanceBonus = (item.critChanceBonus || 0) + value;
+    item.critDamageBonus = (item.critDamageBonus || 0) + value;
+    item.dodgeBonus = (item.dodgeBonus || 0) + value;
+    item.temperCount += 1;
+    return `⚒️ ${item.name} 담금질 성공!\n모든 스탯 +${value}\n(담금질 ${item.temperCount}/5)`;
+  }
+
+  player.materials[matName] += needMat;
+  return '❌ 담금질할 수 없는 아이템 종류입니다.';
+}
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function reviveIfRespawnReady(player){
   if(!player.run) return false;
   if(!player.run.isDown) return false;
@@ -479,7 +536,7 @@ const MATERIALS = [
   '슬라임젤리', '늑대가죽', '고블린뼈조각', '오우거가죽', '작은 용비늘', '낡은장비조각',
   '드래곤 비늘', '드래곤 발톱', '번개조각', '얼음조각', '붉은화염조각', '푸른화염조각', '어둠조각',
   '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각', '암흑의 조각',
-  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','천상의 조각','천상석',
+  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','천상의 조각','천상석','세계석조각',
 ];
 
 const CRAFTS = [
@@ -971,9 +1028,22 @@ if(heavenSet.includes(monsterName)){
   if(monsterName === '레오릭 왕' && chance(40)) drops.push(['레오릭왕의 뼈조각',1]);
   if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 살점',1]);
   if(monsterName === '릴리트' && chance(35)) drops.push(['릴리트의 뿔',1]);
-  if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) drops.push(['악마의 정수',1]);
-  if(monsterName === '종말의 화신 디아블로' && chance(40)) drops.push(['디아블로의 뿔',1]);
+if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) {
+  drops.push(['악마의 정수', 1]);
+}
 
+if(monsterName === '종말의 화신 디아블로' && chance(40)) {
+  drops.push(['디아블로의 뿔', 1]);
+}
+
+// 🔥 세계석조각 드랍 추가
+if(['메피스토','디아블로'].includes(monsterName) && chance(35)) {
+  drops.push(['세계석조각', 1]);
+}
+
+if(monsterName === '종말의 화신 디아블로' && chance(40)) {
+  drops.push(['세계석조각', 1]);
+}
   return drops;
 }
 
@@ -1481,17 +1551,17 @@ function buildFullStatusText(player){
   const baseDodge = player.stats.dodge;
   const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
 
-  const weaponText = player.equipment.weapon
-    ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
-    : '없음';
+const weaponText = player.equipment.weapon
+  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} [담금질 ${player.equipment.weapon.temperCount || 0}/5] (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+  : '없음';
 
-  const armorText = player.equipment.armor
-    ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
-    : '없음';
+const armorText = player.equipment.armor
+  ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} [담금질 ${player.equipment.armor.temperCount || 0}/5] (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+  : '없음';
 
-  const ringText = player.equipment.ring
-    ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
-    : '없음';
+const ringText = player.equipment.ring
+  ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} [담금질 ${player.equipment.ring.temperCount || 0}/5] (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
+  : '없음';
 
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
@@ -1581,15 +1651,68 @@ function buildTownButtons(player){
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('bag_view').setLabel('🎒 가방').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('enhance_view').setLabel('🔨 장비강화').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('enhance_menu').setLabel('🔨 강화').setStyle(ButtonStyle.Danger),
       new ButtonBuilder().setCustomId('equipment_view').setLabel('🧰 장비').setStyle(ButtonStyle.Primary),
    ),
   ];
 }
 
+function buildEnhanceMenuButtons(player){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('enhance_select')
+        .setLabel('강화')
+        .setStyle(ButtonStyle.Primary),
 
+      new ButtonBuilder()
+        .setCustomId('temper_select')
+        .setLabel('담금질')
+        .setStyle(ButtonStyle.Secondary),
 
+      new ButtonBuilder()
+        .setCustomId('bless_select')
+        .setLabel('축성')
+        .setStyle(ButtonStyle.Success),
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('town')
+        .setLabel('↩️ 마을로')
+        .setStyle(ButtonStyle.Secondary),
+    )
+  ];
+}
 
+function buildTemperButtons(player){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('temper_weapon')
+        .setLabel('⚔️ 무기')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.weapon),
+
+      new ButtonBuilder()
+        .setCustomId('temper_armor')
+        .setLabel('🛡️ 갑옷')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.armor),
+
+      new ButtonBuilder()
+        .setCustomId('temper_ring')
+        .setLabel('💍 반지')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.ring),
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('enhance_menu')
+        .setLabel('↩️ 뒤로')
+        .setStyle(ButtonStyle.Secondary),
+    )
+  ];
+}
 
 function buildTownPayload(player, extraText=''){
   const embed = new EmbedBuilder()
@@ -2277,7 +2400,6 @@ if (command === '!시작') {
 });
 
 
-
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
 
@@ -2285,10 +2407,46 @@ client.on('interactionCreate', async (interaction) => {
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
+  const revived = reviveIfRespawnReady(player);
+  if (revived) await saveData(gameData);
 
-const revived = reviveIfRespawnReady(player);
-if(revived) await saveData(gameData);
+  if (id === 'enhance_menu') {
+    await interaction.update({
+      content: '🔨 강화 메뉴\n원하는 기능을 선택하세요.',
+      components: buildEnhanceMenuButtons(player),
+    });
+    return;
+  }
 
+  if (id === 'temper_select') {
+    await interaction.update({
+      content: '⚒️ 담금질할 장비를 선택하세요.\n필요 재료: 세계석조각 3개\n최대 5회 가능',
+      components: buildTemperButtons(player),
+    });
+    return;
+  }
+
+  if (
+    id === 'temper_weapon' ||
+    id === 'temper_armor' ||
+    id === 'temper_ring'
+  ) {
+    let item = null;
+
+    if (id === 'temper_weapon') item = player.equipment.weapon;
+    if (id === 'temper_armor') item = player.equipment.armor;
+    if (id === 'temper_ring') item = player.equipment.ring;
+
+    const result = tryTemperItem(player, item);
+
+    await saveData(gameData);
+
+    await interaction.update({
+      content: result,
+      components: buildTemperButtons(player),
+    });
+    return;
+  }
 
   if (id.startsWith('sell_')) {
     const index = Number(id.replace('sell_', ''));
@@ -2324,6 +2482,8 @@ if(revived) await saveData(gameData);
     });
     return;
   }
+});
+
 
 if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
   const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
@@ -2333,6 +2493,7 @@ if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
   });
   return;
 }
+
 
 if (id.startsWith('private_start_')) {
   const parts = interaction.customId.split('_');
