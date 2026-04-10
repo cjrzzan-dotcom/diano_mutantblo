@@ -1977,6 +1977,36 @@ function buildCraftCategoryButtons(){
   ];
 }
 
+function buildBlessButtons(player){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('bless_weapon')
+        .setLabel('⚔️ 무기')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.weapon),
+
+      new ButtonBuilder()
+        .setCustomId('bless_armor')
+        .setLabel('🛡️ 갑옷')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.armor),
+
+      new ButtonBuilder()
+        .setCustomId('bless_ring')
+        .setLabel('💍 반지')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('enhance_menu')
+        .setLabel('↩️ 뒤로')
+        .setStyle(ButtonStyle.Secondary),
+    )
+  ];
+}
+
 
 
 function shortItemName(name, max = 10){
