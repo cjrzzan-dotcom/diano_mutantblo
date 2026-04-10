@@ -1491,13 +1491,7 @@ function createRingStats(recipeId){
   return out;
 }
 
-function tryCraft(player, craftId){
-  const recipe = CRAFT_BY_ID[craftId];
-  if(!recipe) return { ok:false, text:'없는 제작식입니다.' };
-  if(!canCraft(player, recipe)) return { ok:false, text:'재료가 부족합니다.' };
-  for(const [mat, need] of Object.entries(recipe.materials)){
-    player.materials[mat] -= need;
-  }
+
 function tryCraft(player, craftId){
   const recipe = CRAFT_BY_ID[craftId];
   if(!recipe) return { ok:false, text:'없는 제작식입니다.' };
