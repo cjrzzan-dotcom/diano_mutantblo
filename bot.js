@@ -2238,14 +2238,7 @@ const dungeonKey = getDungeonByChannel(message.channel.id);
     return;
   }
 
-if (id === 'craft_cat_material') {
-  await interaction.reply({
-    content: `📦 재료 제작목록\n${craftListTextByType(player, 'material')}`,
-    components: buildCraftButtonsByType('material'),
-    ephemeral: true
-  });
-  return;
-}
+
 
 if(command === '!가방'){
     console.log("📦 !가방 분기 들어옴");
