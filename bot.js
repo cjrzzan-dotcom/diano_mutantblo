@@ -211,6 +211,12 @@ const AUTO_HUNT_CHARGE_MS = 1 * 60 * 1000; // 1분
 const AUTO_HUNT_MAX_CHARGES = 50;
 const AUTO_HUNT_TURNS = 500;
 
+
+function isAdmin(message) {
+  // 네 아이디만 허용하려면 아래처럼 바꿔도 됨
+return message.author.id === '335720453408817166';
+}
+
 function endBattle(player) {
   player.run = null;
 }
@@ -1985,6 +1991,103 @@ await saveData(gameData);
     await message.reply('초기화 완료');
     return;
   }
+
+if (command === '!스탯초기화') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능합니다.');
+    return;
+  }
+
+  const target = message.mentions.users.first();
+  if (!target) {
+    await message.reply('사용법: !스탯초기화 @유저');
+    return;
+  }
+
+  const targetPlayer = getPlayer(target.id);
+
+  if (!targetPlayer.stats) targetPlayer.stats = {};
+
+  targetPlayer.stats.atk = 0;
+  targetPlayer.stats.critChance = 0;
+  targetPlayer.stats.critDamage = 0;
+  targetPlayer.stats.dodge = 0;
+
+  // 스탯포인트도 같이 초기화하고 싶으면 적당히 지급
+  // 필요하면 여기 숫자 계산 방식은 나중에 바꿔도 됨
+  targetPlayer.statPoints = Math.max(0, (targetPlayer.level || 1) - 1);
+
+  await saveData(gameData);
+  await message.reply(`✅ ${target.username}의 스탯을 초기화했습니다.`);
+  return;
+}
+
+if (command === '!재료주기') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능합니다.');
+    return;
+  }
+
+  const target = message.mentions.users.first();
+  if (!target) {
+    await message.reply('사용법: !재료주기 @유저 재료이름 수량');
+    return;
+  }
+
+  const targetPlayer = getPlayer(target.id);
+  if (!targetPlayer.materials) targetPlayer.materials = {};
+
+  const args = message.content.trim().split(/\s+/);
+
+  if (args.length < 4) {
+    await message.reply('사용법: !재료주기 @유저 재료이름 수량');
+    return;
+  }
+
+  const amount = Number(args[args.length - 1]);
+  const matName = args.slice(2, -1).join(' ').trim();
+
+  if (!matName || isNaN(amount) || amount <= 0) {
+    await message.reply('사용법: !재료주기 @유저 재료이름 수량');
+    return;
+  }
+
+  targetPlayer.materials[matName] = (targetPlayer.materials[matName] || 0) + amount;
+
+  await saveData(gameData);
+  await message.reply(`✅ ${target.username}에게 ${matName} ${amount}개를 지급했습니다.`);
+  return;
+}
+
+if (command === '!골드주기') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능합니다.');
+    return;
+  }
+
+  const target = message.mentions.users.first();
+  if (!target) {
+    await message.reply('사용법: !골드주기 @유저 수량');
+    return;
+  }
+
+  const targetPlayer = getPlayer(target.id);
+
+  const args = message.content.trim().split(/\s+/);
+  const amount = Number(args[2]);
+
+  if (isNaN(amount) || amount <= 0) {
+    await message.reply('사용법: !골드주기 @유저 수량');
+    return;
+  }
+
+  targetPlayer.gold = (targetPlayer.gold || 0) + amount;
+
+  await saveData(gameData);
+  await message.reply(`✅ ${target.username}에게 ${amount}골드를 지급했습니다.`);
+  return;
+}
+
 
   if(command === '!상태'){
     await saveData(gameData);
