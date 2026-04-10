@@ -1476,15 +1476,17 @@ function buildFullStatusText(player){
   const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
 
 const weaponText = player.equipment.weapon
-  ? `${player.equipment.weapon.name} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhance || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.
+
+.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
   : '없음';
 
 const armorText = player.equipment.armor
-  ? `${player.equipment.armor.name} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+  ? `${player.equipment.armor.name} +${player.equipment.armor.enhance || 0} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
   : '없음';
 
 const ringText = player.equipment.ring
-  ? `${player.equipment.ring.name} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
+  ? `${player.equipment.ring.name} +${player.equipment.ring.enhance || 0} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
   : '없음';
 
   return [
