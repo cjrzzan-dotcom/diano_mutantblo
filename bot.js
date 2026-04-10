@@ -1476,9 +1476,7 @@ function buildFullStatusText(player){
   const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
 
 const weaponText = player.equipment.weapon
-  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhance || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.
-
-.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhance || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
   : '없음';
 
 const armorText = player.equipment.armor
