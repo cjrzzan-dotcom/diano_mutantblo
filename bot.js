@@ -2015,7 +2015,7 @@ if (command === '!스탯초기화') {
 
   // 스탯포인트도 같이 초기화하고 싶으면 적당히 지급
   // 필요하면 여기 숫자 계산 방식은 나중에 바꿔도 됨
-  targetPlayer.statPoints = Math.max(0, (targetPlayer.level || 1) - 1);
+targetPlayer.statPoints = (targetPlayer.level || 1) * 3;
 
   await saveData(gameData);
   await message.reply(`✅ ${target.username}의 스탯을 초기화했습니다.`);
