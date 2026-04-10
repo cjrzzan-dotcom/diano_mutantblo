@@ -2813,6 +2813,15 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+if (id === 'craft_cat_material') {
+  await interaction.reply({
+    content: `📦 재료 제작목록\n${craftListTextByType(player, 'material')}`,
+    components: buildCraftButtonsByType('material'),
+    ephemeral: true
+  });
+  return;
+}
+
 
   if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
     const craftId = id.replace('craft_', '');
