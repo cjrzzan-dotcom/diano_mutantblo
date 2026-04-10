@@ -2199,10 +2199,11 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
   if (!message.content.startsWith('!')) return;
 
-  const player = getPlayer(message.author.id);
-  const args = message.content.trim().split(/\s+/);
-  const command = args[0];
-  const arg = args[1];
+const player = getPlayer(message.author.id);
+const args = message.content.trim().split(/\s+/);
+const command = args[0];
+const arg = args[1];
+const dungeonKey = getDungeonByChannel(message.channel.id);
 
   if (command === '!판매') {
     if (!player.materials) player.materials = {};
@@ -2524,7 +2525,6 @@ if(command === '!자동'){
   return;
 }
 
-const dungeonKey = getDungeonByChannel(message.channel.id);
 
 if (command === '!시작') {
   
@@ -2826,14 +2826,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  if (id === 'craft_cat_material') {
-    await interaction.reply({
-      content: `📦 재료 제작목록\n${craftListTextByType(player, 'material')}`,
-      components: buildCraftButtonsByType('material'),
-      ephemeral: true
-    });
-    return;
-  }
 
   if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
     const craftId = id.replace('craft_', '');
