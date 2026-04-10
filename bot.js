@@ -2405,11 +2405,8 @@ client.on('interactionCreate', async (interaction) => {
 
   const player = getPlayer(interaction.user.id);
   const id = interaction.customId;
-  const dungeonKey = getDungeonByChannel(interaction.channelId);
 
-  const revived = reviveIfRespawnReady(player);
-  if (revived) await saveData(gameData);
-
+  // 🔨 강화 메뉴
   if (id === 'enhance_menu') {
     await interaction.update({
       content: '🔨 강화 메뉴\n원하는 기능을 선택하세요.',
@@ -2418,19 +2415,17 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+  // ⚒️ 담금질 선택
   if (id === 'temper_select') {
     await interaction.update({
-      content: '⚒️ 담금질할 장비를 선택하세요.\n필요 재료: 세계석조각 3개\n최대 5회 가능',
+      content: '⚒️ 담금질할 장비를 선택하세요.\n세계석조각 3개 필요',
       components: buildTemperButtons(player),
     });
     return;
   }
 
-  if (
-    id === 'temper_weapon' ||
-    id === 'temper_armor' ||
-    id === 'temper_ring'
-  ) {
+  // ⚒️ 실제 담금질 실행
+  if (id === 'temper_weapon' || id === 'temper_armor' || id === 'temper_ring') {
     let item = null;
 
     if (id === 'temper_weapon') item = player.equipment.weapon;
@@ -2448,41 +2443,28 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+  // 💰 판매 처리
   if (id.startsWith('sell_')) {
     const index = Number(id.replace('sell_', ''));
     const item = player.inventory[index];
 
     if (!item) {
-      await interaction.reply({
-        content: '❌ 해당 아이템이 없습니다.',
-        ephemeral: true
-      });
+      await interaction.reply({ content: '❌ 아이템 없음', ephemeral: true });
       return;
     }
-
-    if (isEquippedItem(player, item)) {
-      await interaction.reply({
-        content: '❌ 장착 중인 아이템은 판매할 수 없습니다.',
-        ephemeral: true
-      });
-      return;
-    }
-
-    const price = getItemSellPrice(item);
-    const itemName = item.name;
 
     player.inventory.splice(index, 1);
-    player.gold += price;
+    player.gold += getItemSellPrice(item);
 
     await saveData(gameData);
 
     await interaction.reply({
-      content: `💰 ${itemName} 판매 완료! (+${price} 골드)`,
+      content: `💰 판매 완료`,
       ephemeral: true
     });
     return;
   }
-});
+
 
 
 if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
