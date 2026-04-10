@@ -2243,6 +2243,14 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
+if (id === 'craft_cat_material') {
+  await interaction.reply({
+    content: `📦 재료 제작목록\n${craftListTextByType(player, 'material')}`,
+    components: buildCraftButtonsByType('material'),
+    ephemeral: true
+  });
+  return;
+}
 
 if(command === '!가방'){
     console.log("📦 !가방 분기 들어옴");
@@ -2557,7 +2565,9 @@ client.on('interactionCreate', async (interaction) => {
   const revived = reviveIfRespawnReady(player);
   if (revived) await saveData(gameData);
 
- // 🔨 강화 메뉴 열기
+  // =========================
+  // 강화 / 담금질 / 축성
+  // =========================
   if (id === 'enhance_menu') {
     await interaction.update({
       content: '🔨 강화 메뉴\n원하는 기능을 선택하세요.',
@@ -2566,7 +2576,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // 🔨 강화 장비 선택
   if (id === 'enhance_select') {
     await interaction.update({
       content: '🔨 강화할 장비를 선택하세요.\n골드를 사용해 강화합니다.',
@@ -2575,7 +2584,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // ⚒️ 담금질 장비 선택
   if (id === 'temper_select') {
     await interaction.update({
       content: '⚒️ 담금질할 장비를 선택하세요.\n세계석조각 3개 필요 / 최대 5회',
@@ -2584,7 +2592,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // ✨ 축성 장비 선택
   if (id === 'bless_select') {
     await interaction.update({
       content: '✨ 축성할 장비를 선택하세요.\n축성석 1개 필요 / 장비당 1회만 가능',
@@ -2593,7 +2600,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // 🔨 실제 강화 실행
   if (id === 'enhance_weapon' || id === 'enhance_armor' || id === 'enhance_ring') {
     await interaction.deferUpdate();
 
@@ -2603,7 +2609,6 @@ client.on('interactionCreate', async (interaction) => {
     if (id === 'enhance_ring') item = player.equipment.ring;
 
     const result = tryEnhanceItem(player, item);
-
     await saveData(gameData);
 
     await interaction.editReply({
@@ -2613,7 +2618,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // ⚒️ 실제 담금질 실행
   if (id === 'temper_weapon' || id === 'temper_armor' || id === 'temper_ring') {
     await interaction.deferUpdate();
 
@@ -2623,7 +2627,6 @@ client.on('interactionCreate', async (interaction) => {
     if (id === 'temper_ring') item = player.equipment.ring;
 
     const result = tryTemperItem(player, item);
-
     await saveData(gameData);
 
     await interaction.editReply({
@@ -2633,7 +2636,6 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  // ✨ 실제 축성 실행
   if (id === 'bless_weapon' || id === 'bless_armor' || id === 'bless_ring') {
     await interaction.deferUpdate();
 
@@ -2643,7 +2645,6 @@ client.on('interactionCreate', async (interaction) => {
     if (id === 'bless_ring') item = player.equipment.ring;
 
     const result = tryBlessItem(player, item);
-
     await saveData(gameData);
 
     await interaction.editReply({
@@ -2653,12 +2654,26 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+  // =========================
+  // 판매
+  // =========================
   if (id.startsWith('sell_')) {
     const index = Number(id.replace('sell_', ''));
     const item = player.inventory[index];
 
     if (!item) {
-      await interaction.reply({ content: '❌ 아이템 없음', ephemeral: true });
+      await interaction.reply({
+        content: '❌ 아이템 없음',
+        ephemeral: true
+      });
+      return;
+    }
+
+    if (isEquippedItem(player, item)) {
+      await interaction.reply({
+        content: '❌ 장착 중인 아이템은 판매할 수 없습니다.',
+        ephemeral: true
+      });
       return;
     }
 
@@ -2668,86 +2683,86 @@ client.on('interactionCreate', async (interaction) => {
     await saveData(gameData);
 
     await interaction.reply({
-      content: `💰 판매 완료`,
+      content: '💰 판매 완료',
       ephemeral: true
     });
     return;
   }
 
-
-
-if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
-  const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
-  await interaction.reply({
-    content: `💀 아직 사망 패널티 중입니다. 약 ${min}분 후 다시 사냥할 수 있습니다.`,
-    ephemeral: true
-  });
-  return;
-}
-
-
-if (id.startsWith('private_start_')) {
-  const parts = interaction.customId.split('_');
-  const ownerId = parts[2];
-  const startKey = parts.slice(3).join('_');
-
-  if (interaction.user.id !== ownerId) {
+  // =========================
+  // 사망 패널티 체크
+  // =========================
+  if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
+    const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
     await interaction.reply({
-      content: '이 버튼은 만든 사람만 사용할 수 있습니다.',
+      content: `💀 아직 사망 패널티 중입니다. 약 ${min}분 후 다시 사냥할 수 있습니다.`,
       ephemeral: true
     });
     return;
   }
 
-  if (startKey === 'town') {
+  // =========================
+  // 개인 시작 버튼
+  // =========================
+  if (id.startsWith('private_start_')) {
+    const parts = id.split('_');
+    const ownerId = parts[2];
+    const startKey = parts.slice(3).join('_');
+
+    if (interaction.user.id !== ownerId) {
+      await interaction.reply({
+        content: '이 버튼은 만든 사람만 사용할 수 있습니다.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    if (startKey === 'town') {
+      await interaction.reply({
+        content: '🏘️ 마을입니다! 원하는 기능을 선택하세요.',
+        ephemeral: true,
+        components: buildTownButtons(player)
+      });
+      return;
+    }
+
+    createRunIfNeeded(player, startKey);
+    player.run.lastDrops = [];
+    await saveData(gameData);
+
+    const introTarget = player.run?.target || player.run?.nextTarget;
+
     await interaction.reply({
-      content: '🏘️ 마을입니다! 원하는 기능을 선택하세요.',
-      ephemeral: true,
-      components: buildTownButtons(player)
+      ...buildIntroPayload(startKey, introTarget),
+      ephemeral: true
     });
+
+    await sleep(INTRO_DELAY_MS);
+
+    await interaction.editReply(
+      buildBattlePayload(
+        player,
+        interaction.channelId,
+        startKey,
+        '전투 시작!'
+      )
+    );
     return;
   }
 
-  createRunIfNeeded(player, startKey);
-  player.run.lastDrops = [];
-  await saveData(gameData);
-
-  const introTarget = player.run?.target || player.run?.nextTarget;
-
-  // 1) 먼저 이미지/등장 연출
-  await interaction.reply({
-    ...buildIntroPayload(startKey, introTarget),
-    ephemeral: true
-  });
-
-  // 2) 1초 대기
-  await sleep(INTRO_DELAY_MS);
-
-  // 3) 전투 UI로 전환
-  await interaction.editReply(
-    buildBattlePayload(
-      player,
-      interaction.channelId,
-      startKey,
-      '전투 시작!'
-    )
-  );
-
-  return;
-}
-
-  // 마을/던전 공통으로 열려야 하는 버튼들
-if (id === 'status') {
-  await saveData(gameData);
-  await interaction.reply({
-    content: buildFullStatusText(player),
-    components: buildStatusButtons(player),
-    ephemeral: true
-  });
-
-  await safeDeleteReply(interaction, 8000);
-  return;
-}
+  // =========================
+  // 마을 / 공통 버튼
+  // =========================
+  if (id === 'status') {
+    await saveData(gameData);
+    await interaction.reply({
+      content: buildFullStatusText(player),
+      components: buildStatusButtons(player),
+      ephemeral: true
+    });
+    await safeDeleteReply(interaction, 8000);
+    return;
+  }
 
   if (id === 'bag_view') {
     await interaction.reply({
@@ -2756,8 +2771,6 @@ if (id === 'status') {
     });
     return;
   }
-
-
 
   if (id === 'shop') {
     await interaction.reply({
@@ -2777,540 +2790,427 @@ if (id === 'status') {
     return;
   }
 
-if (id === 'craft_list') {
-  await interaction.reply({
-    content: `🛠️ 제작 카테고리를 선택하세요.`,
-    components: buildCraftCategoryButtons(),
-    ephemeral: true
-  });
-  return;
-}
-if (id === 'craft_cat_weapon') {
-  await interaction.reply({
-    content: `⚔️ 무기 제작목록\n${craftListTextByType(player, 'weapon')}`,
-    components: buildCraftButtonsByType('weapon'),
-    ephemeral: true
-  });
-  return;
-}
-
-if (id === 'craft_cat_armor') {
-  await interaction.reply({
-    content: `🛡️ 갑옷 제작목록\n${craftListTextByType(player, 'armor')}`,
-    components: buildCraftButtonsByType('armor'),
-    ephemeral: true
-  });
-  return;
-}
-
-if (id === 'craft_cat_ring') {
-  await interaction.reply({
-    content: `💍 반지 제작목록\n${craftListTextByType(player, 'ring')}`,
-    components: buildCraftButtonsByType('ring'),
-    ephemeral: true
-  });
-  return;
-}
-
-
-if (id === 'equipment_view') {
-  await interaction.reply({
-    content: `🧰 장비창\n\n${equipmentText(player)}\n\n🎒 인벤토리\n${inventoryText(player)}`,
-    components: buildEquipmentButtons(player),
-    ephemeral: true
-  });
-  return;
-}
-
-if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
-  const parts = id.split('_');
-  const action = parts[1]; // prev or next
-  const currentPage = Number(parts[2]);
-
-  const totalPages = getInventoryTotalPages(player);
-
-  let nextPage = currentPage;
-  if (action === 'prev') nextPage--;
-  if (action === 'next') nextPage++;
-
-  if (nextPage < 1) nextPage = 1;
-  if (nextPage > totalPages) nextPage = totalPages;
-
-  await interaction.update({
-    content: `${equipmentText(player)}\n\n인벤토리 (${nextPage}/${totalPages})\n${inventoryText(player, nextPage)}`,
-    components: buildEquipmentButtons(player, nextPage)
-  });
-  return;
-}
-
-if (id === 'buy_big_10') {
-  const cost = 1000;
-
-  if (player.gold < cost) {
+  if (id === 'craft_list') {
     await interaction.reply({
-      content: '❌ 골드가 부족합니다. (큰물약 10개 1000G)',
+      content: '🛠️ 제작 카테고리를 선택하세요.',
+      components: buildCraftCategoryButtons(),
       ephemeral: true
     });
     return;
   }
 
-  player.gold -= cost;
-  player.potions.big = (player.potions.big || 0) + 10;
+  if (id === 'craft_cat_weapon') {
+    await interaction.reply({
+      content: `⚔️ 무기 제작목록\n${craftListTextByType(player, 'weapon')}`,
+      components: buildCraftButtonsByType('weapon'),
+      ephemeral: true
+    });
+    return;
+  }
 
-  await saveData(gameData);
+  if (id === 'craft_cat_armor') {
+    await interaction.reply({
+      content: `🛡️ 갑옷 제작목록\n${craftListTextByType(player, 'armor')}`,
+      components: buildCraftButtonsByType('armor'),
+      ephemeral: true
+    });
+    return;
+  }
 
-  await interaction.reply({
-    content:
+  if (id === 'craft_cat_ring') {
+    await interaction.reply({
+      content: `💍 반지 제작목록\n${craftListTextByType(player, 'ring')}`,
+      components: buildCraftButtonsByType('ring'),
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id === 'craft_cat_material') {
+    await interaction.reply({
+      content: `📦 재료 제작목록\n${craftListTextByType(player, 'material')}`,
+      components: buildCraftButtonsByType('material'),
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
+    const craftId = id.replace('craft_', '');
+    const res = tryCraft(player, craftId);
+    await saveData(gameData);
+
+    await interaction.reply({
+      content: res.text,
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id === 'equipment_view') {
+    await interaction.reply({
+      content: `🧰 장비창\n\n${equipmentText(player)}\n\n🎒 인벤토리\n${inventoryText(player, 1)}`,
+      components: buildEquipmentButtons(player, 1),
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
+    const parts = id.split('_');
+    const action = parts[1];
+    const currentPage = Number(parts[2]);
+
+    const totalPages = getInventoryTotalPages(player);
+
+    let nextPage = currentPage;
+    if (action === 'prev') nextPage--;
+    if (action === 'next') nextPage++;
+
+    if (nextPage < 1) nextPage = 1;
+    if (nextPage > totalPages) nextPage = totalPages;
+
+    await interaction.update({
+      content: `🧰 장비창\n\n${equipmentText(player)}\n\n🎒 인벤토리 (${nextPage}/${totalPages})\n${inventoryText(player, nextPage)}`,
+      components: buildEquipmentButtons(player, nextPage)
+    });
+    return;
+  }
+
+  if (id.startsWith('equip_')) {
+    const idx = Number(id.replace('equip_', ''));
+    const text = equipItemByIndex(player, idx);
+    await saveData(gameData);
+
+    await interaction.reply({
+      content: `${text}\n\n${equipmentText(player)}`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  // =========================
+  // 상점 구매
+  // =========================
+  if (id === 'buy_big_10') {
+    const cost = 1000;
+
+    if (player.gold < cost) {
+      await interaction.reply({
+        content: '❌ 골드가 부족합니다. (큰물약 10개 1000G)',
+        ephemeral: true
+      });
+      return;
+    }
+
+    player.gold -= cost;
+    player.potions.big = (player.potions.big || 0) + 10;
+    await saveData(gameData);
+
+    await interaction.reply({
+      content:
 `✅ 큰물약 10개 구매 완료!
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
 💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
-    ephemeral: true
-  });
-  return;
-}
-
-if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
-  const shopMap = {
-    buy_small: { key: 'small', name: '작은물약', price: 10 },
-    buy_mid: { key: 'mid', name: '중간물약', price: 30 },
-    buy_big: { key: 'big', name: '큰물약', price: 100 },
-    buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000 },
-  };
-
-  const buy = shopMap[id];
-
-  if (!buy) {
-    await interaction.reply({
-      content: '구매할 수 없는 아이템입니다.',
       ephemeral: true
     });
     return;
   }
 
-  if (player.gold < buy.price) {
+  if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
+    const shopMap = {
+      buy_small: { key: 'small', name: '작은물약', price: 10 },
+      buy_mid: { key: 'mid', name: '중간물약', price: 30 },
+      buy_big: { key: 'big', name: '큰물약', price: 100 },
+      buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000 },
+    };
+
+    const buy = shopMap[id];
+
+    if (!buy) {
+      await interaction.reply({
+        content: '구매할 수 없는 아이템입니다.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    if (player.gold < buy.price) {
+      await interaction.reply({
+        content: `❌ 골드가 부족합니다. (${buy.name} ${buy.price}G)`,
+        ephemeral: true
+      });
+      return;
+    }
+
+    player.gold -= buy.price;
+    player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
+    await saveData(gameData);
+
     await interaction.reply({
-      content: `❌ 골드가 부족합니다. (${buy.name} ${buy.price}G)`,
-      ephemeral: true
-    });
-    return;
-  }
-
-  player.gold -= buy.price;
-  player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
-
-  await saveData(gameData);
-
-  await interaction.reply({
-    content:
+      content:
 `✅ ${buy.name} 1개 구매 완료!
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
 💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
-    ephemeral: true
-  });
-  return;
-}
-
-
-
-
-
-if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
-  const page = 1;
-  const totalPages = getInventoryTotalPages(player);
-
-  await interaction.reply({
-    content: `${equipmentText(player)}\n\n인벤토리 (${page}/${totalPages})\n${inventoryText(player, page)}`,
-    components: buildEquipmentButtons(player, page),
-    ephemeral: true
-  });
-  return;
-}
-
-
-if (id === 'enhance_view') {
-  await interaction.deferReply({ ephemeral: true });
-
-  player.selectedEnhanceTarget = null;
-  await saveData(gameData);
-
-  await interaction.editReply({
-    content: `🔨 강화할 아이템을 선택하세요.\n\n${inventoryText(player)}\n\n강화는 골드만 소모됩니다.`,
-    components: buildEnhanceItemButtons(player)
-  });
-  return;
-}
-
-if (id.startsWith('enhance_item_')) {
-  await interaction.deferReply({ ephemeral: true });
-
-  const idx = Number(id.replace('enhance_item_', ''));
-  const item = player.inventory[idx];
-
-  if (!item) {
-    await interaction.editReply({
-      content: '선택한 아이템이 없습니다.'
-    });
-    return;
-  }
-
-  const text = tryEnhanceItem(player, item);
-  await saveData(gameData);
-
-  await interaction.editReply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
-  });
-  return;
-}
-
-if (id === 'enhance_equipped_weapon') {
-  await interaction.deferReply({ ephemeral: true });
-
-  const item = player.equipment.weapon;
-
-  if (!item) {
-    await interaction.editReply({
-      content: '착용 무기가 없습니다.'
-    });
-    return;
-  }
-
-  const text = tryEnhanceItem(player, item);
-  await saveData(gameData);
-
-  await interaction.editReply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
-  });
-  return;
-}
-
-if (id === 'enhance_equipped_armor') {
-  await interaction.deferReply({ ephemeral: true });
-
-  const item = player.equipment.armor;
-
-  if (!item) {
-    await interaction.editReply({
-      content: '착용 갑옷이 없습니다.'
-    });
-    return;
-  }
-
-  const text = tryEnhanceItem(player, item);
-  await saveData(gameData);
-
-  await interaction.editReply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
-  });
-  return;
-}
-
-if (id === 'enhance_equipped_ring') {
-  await interaction.deferReply({ ephemeral: true });
-
-  const item = player.equipment.ring;
-
-  if (!item) {
-    await interaction.editReply({
-      content: '착용 반지가 없습니다.'
-    });
-    return;
-  }
-
-  const text = tryEnhanceItem(player, item);
-  await saveData(gameData);
-
-  await interaction.editReply({
-    content: `${text}\n\n${getEnhancePreviewText(player, item)}`
-  });
-  return;
-}
-
-
-
-
-if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
-  const craftId = id.replace('craft_', '');
-  const res = tryCraft(player, craftId);
-  await saveData(gameData);
-  await interaction.reply({
-    content: res.text,
-    ephemeral: true
-  });
-  return;
-}
-
-if (id.startsWith('equip_')) {
-  const idx = Number(id.replace('equip_', ''));
-  const text = equipItemByIndex(player, idx);
-  await saveData(gameData);
-  await interaction.reply({
-    content: `${text}\n\n${equipmentText(player)}`,
-    ephemeral: true
-  });
-  return;
-}
-
-if (id === 'stat_atk' || id === 'stat_crit' || id === 'stat_critdmg' || id === 'stat_dodge') {
-  const map = {
-    stat_atk: 'atk',
-    stat_crit: 'critChance',
-    stat_critdmg: 'critDamage',
-    stat_dodge: 'dodge'
-  };
-
-  const text = tryUpgradeStat(player, map[id]);
-  await saveData(gameData);
-
-  await interaction.reply({
-    content: `${text}\n\n${buildFullStatusText(player)}`,
-    components: buildStatusButtons(player),
-    ephemeral: true
-  });
-  return;
-}
-
-// 던전 전용 버튼만 여기서 막기
-const dungeonOnlyButtons = [
-  'attack',
-  'revive',
-  'auto',
-  'use_small',
-  'use_mid',
-  'use_big',
-  'use_elixir'
-];
-
-const isDungeonOnlyButton = dungeonOnlyButtons.includes(id);
-
-if (isDungeonOnlyButton && !dungeonKey) {
-  await interaction.reply({
-    content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
-    ephemeral: true
-  });
-  return;
-}
-
-
-if (id === 'revive') {
-  if (!player.run?.isDown) {
-    await interaction.reply({
-      content: '지금은 부활권을 사용할 수 없습니다.',
       ephemeral: true
     });
-    await safeDeleteReply(interaction, 3000);
     return;
   }
 
-  if (player.reviveTickets <= 0) {
+  // =========================
+  // 스탯 업
+  // =========================
+  if (id === 'stat_atk' || id === 'stat_crit' || id === 'stat_critdmg' || id === 'stat_dodge') {
+    const map = {
+      stat_atk: 'atk',
+      stat_crit: 'critChance',
+      stat_critdmg: 'critDamage',
+      stat_dodge: 'dodge'
+    };
+
+    const text = tryUpgradeStat(player, map[id]);
+    await saveData(gameData);
+
     await interaction.reply({
-      content: '부활권이 없습니다.',
+      content: `${text}\n\n${buildFullStatusText(player)}`,
+      components: buildStatusButtons(player),
       ephemeral: true
     });
-    await safeDeleteReply(interaction, 3000);
     return;
   }
 
-  player.reviveTickets -= 1;
-  player.hp = Math.max(1, Math.floor(player.maxHp));
-  player.run.isDown = false;
-  player.respawnAt = 0;
+  // =========================
+  // 던전 전용 버튼 체크
+  // =========================
+  const dungeonOnlyButtons = [
+    'attack',
+    'revive',
+    'auto',
+    'use_small',
+    'use_mid',
+    'use_big',
+    'use_elixir'
+  ];
 
-  await saveData(gameData);
+  const isDungeonOnlyButton = dungeonOnlyButtons.includes(id);
 
-  await interaction.update(
-    buildBattlePayload(
-      player,
-      interaction.channelId,
-      player.run.dungeon,
-      '💖 부활권 사용! 부활했습니다.'
-    )
-  );
-  return;
-}
+  if (isDungeonOnlyButton && !dungeonKey) {
+    await interaction.reply({
+      content: '이 버튼은 던전 채널에서만 사용할 수 있습니다.',
+      ephemeral: true
+    });
+    return;
+  }
 
+  // =========================
+  // 부활
+  // =========================
+  if (id === 'revive') {
+    if (!player.run?.isDown) {
+      await interaction.reply({
+        content: '지금은 부활권을 사용할 수 없습니다.',
+        ephemeral: true
+      });
+      await safeDeleteReply(interaction, 3000);
+      return;
+    }
 
-  await saveData(gameData);
+    if (player.reviveTickets <= 0) {
+      await interaction.reply({
+        content: '부활권이 없습니다.',
+        ephemeral: true
+      });
+      await safeDeleteReply(interaction, 3000);
+      return;
+    }
 
+    player.reviveTickets -= 1;
+    player.hp = Math.max(1, Math.floor(player.maxHp));
+    player.run.isDown = false;
+    player.respawnAt = 0;
 
-
-
-if (id.startsWith('use_')) {
-  const key = id.replace('use_', '');
-
-  if (player.run?.target && dungeonKey) {
-    const result = usePotionInBattle(player, key);
     await saveData(gameData);
 
     await interaction.update(
-      buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
+      buildBattlePayload(
+        player,
+        interaction.channelId,
+        player.run.dungeon,
+        '💖 부활권 사용! 부활했습니다.'
+      )
     );
     return;
   }
 
-  const text = usePotionOutOfBattle(player, key);
-  await saveData(gameData);
+  // =========================
+  // 물약
+  // =========================
+  if (id.startsWith('use_')) {
+    const key = id.replace('use_', '');
 
-  await interaction.reply({
-    content: text,
-    ephemeral: true
-  });
-  await safeDeleteReply(interaction, 3000);
-  return;
-}
+    if (player.run?.target && dungeonKey) {
+      const result = usePotionInBattle(player, key);
+      await saveData(gameData);
 
-if (id === 'auto') {
-  if (!DUNGEONS[dungeonKey]?.autoAllowed) {
+      await interaction.update(
+        buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
+      );
+      return;
+    }
+
+    const text = usePotionOutOfBattle(player, key);
+    await saveData(gameData);
+
     await interaction.reply({
-      content: '이 던전은 자동사냥이 불가능합니다.',
+      content: text,
       ephemeral: true
     });
     await safeDeleteReply(interaction, 3000);
     return;
   }
 
-  refreshAutoHuntCharges(player);
-
-  if (player.autoHuntCharges <= 0) {
-    const remainMs = getNextAutoHuntChargeRemain(player);
-    const remainMin = Math.floor(remainMs / 60000);
-    const remainSec = Math.floor((remainMs % 60000) / 1000);
-
-    await interaction.reply({
-      content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
-      ephemeral: true
-    });
-    await safeDeleteReply(interaction, 4000);
-    return;
-  }
-
-  player.autoHuntCharges -= 1;
-  createRunIfNeeded(player, dungeonKey);
-  await saveData(gameData);
-
-  const introTarget = player.run?.target || player.run?.nextTarget;
-
   // =========================
-  // 1) 이미지 먼저 출력
+  // 자동사냥
   // =========================
-  await interaction.update(
-    buildIntroPayload(dungeonKey, introTarget)
-  );
-
-  // =========================
-  // 2) 1초 대기
-  // =========================
-  await sleep(INTRO_DELAY_MS);
-
-  const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
-
-  // =========================
-  // 3) 자동 전투 루프
-  // =========================
-  for (let i = 0; i < AUTO_HUNT_TURNS; i++) {
-    if (!player.run) break;
-    if (player.run.isDown) break;
-
-    if (player.run.target && player.run.nextTarget) {
-      player.run.lastDrops = [];
-      player.run.target = player.run.nextTarget;
-      player.run.nextTarget = null;
-
-      logs.push(`\n[${i + 1}턴]\n👁️ ${player.run.target.name} 등장! `);
-      continue;
+  if (id === 'auto') {
+    if (!DUNGEONS[dungeonKey]?.autoAllowed) {
+      await interaction.reply({
+        content: '이 던전은 자동사냥이 불가능합니다.',
+        ephemeral: true
+      });
+      await safeDeleteReply(interaction, 3000);
+      return;
     }
 
-    const beforeGold = player.gold;
-    const beforeXp = player.xp;
+    refreshAutoHuntCharges(player);
 
-    const result = performAttack(player, dungeonKey);
+    if (player.autoHuntCharges <= 0) {
+      const remainMs = getNextAutoHuntChargeRemain(player);
+      const remainMin = Math.floor(remainMs / 60000);
+      const remainSec = Math.floor((remainMs % 60000) / 1000);
 
-    const gainedGold = Math.max(0, player.gold - beforeGold);
-    const gainedXp = Math.max(0, player.xp - beforeXp);
-
-    const reducedGold = Math.floor(gainedGold * 0.8);
-    const reducedXp = Math.floor(gainedXp * 0.8);
-
-    player.gold = beforeGold + reducedGold;
-    player.xp = beforeXp + reducedXp;
-
-    if (player.run?.lastDrops) {
-      player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.8);
+      await interaction.reply({
+        content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
+        ephemeral: true
+      });
+      await safeDeleteReply(interaction, 4000);
+      return;
     }
 
-    logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
-    logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
-
-    if (Date.now() < player.respawnAt) break;
-  }
-
-  await saveData(gameData);
-
-  // =========================
-  // 4) 전투 로그 UI 출력
-  // =========================
-  await interaction.editReply(
-    buildBattlePayload(
-      player,
-      interaction.channelId,
-      dungeonKey,
-      logs.join('\n')
-    )
-  );
-
-  return;
-}
-
-if (id === 'attack') {
-  if (!player.run) createRunIfNeeded(player, dungeonKey);
-
-  if (!player.run.target && player.run.nextTarget) {
-    player.run.lastDrops = [];
-    player.run.target = player.run.nextTarget;
-    player.run.nextTarget = null;
+    player.autoHuntCharges -= 1;
+    createRunIfNeeded(player, dungeonKey);
     await saveData(gameData);
 
+    const introTarget = player.run?.target || player.run?.nextTarget;
+
     await interaction.update(
-      buildIntroPayload(dungeonKey, player.run.target)
+      buildIntroPayload(dungeonKey, introTarget)
     );
 
     await sleep(INTRO_DELAY_MS);
 
+    const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
+
+    for (let i = 0; i < AUTO_HUNT_TURNS; i++) {
+      if (!player.run) break;
+      if (player.run.isDown) break;
+
+      if (player.run.target && player.run.nextTarget) {
+        player.run.lastDrops = [];
+        player.run.target = player.run.nextTarget;
+        player.run.nextTarget = null;
+
+        logs.push(`\n[${i + 1}턴]\n👁️ ${player.run.target.name} 등장! `);
+        continue;
+      }
+
+      const beforeGold = player.gold;
+      const beforeXp = player.xp;
+
+      const result = performAttack(player, dungeonKey);
+
+      const gainedGold = Math.max(0, player.gold - beforeGold);
+      const gainedXp = Math.max(0, player.xp - beforeXp);
+
+      const reducedGold = Math.floor(gainedGold * 0.8);
+      const reducedXp = Math.floor(gainedXp * 0.8);
+
+      player.gold = beforeGold + reducedGold;
+      player.xp = beforeXp + reducedXp;
+
+      if (player.run?.lastDrops) {
+        player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.8);
+      }
+
+      logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
+      logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
+
+      if (Date.now() < player.respawnAt) break;
+    }
+
+    await saveData(gameData);
+
     await interaction.editReply(
-      buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
+      buildBattlePayload(
+        player,
+        interaction.channelId,
+        dungeonKey,
+        logs.join('\n')
+      )
     );
     return;
   }
 
-  const logs = [];
+  // =========================
+  // 공격
+  // =========================
+  if (id === 'attack') {
+    if (!player.run) createRunIfNeeded(player, dungeonKey);
 
-  for (let i = 0; i < 3; i++) {
-    if (!player.run) break;
-    if (player.run.isDown) break;
+    if (!player.run.target && player.run.nextTarget) {
+      player.run.lastDrops = [];
+      player.run.target = player.run.nextTarget;
+      player.run.nextTarget = null;
+      await saveData(gameData);
 
-    logs.push(`\n⚔️ [${i + 1}턴]`);
+      await interaction.update(
+        buildIntroPayload(dungeonKey, player.run.target)
+      );
 
-    const result = performAttack(player, dungeonKey);
+      await sleep(INTRO_DELAY_MS);
 
-    logs.push(...result.logs);
+      await interaction.editReply(
+        buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
+      );
+      return;
+    }
 
-    // 죽으면 중단
-    if (Date.now() < player.respawnAt) break;
+    const logs = [];
 
-    // 몬스터 죽고 다음 몹 대기면 멈춤
-    if (!player.run?.target && player.run?.nextTarget) break;
+    for (let i = 0; i < 3; i++) {
+      if (!player.run) break;
+      if (player.run.isDown) break;
+
+      logs.push(`\n⚔️ [${i + 1}턴]`);
+
+      const result = performAttack(player, dungeonKey);
+      logs.push(...result.logs);
+
+      if (Date.now() < player.respawnAt) break;
+      if (!player.run?.target && player.run?.nextTarget) break;
+    }
+
+    await saveData(gameData);
+
+    await interaction.update(
+      buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+    );
+    return;
   }
-
-  await saveData(gameData);
-
-  await interaction.update(
-    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
-  );
-  return;
-}
 });
 
 
