@@ -2405,6 +2405,7 @@ client.on('interactionCreate', async (interaction) => {
 
   const player = getPlayer(interaction.user.id);
   const id = interaction.customId;
+  const dungeonKey = getDungeonByChannel(interaction.channelId);
 
   // 🔨 강화 메뉴
   if (id === 'enhance_menu') {
