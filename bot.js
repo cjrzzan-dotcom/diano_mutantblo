@@ -307,6 +307,91 @@ function tryTemperItem(player, item){
   return '❌ 담금질할 수 없는 아이템 종류입니다.';
 }
 
+function tryBlessItem(player, item){
+  if (!item) return '❌ 없는 아이템입니다.';
+  if (!player.materials) player.materials = {};
+
+  if ((player.materials['축성석'] || 0) < 1) {
+    return '❌ 축성석이 부족합니다.';
+  }
+
+  if (item.blessing) {
+    return `❌ ${item.name}은(는) 이미 축성을 마친 장비입니다.`;
+  }
+
+  let options = [];
+
+  if (item.type === 'weapon') {
+    options = [
+      { key: 'atkPercent', label: '공격력 15% 증가', value: 15 },
+      { key: 'critChance', label: '크리 10% 증가', value: 10 },
+      { key: 'critDamage', label: '크뎀 20% 증가', value: 20 },
+      { key: 'lifesteal', label: '흡혈 15%', value: 15 },
+    ];
+  }
+  else if (item.type === 'armor') {
+    options = [
+      { key: 'flatDef', label: '방어 +20', value: 20 },
+      { key: 'dodge', label: '회피 15% 증가', value: 15 },
+      { key: 'hpPercent', label: '체력 15% 증가', value: 15 },
+      { key: 'reflect', label: '데미지반사 15%', value: 15 },
+    ];
+  }
+  else if (item.type === 'ring') {
+    return '❌ 반지는 아직 축성할 수 없습니다.';
+  }
+  else {
+    return '❌ 축성할 수 없는 장비입니다.';
+  }
+
+  const blessed = pick(options);
+
+  player.materials['축성석'] -= 1;
+
+  item.blessing = {
+    key: blessed.key,
+    label: blessed.label,
+    value: blessed.value,
+  };
+
+  return `✨ ${item.name} 축성 성공!\n[${blessed.label}] 부여됨`;
+}
+
+function getBlessingText(item){
+  if (!item || !item.blessing) return '';
+  return ` [축성: ${item.blessing.label}]`;
+}
+
+function getBlessingBonuses(item){
+  const out = {
+    atkPercent: 0,
+    critChance: 0,
+    critDamage: 0,
+    lifesteal: 0,
+    flatDef: 0,
+    dodge: 0,
+    hpPercent: 0,
+    reflect: 0,
+  };
+
+  if (!item || !item.blessing) return out;
+
+  const key = item.blessing.key;
+  const value = item.blessing.value || 0;
+
+  if (key === 'atkPercent') out.atkPercent = value;
+  if (key === 'critChance') out.critChance = value;
+  if (key === 'critDamage') out.critDamage = value;
+  if (key === 'lifesteal') out.lifesteal = value;
+  if (key === 'flatDef') out.flatDef = value;
+  if (key === 'dodge') out.dodge = value;
+  if (key === 'hpPercent') out.hpPercent = value;
+  if (key === 'reflect') out.reflect = value;
+
+  return out;
+}
+
+
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -571,6 +656,11 @@ const CRAFTS = [
 
 { id:'lilith_sword', label:'천상의 심판', type:'weapon', materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
 { id:'end_armor', label:'천상의 갑주', type:'armor', materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
+{ id: 'make_high_piece',  label: '고급장비조각',  type: 'material',  materials: {    '낡은장비조각': 20  },
+  result: {   '고급장비조각': 1  }
+},
+{  id: 'make_bless_stone',  label: '축성석', type: 'material',  materials: {    '세계석조각': 5  },
+  result: {    '축성석': 1  }},
 
 
 ];
@@ -1408,6 +1498,31 @@ function tryCraft(player, craftId){
   for(const [mat, need] of Object.entries(recipe.materials)){
     player.materials[mat] -= need;
   }
+function tryCraft(player, craftId){
+  const recipe = CRAFT_BY_ID[craftId];
+  if(!recipe) return { ok:false, text:'없는 제작식입니다.' };
+  if(!canCraft(player, recipe)) return { ok:false, text:'재료가 부족합니다.' };
+
+  for(const [mat, need] of Object.entries(recipe.materials)){
+    player.materials[mat] -= need;
+  }
+
+  // 재료 제작
+  if (recipe.type === 'material') {
+    if (!player.materials) player.materials = {};
+
+    for (const [mat, amount] of Object.entries(recipe.result || {})) {
+      player.materials[mat] = (player.materials[mat] || 0) + amount;
+    }
+
+    const madeText = Object.entries(recipe.result || {})
+      .map(([mat, amount]) => `${mat} ${amount}개`)
+      .join(', ');
+
+    return { ok:true, text:`🛠️ 제작 성공!\n${madeText}` };
+  }
+
+  // 장비 제작
   const item = createCraftItem(recipe);
   player.inventory.push(item);
   return { ok:true, item, text:`🛠️ 제작 성공!\n${item.name}` };
@@ -1714,6 +1829,37 @@ function buildTemperButtons(player){
   ];
 }
 
+function buildEnhanceButtons(player){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('enhance_weapon')
+        .setLabel('⚔️ 무기')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.weapon),
+
+      new ButtonBuilder()
+        .setCustomId('enhance_armor')
+        .setLabel('🛡️ 갑옷')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.armor),
+
+      new ButtonBuilder()
+        .setCustomId('enhance_ring')
+        .setLabel('💍 반지')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.ring),
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('enhance_menu')
+        .setLabel('↩️ 뒤로')
+        .setStyle(ButtonStyle.Secondary),
+    )
+  ];
+}
+
+
 function buildTownPayload(player, extraText=''){
   const embed = new EmbedBuilder()
     .setTitle('🏘️ 마을')
@@ -1832,6 +1978,7 @@ function buildCraftCategoryButtons(){
       new ButtonBuilder().setCustomId('craft_cat_weapon').setLabel('⚔️ 무기').setStyle(ButtonStyle.Danger),
       new ButtonBuilder().setCustomId('craft_cat_armor').setLabel('🛡️ 갑옷').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('craft_cat_ring').setLabel('💍 반지').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('craft_cat_material').setLabel('📦 재료').setStyle(ButtonStyle.Secondary),
     )
   ];
 }
@@ -2410,6 +2557,7 @@ client.on('interactionCreate', async (interaction) => {
   const revived = reviveIfRespawnReady(player);
   if (revived) await saveData(gameData);
 
+ // 🔨 강화 메뉴 열기
   if (id === 'enhance_menu') {
     await interaction.update({
       content: '🔨 강화 메뉴\n원하는 기능을 선택하세요.',
@@ -2418,19 +2566,58 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+  // 🔨 강화 장비 선택
+  if (id === 'enhance_select') {
+    await interaction.update({
+      content: '🔨 강화할 장비를 선택하세요.\n골드를 사용해 강화합니다.',
+      components: buildEnhanceButtons(player),
+    });
+    return;
+  }
+
+  // ⚒️ 담금질 장비 선택
   if (id === 'temper_select') {
     await interaction.update({
-      content: '⚒️ 담금질할 장비를 선택하세요.\n세계석조각 3개 필요',
+      content: '⚒️ 담금질할 장비를 선택하세요.\n세계석조각 3개 필요 / 최대 5회',
       components: buildTemperButtons(player),
     });
     return;
   }
 
+  // ✨ 축성 장비 선택
+  if (id === 'bless_select') {
+    await interaction.update({
+      content: '✨ 축성할 장비를 선택하세요.\n축성석 1개 필요 / 장비당 1회만 가능',
+      components: buildBlessButtons(player),
+    });
+    return;
+  }
+
+  // 🔨 실제 강화 실행
+  if (id === 'enhance_weapon' || id === 'enhance_armor' || id === 'enhance_ring') {
+    await interaction.deferUpdate();
+
+    let item = null;
+    if (id === 'enhance_weapon') item = player.equipment.weapon;
+    if (id === 'enhance_armor') item = player.equipment.armor;
+    if (id === 'enhance_ring') item = player.equipment.ring;
+
+    const result = tryEnhanceItem(player, item);
+
+    await saveData(gameData);
+
+    await interaction.editReply({
+      content: result,
+      components: buildEnhanceButtons(player),
+    });
+    return;
+  }
+
+  // ⚒️ 실제 담금질 실행
   if (id === 'temper_weapon' || id === 'temper_armor' || id === 'temper_ring') {
     await interaction.deferUpdate();
 
     let item = null;
-
     if (id === 'temper_weapon') item = player.equipment.weapon;
     if (id === 'temper_armor') item = player.equipment.armor;
     if (id === 'temper_ring') item = player.equipment.ring;
@@ -2442,6 +2629,26 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.editReply({
       content: result,
       components: buildTemperButtons(player),
+    });
+    return;
+  }
+
+  // ✨ 실제 축성 실행
+  if (id === 'bless_weapon' || id === 'bless_armor' || id === 'bless_ring') {
+    await interaction.deferUpdate();
+
+    let item = null;
+    if (id === 'bless_weapon') item = player.equipment.weapon;
+    if (id === 'bless_armor') item = player.equipment.armor;
+    if (id === 'bless_ring') item = player.equipment.ring;
+
+    const result = tryBlessItem(player, item);
+
+    await saveData(gameData);
+
+    await interaction.editReply({
+      content: result,
+      components: buildBlessButtons(player),
     });
     return;
   }
