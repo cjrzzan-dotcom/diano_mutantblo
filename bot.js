@@ -1326,24 +1326,32 @@ function enemyAttack(player, target, logs){
 
 
 function usePotionOutOfBattle(player, key){
-  const item = SHOP[key];
-  if(!item) return '잘못된 물약입니다.';
-  if((player.potions[key]||0) <= 0) return `${item.label}이 없습니다.`;
-  player.potions[key] -= 1;
-  player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
-  return `${item.label} 사용! HP ${player.hp}/${player.maxHp}`;
-}
-function usePotionInBattle(player, key){
-  const item = SHOP[key];
-  if(!item) return { logs:['잘못된 물약입니다.'] };
-  if((player.potions[key]||0) <= 0) return { logs:[`${item.label}이 없습니다.`] };
-  if(!player.run?.target) return { logs:['현재 전투 중인 몬스터가 없습니다.'] };
-  if(player.run.isDown) return { logs:['쓰러진 상태입니다. 먼저 부활권을 사용하세요.'] };
-  player.potions[key] -= 1;
-  player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
-  const logs = [`${item.label} 사용! HP ${player.hp}/${player.maxHp}`];
-  enemyAttack(player, player.run.target, logs);
-  return { logs };
+  if (!player.potions[key] || player.potions[key] <= 0) {
+    return '❌ 물약이 없습니다.';
+  }
+
+  let heal = 0;
+
+  if (key === 'small') heal = 30;
+  else if (key === 'mid') heal = 80;
+  else if (key === 'big') heal = 200;
+
+  // ⭐ 추가
+  else if (key === 'large') heal = 300;
+  else if (key === 'xlarge') heal = 500;
+
+  else if (key === 'elixir') {
+    player.hp = player.maxHp;
+    player.potions[key]--;
+    return '🧪 엘릭서 사용! HP 완전 회복!';
+  }
+
+  player.potions[key]--;
+
+  const before = player.hp;
+  player.hp = Math.min(player.maxHp, player.hp + heal);
+
+  return `💊 회복 +${player.hp - before}`;
 }
 
 function performAttack(player, dungeonKey){
@@ -1836,6 +1844,7 @@ const items = player.inventory && player.inventory.length
 
 function buildCompactBattleText(player,target,channelId){
   const lines = [];
+
   if(target){
     lines.push(`👿 ${target.name}`);
     lines.push(`❤️ ${target.currentHp}/${target.hp}`);
@@ -1845,10 +1854,14 @@ function buildCompactBattleText(player,target,channelId){
     lines.push('👿 몬스터 없음');
     lines.push('━━━━━━━━━━');
   }
+
   lines.push(`<#${channelId}>`);
   lines.push(`❤️ ${player.hp}/${player.maxHp}`);
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
-  lines.push(`💊 ${player.potions.small} / 🍗 ${player.potions.mid} / 🍖 ${player.potions.big} / 🧪 ${player.potions.elixir}`);
+
+  // ⭐ 물약 2줄
+  lines.push(`💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0}`);
+  lines.push(`🧃 ${player.potions.large || 0} / 🍶 ${player.potions.xlarge || 0} / 🧪 ${player.potions.elixir || 0}`);
 
   return lines.join('\n');
 }
@@ -1985,18 +1998,27 @@ function buildBattleButtons(player, dungeonKey){
   const down = !!player.run?.isDown;
 
   return [
+
+    // 1️⃣ 핵심 버튼
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('attack').setLabel('⚔️ 공격').setStyle(ButtonStyle.Danger).setDisabled(down),
+      new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),
+      new ButtonBuilder().setCustomId('auto').setLabel(canAuto ? '🤖 자동' : '자동불가').setStyle(canAuto ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canAuto || down),
+    ),
+
+    // 2️⃣ 기본 물약
+    new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('use_small').setLabel('💊').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_mid').setLabel('🍗').setStyle(ButtonStyle.Secondary).setDisabled(down),
-      new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),     
       new ButtonBuilder().setCustomId('use_big').setLabel('🍖').setStyle(ButtonStyle.Secondary).setDisabled(down),
+    ),
+
+    // 3️⃣ 고급 물약
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('use_large').setLabel('🧃').setStyle(ButtonStyle.Primary).setDisabled(down),
+      new ButtonBuilder().setCustomId('use_xlarge').setLabel('🍶').setStyle(ButtonStyle.Success).setDisabled(down),
       new ButtonBuilder().setCustomId('use_elixir').setLabel('🧪').setStyle(ButtonStyle.Secondary).setDisabled(down),
-      new ButtonBuilder().setCustomId('auto').setLabel(canAuto ? '🤖 자동' : '자동불가').setStyle(canAuto ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canAuto || down),
-      
     ),
   ];
 }
@@ -3068,7 +3090,7 @@ if (id === 'buy_large_10') {
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧃 ${player.potions.large || 0} / 🍶 ${player.potions.xlarge || 0} / 🧪 ${player.potions.elixir || 0}`,
     ephemeral: true
   });
   return;
@@ -3239,29 +3261,28 @@ const shopMap = {
   // =========================
   // 물약
   // =========================
-  if (id.startsWith('use_')) {
-    const key = id.replace('use_', '');
+if (id.startsWith('use_')) {
+  const key = id.replace('use_', '');
 
-    if (player.run?.target && dungeonKey) {
-      const result = usePotionInBattle(player, key);
-      await saveData(gameData);
-
-      await interaction.update(
-        buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
-      );
-      return;
-    }
-
-    const text = usePotionOutOfBattle(player, key);
+  if (player.run?.target && dungeonKey) {
+    const result = usePotionInBattle(player, key);
     await saveData(gameData);
 
-    await interaction.reply({
-      content: text,
-      ephemeral: true
-    });
-    await safeDeleteReply(interaction, 3000);
+    await interaction.update(
+      buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
+    );
     return;
   }
+
+  const text = usePotionOutOfBattle(player, key);
+  await saveData(gameData);
+
+  await interaction.reply({
+    content: text,
+    ephemeral: true
+  });
+  return;
+}
 
   // =========================
   // 자동사냥
