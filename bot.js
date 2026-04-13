@@ -1150,22 +1150,22 @@ if(heavenSet.includes(monsterName)){
 
   if(monsterName === '도살자' && chance(40)) drops.push(['도살자의 도끼조각',1]);
   if(monsterName === '레오릭 왕' && chance(40)) drops.push(['레오릭왕의 뼈조각',1]);
-  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 살점',1]);
+  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(45)) drops.push(['악마의 살점',1]);
   if(monsterName === '릴리트' && chance(35)) drops.push(['릴리트의 뿔',1]);
-if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) {
+if(['바알','메피스토','디아블로'].includes(monsterName) && chance(45)) {
   drops.push(['악마의 정수', 1]);
 }
 
-if(monsterName === '종말의 화신 디아블로' && chance(40)) {
+if(monsterName === '종말의 화신 디아블로' && chance(45)) {
   drops.push(['디아블로의 뿔', 1]);
 }
 
 // 🔥 세계석조각 드랍 추가
-if(['메피스토','디아블로'].includes(monsterName) && chance(35)) {
+if(['메피스토','디아블로'].includes(monsterName) && chance(25)) {
   drops.push(['세계석조각', 1]);
 }
 
-if(monsterName === '종말의 화신 디아블로' && chance(40)) {
+if(monsterName === '종말의 화신 디아블로' && chance(30)) {
   drops.push(['세계석조각', 1]);
 }
   return drops;
@@ -1378,14 +1378,31 @@ function performAttack(player, dungeonKey){
 
 const target = player.run.target;
 
+// ⭐ 축성 포함 공격/크리/크뎀/흡혈 계산
+const eq = getEquippedBonuses(player);
 
-let damage = getAttackPower(player) - target.def;
+const wb = getBlessingBonuses(player.equipment.weapon);
+const ab = getBlessingBonuses(player.equipment.armor);
+const rb = getBlessingBonuses(player.equipment.ring);
+
+const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
+const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
+const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
+
+const baseAtk = player.baseAtk + player.stats.atk;
+const atkBeforeBless = baseAtk + eq.atk;
+const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+const finalAtk = atkBeforeBless + blessAtkBonus;
+
+const finalCritChance = Math.min(STAT_CAPS.critChance, player.stats.critChance + eq.critChance + totalBlessCritChance);
+const finalCritDamage = Math.min(STAT_CAPS.critDamage, player.stats.critDamage + eq.critDamage + totalBlessCritDamage);
+
+let damage = finalAtk - target.def;
 let isCrit = false;
 
-
-
-if(chance(getCritChance(player))){
-  damage *= 1.5 + (getCritDamage(player)/100);
+if (chance(finalCritChance)) {
+  damage *= 1.5 + (finalCritDamage / 100);
   isCrit = true;
 }
 
@@ -1394,8 +1411,21 @@ damage = Math.max(1, Math.floor(damage));
 target.currentHp -= damage;
 result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
-const eqBonus = getEquippedBonuses(player);
-const lifesteal = eqBonus.lifesteal || 0;
+// ⭐ 흡혈 적용
+if (totalBlessLifesteal > 0 && damage > 0) {
+  const heal = Math.floor(damage * (totalBlessLifesteal / 100));
+  const beforeHp = player.hp;
+
+  player.hp = Math.min(player.maxHp, player.hp + heal);
+
+  const actualHeal = player.hp - beforeHp;
+  if (actualHeal > 0) {
+    result.logs.push(`🩸 흡혈 +${actualHeal}`);
+  }
+}
+
+
+
 
 if (lifesteal > 0 && damage > 0) {
   const heal = Math.floor(damage * (lifesteal / 100));
