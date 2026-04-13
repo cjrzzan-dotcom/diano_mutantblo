@@ -3024,11 +3024,67 @@ if (id === 'craft_cat_material') {
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} /🧃 ${player.potions.large || 0} / 🍶 ${player.potions.large2 || 0} /🧪 ${player.potions.elixir || 0}`,
       ephemeral: true
     });
     return;
   }
+
+if (id === 'buy_large_10') {
+  const cost = 3500;
+
+  if (player.gold < cost) {
+    await interaction.reply({
+      content: '❌ 골드가 부족합니다. (대량물약 10개 500G)',
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.gold -= cost;
+  player.potions.large = (player.potions.large || 0) + 10;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content:
+`✅ 대량물약 10개 구매 완료!
+
+💰 남은 골드: ${player.gold}
+🧪 보유 물약:
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧃 ${player.potions.large || 0} / 🍶 ${player.potions.large2 || 0} /🧪 ${player.potions.elixir || 0}`,
+    ephemeral: true
+  });
+  return;
+}
+
+if (id === 'buy_xlarge_10') {
+  const cost = 5000;
+
+  if (player.gold < cost) {
+    await interaction.reply({
+      content: '❌ 골드가 부족합니다. (초대량물약 10개 7000G)',
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.gold -= cost;
+  player.potions.xlarge = (player.potions.large2 || 0) + 10;
+
+  await saveData(gameData);
+
+  await interaction.reply({
+    content:
+`✅ 초대량물약 10개 구매 완료!
+
+💰 남은 골드: ${player.gold}
+🧪 보유 물약:
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🍶 ${player.potions.large2 || 0} / 🧪 ${player.potions.xlarge || 0}`,
+    ephemeral: true
+  });
+  return;
+}
 
 if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_large2' || id === 'buy_large3' || id === 'buy_elixir') {
 const shopMap = {
