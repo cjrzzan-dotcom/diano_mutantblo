@@ -362,36 +362,6 @@ function getBlessingText(item){
   return ` [축성: ${item.blessing.label}]`;
 }
 
-function getBlessingBonuses(item){
-  const out = {
-    atkPercent: 0,
-    critChance: 0,
-    critDamage: 0,
-    lifesteal: 0,
-    flatDef: 0,
-    dodge: 0,
-    hpPercent: 0,
-    reflect: 0,
-  };
-
-  if (!item || !item.blessing) return out;
-
-  const key = item.blessing.key;
-  const value = item.blessing.value || 0;
-
-  if (key === 'atkPercent') out.atkPercent = value;
-  if (key === 'critChance') out.critChance = value;
-  if (key === 'critDamage') out.critDamage = value;
-  if (key === 'lifesteal') out.lifesteal = value;
-  if (key === 'flatDef') out.flatDef = value;
-  if (key === 'dodge') out.dodge = value;
-  if (key === 'hpPercent') out.hpPercent = value;
-  if (key === 'reflect') out.reflect = value;
-
-  return out;
-}
-
-
 function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -1627,6 +1597,35 @@ function getInventoryTotalPages(player){
   return Math.max(1, Math.ceil((player.inventory?.length || 0) / ITEMS_PER_PAGE));
 }
 
+function getBlessingBonuses(item){
+  const out = {
+    atkPercent: 0,
+    critChance: 0,
+    critDamage: 0,
+    lifesteal: 0,
+    flatDef: 0,
+    dodge: 0,
+    hpPercent: 0,
+    reflect: 0,
+  };
+
+  if (!item || !item.blessing) return out;
+
+  const key = item.blessing.key;
+  const value = item.blessing.value || 0;
+
+  if (key === 'atkPercent') out.atkPercent = value;
+  if (key === 'critChance') out.critChance = value;
+  if (key === 'critDamage') out.critDamage = value;
+  if (key === 'lifesteal') out.lifesteal = value;
+  if (key === 'flatDef') out.flatDef = value;
+  if (key === 'dodge') out.dodge = value;
+  if (key === 'hpPercent') out.hpPercent = value;
+  if (key === 'reflect') out.reflect = value;
+
+  return out;
+}
+
 function inventoryText(player, page = 1){
   if(!player.inventory.length) return '비어있음';
 
@@ -1643,22 +1642,41 @@ function inventoryText(player, page = 1){
 }
 
 function buildFullStatusText(player){
-  const eq = getEquippedBonuses(player);
+const eq = getEquippedBonuses(player);
 
-  const baseAtk = player.baseAtk + player.stats.atk * 1;
-  const totalAtk = baseAtk + eq.atk;
+const wb = getBlessingBonuses(player.equipment.weapon);
+const ab = getBlessingBonuses(player.equipment.armor);
+const rb = getBlessingBonuses(player.equipment.ring);
 
-  const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const totalDef = baseDef + eq.def;
+const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
+const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
+const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
 
-  const baseCrit = player.stats.critChance;
-  const totalCrit = Math.min(STAT_CAPS.critChance, baseCrit + eq.critChance);
+const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
+const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
 
-  const baseCritDmg = player.stats.critDamage;
-  const totalCritDmg = Math.min(STAT_CAPS.critDamage, baseCritDmg + eq.critDamage);
+const baseAtk = player.baseAtk + player.stats.atk * 1;
+const atkBeforeBless = baseAtk + eq.atk;
+const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+const totalAtk = atkBeforeBless + blessAtkBonus;
 
-  const baseDodge = player.stats.dodge;
-  const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
+const baseDef = player.baseDef + Math.floor(player.level / 3);
+const totalDef = baseDef + eq.def + totalBlessFlatDef;
+
+const baseCrit = player.stats.critChance;
+const totalCrit = Math.min(STAT_CAPS.critChance, baseCrit + eq.critChance + totalBlessCritChance);
+
+const baseCritDmg = player.stats.critDamage;
+const totalCritDmg = Math.min(STAT_CAPS.critDamage, baseCritDmg + eq.critDamage + totalBlessCritDamage);
+
+const baseDodge = player.stats.dodge;
+const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge + totalBlessDodge);
+
+const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+const totalMaxHp = player.maxHp + blessHpBonus;
 
 const weaponText = player.equipment.weapon
   ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} [담금질 ${player.equipment.weapon.temperCount || 0}/5] (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
@@ -1675,12 +1693,14 @@ const ringText = player.equipment.ring
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
-    `❤️ HP: ${player.hp}/${player.maxHp}`,
-    `⚔️ 공격력: ${totalAtk} (${baseAtk} + 장비 ${eq.atk})`,
-    `🛡️ 방어력: ${totalDef} (${baseDef} + 장비 ${eq.def})`,
-    `💥 크리확률: ${totalCrit}% (${baseCrit}% + 장비 ${eq.critChance}%)`,
-    `🔥 크리데미지: +${totalCritDmg}% (${baseCritDmg}% + 장비 ${eq.critDamage}%)`,
-    `💨 회피: ${totalDodge}% (${baseDodge}% + 장비 ${eq.dodge}%)`,
+    `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성 ${blessHpBonus})`,
+    `⚔️ 공격력: ${totalAtk} (${baseAtk} + 장비 ${eq.atk} + 축성 ${blessAtkBonus})`,
+    `🛡️ 방어력: ${totalDef} (${baseDef} + 장비 ${eq.def} + 축성 ${totalBlessFlatDef})`,
+    `💥 크리확률: ${totalCrit}% (${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}%)`,
+    `🔥 크리데미지: +${totalCritDmg}% (${baseCritDmg}% + 장비 ${eq.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
+    `💨 회피: ${totalDodge}% (${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
+    `🩸 흡혈: ${totalBlessLifesteal}%`,
+    `🔁 데미지반사: ${totalBlessReflect}%`,
     ``,
     `⚔️ 무기: ${weaponText}`,
     `🛡️ 갑옷: ${armorText}`,
