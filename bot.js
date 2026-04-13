@@ -1265,30 +1265,46 @@ function getEnhancePreviewText(player, item){
   ].join('\n');
 }
 
-
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
 
-  if(chance(getDodge(player))){
+  // ⭐ 축성 포함 방어/회피/반사 계산
+  const eq = getEquippedBonuses(player);
+
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
+  const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
+
+  const baseDef = player.baseDef + Math.floor(player.level / 3);
+  const finalDef = baseDef + eq.def + totalBlessFlatDef;
+
+  const finalDodge = Math.min(
+    STAT_CAPS.dodge,
+    player.stats.dodge + eq.dodge + totalBlessDodge
+  );
+
+  if (chance(finalDodge)) {
     logs.push(makeDodgeLine());
     return;
   }
 
-  const dmg = Math.max(1, target.atk - getDefensePower(player));
+  const dmg = Math.max(1, target.atk - finalDef);
   player.hp -= dmg;
   logs.push(makeEnemyDamageLine(target.name, dmg));
 
-const eqBonus = getEquippedBonuses(player);
-const reflect = eqBonus.reflect || 0;
+  // ⭐ 데미지 반사
+  if (totalBlessReflect > 0 && dmg > 0 && target.currentHp > 0) {
+    const reflectDmg = Math.floor(dmg * (totalBlessReflect / 100));
 
-if (reflect > 0 && dmg > 0 && target.currentHp > 0) {
-  const reflectDmg = Math.floor(dmg * (reflect / 100));
-
-  if (reflectDmg > 0) {
-    target.currentHp = Math.max(0, target.currentHp - reflectDmg);
-    logs.push(`🔁 데미지반사 ${reflectDmg}`);
+    if (reflectDmg > 0) {
+      target.currentHp = Math.max(0, target.currentHp - reflectDmg);
+      logs.push(`🔁 데미지반사 ${reflectDmg}`);
+    }
   }
-}
 
   if(player.hp <= 0){
     player.hp = 0;
@@ -1304,29 +1320,8 @@ if (reflect > 0 && dmg > 0 && target.currentHp > 0) {
   }
 }
 
-function applyAutoHuntPenalty(result) {
-  if (!result) return result;
 
-  // 경험치
-  if (typeof result.exp === 'number') {
-    result.exp = Math.max(1, Math.floor(result.exp / 5));
-  }
 
-  // 골드
-  if (typeof result.gold === 'number') {
-    result.gold = Math.max(1, Math.floor(result.gold / 5));
-  }
-
-  // 드랍 아이템 수량
-  if (Array.isArray(result.drops)) {
-    result.drops = result.drops.map(drop => ({
-      ...drop,
-      amount: Math.max(1, Math.floor((drop.amount || 1) / 5))
-    }));
-  }
-
-  return result;
-}
 
 function usePotionOutOfBattle(player, key){
   const item = SHOP[key];
