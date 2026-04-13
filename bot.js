@@ -422,7 +422,7 @@ function reviveIfRespawnReady(player){
   if(Date.now() < player.respawnAt) return false;
 
   player.run.isDown = false;
-  player.hp = Math.max(1, Math.floor(player.maxHp));
+  player.hp = Math.max(1, Math.floor(getMaxHpWithBless(player)));
   player.respawnAt = 0;
   return true;
 }
@@ -477,6 +477,17 @@ function getWaveMonster(dungeonKey, idx){
     ...base,
     currentHp: base.hp,
   };
+}
+
+function getMaxHpWithBless(player){
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+  const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+
+  return player.maxHp + blessHpBonus;
 }
 
 
@@ -1319,7 +1330,7 @@ function usePotionOutOfBattle(player, key){
   if(!item) return '잘못된 물약입니다.';
   if((player.potions[key]||0) <= 0) return `${item.label}이 없습니다.`;
   player.potions[key] -= 1;
-  player.hp = Math.min(player.maxHp, player.hp + item.heal);
+  player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
   return `${item.label} 사용! HP ${player.hp}/${player.maxHp}`;
 }
 function usePotionInBattle(player, key){
@@ -1329,7 +1340,7 @@ function usePotionInBattle(player, key){
   if(!player.run?.target) return { logs:['현재 전투 중인 몬스터가 없습니다.'] };
   if(player.run.isDown) return { logs:['쓰러진 상태입니다. 먼저 부활권을 사용하세요.'] };
   player.potions[key] -= 1;
-  player.hp = Math.min(player.maxHp, player.hp + item.heal);
+  player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
   const logs = [`${item.label} 사용! HP ${player.hp}/${player.maxHp}`];
   enemyAttack(player, player.run.target, logs);
   return { logs };
@@ -1408,7 +1419,7 @@ function performAttack(player, dungeonKey){
     const heal = Math.floor(damage * (totalBlessLifesteal / 100));
     const beforeHp = player.hp;
 
-    player.hp = Math.min(player.maxHp, player.hp + heal);
+    player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
 
     const actualHeal = player.hp - beforeHp;
     if (actualHeal > 0) {
@@ -1768,8 +1779,8 @@ const totalCritDmg = Math.min(STAT_CAPS.critDamage, baseCritDmg + eq.critDamage 
 const baseDodge = player.stats.dodge;
 const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge + totalBlessDodge);
 
-const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
-const totalMaxHp = player.maxHp + blessHpBonus;
+const totalMaxHp = getMaxHpWithBless(player);
+const blessHpBonus = totalMaxHp - player.maxHp;
 
 const weaponText = player.equipment.weapon
   ? getItemDisplayName(player.equipment.weapon)
@@ -3031,11 +3042,11 @@ if (id === 'craft_cat_material') {
   }
 
 if (id === 'buy_large_10') {
-  const cost = 3500;
+  const cost = 5000;
 
   if (player.gold < cost) {
     await interaction.reply({
-      content: '❌ 골드가 부족합니다. (대량물약 10개 500G)',
+      content: '❌ 골드가 부족합니다. (대량물약 10개 5000G)',
       ephemeral: true
     });
     return;
@@ -3059,7 +3070,7 @@ if (id === 'buy_large_10') {
 }
 
 if (id === 'buy_xlarge_10') {
-  const cost = 5000;
+  const cost = 7000;
 
   if (player.gold < cost) {
     await interaction.reply({
