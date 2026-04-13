@@ -1050,11 +1050,11 @@ function createRingStats(recipeId){
 }
 
 function getEquippedBonuses(player){
-  const bonus = { 
-    atk:0, 
-    def:0, 
-    critChance:0, 
-    critDamage:0, 
+  const bonus = {
+    atk:0,
+    def:0,
+    critChance:0,
+    critDamage:0,
     dodge:0,
     lifesteal:0,
     reflect:0
@@ -1069,8 +1069,14 @@ function getEquippedBonuses(player){
     bonus.critDamage += item.critDamageBonus || 0;
     bonus.dodge += item.dodgeBonus || 0;
 
-    bonus.lifesteal += item.lifesteal || 0;
-    bonus.reflect += item.reflect || 0;
+    if (item.blessing){
+      if (item.blessing.key === 'lifesteal') {
+        bonus.lifesteal += item.blessing.value || 0;
+      }
+      if (item.blessing.key === 'reflect') {
+        bonus.reflect += item.blessing.value || 0;
+      }
+    }
   }
 
   return bonus;
@@ -1268,37 +1274,20 @@ function getEnhancePreviewText(player, item){
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
 
-  // ⭐ 축성 포함 방어/회피/반사 계산
-  const eq = getEquippedBonuses(player);
-
-  const wb = getBlessingBonuses(player.equipment.weapon);
-  const ab = getBlessingBonuses(player.equipment.armor);
-  const rb = getBlessingBonuses(player.equipment.ring);
-
-  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
-  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
-  const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
-
-  const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const finalDef = baseDef + eq.def + totalBlessFlatDef;
-
-  const finalDodge = Math.min(
-    STAT_CAPS.dodge,
-    player.stats.dodge + eq.dodge + totalBlessDodge
-  );
-
-  if (chance(finalDodge)) {
+  if(chance(getDodge(player))){
     logs.push(makeDodgeLine());
     return;
   }
 
-  const dmg = Math.max(1, target.atk - finalDef);
+  const dmg = Math.max(1, target.atk - getDefensePower(player));
   player.hp -= dmg;
   logs.push(makeEnemyDamageLine(target.name, dmg));
 
-  // ⭐ 데미지 반사
-  if (totalBlessReflect > 0 && dmg > 0 && target.currentHp > 0) {
-    const reflectDmg = Math.floor(dmg * (totalBlessReflect / 100));
+  const eqBonus = getEquippedBonuses(player);
+  const reflect = eqBonus.reflect || 0;
+
+  if (reflect > 0 && dmg > 0 && target.currentHp > 0) {
+    const reflectDmg = Math.floor(dmg * (reflect / 100));
 
     if (reflectDmg > 0) {
       target.currentHp = Math.max(0, target.currentHp - reflectDmg);
@@ -1319,7 +1308,6 @@ function enemyAttack(player, target, logs){
     }
   }
 }
-
 
 
 
@@ -1373,6 +1361,7 @@ function performAttack(player, dungeonKey){
 
 const target = player.run.target;
 
+
 // ⭐ 축성 포함 공격/크리/크뎀/흡혈 계산
 const eq = getEquippedBonuses(player);
 
@@ -1405,6 +1394,10 @@ damage = Math.max(1, Math.floor(damage));
 
 target.currentHp -= damage;
 result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+
+
+const eqBonus = getEquippedBonuses(player);
+const lifesteal = eqBonus.lifesteal || 0;
 
 // ⭐ 흡혈 적용
 if (totalBlessLifesteal > 0 && damage > 0) {
