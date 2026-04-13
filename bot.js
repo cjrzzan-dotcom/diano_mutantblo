@@ -254,15 +254,16 @@ function getItemStatTextWithBless(item){
 function getItemDisplayName(item){
   if(!item) return '없음';
 
-  const enhance = item.enhanceLevel ? `+${item.enhanceLevel}` : '';
-  const bless = item.bless ? '(축성)' : '';
+  const enhance = `+${item.enhanceLevel || 0}`;
+  const bless = item.blessing ? '(축성)' : ''; // ⭐ 이거 있어야 표시됨
   const temper = `[담금질 ${item.temperCount || 0}/5]`;
 
-  const stats = getItemStatTextWithBless(item); // 이미 만든 함수
+  const stats = getItemStatTextWithBless(item); // ⭐ 축성 옵션 포함
 
-  return `${enhance}${bless} ${item.name} ${temper}\n(${stats})`;
+  return stats
+    ? `${enhance}${bless} ${item.name} ${temper}\n(${stats})`
+    : `${enhance}${bless} ${item.name} ${temper}`;
 }
-
 
 
 function endBattle(player) {
