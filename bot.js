@@ -1048,15 +1048,29 @@ function createRingStats(recipeId){
 }
 
 function getEquippedBonuses(player){
-  const bonus = { atk:0, def:0, critChance:0, critDamage:0, dodge:0 };
+  const bonus = { 
+    atk:0, 
+    def:0, 
+    critChance:0, 
+    critDamage:0, 
+    dodge:0,
+    lifesteal:0,
+    reflect:0
+  };
+
   for(const item of Object.values(player.equipment)){
     if(!item) continue;
+
     bonus.atk += item.atkBonus || 0;
     bonus.def += item.defBonus || 0;
     bonus.critChance += item.critChanceBonus || 0;
     bonus.critDamage += item.critDamageBonus || 0;
     bonus.dodge += item.dodgeBonus || 0;
+
+    bonus.lifesteal += item.lifesteal || 0;
+    bonus.reflect += item.reflect || 0;
   }
+
   return bonus;
 }
 function getAttackPower(player){
@@ -1262,6 +1276,18 @@ function enemyAttack(player, target, logs){
   player.hp -= dmg;
   logs.push(makeEnemyDamageLine(target.name, dmg));
 
+const eqBonus = getEquippedBonuses(player);
+const reflect = eqBonus.reflect || 0;
+
+if (reflect > 0 && dmg > 0 && target.currentHp > 0) {
+  const reflectDmg = Math.floor(dmg * (reflect / 100));
+
+  if (reflectDmg > 0) {
+    target.currentHp = Math.max(0, target.currentHp - reflectDmg);
+    logs.push(`🔁 데미지반사 ${reflectDmg}`);
+  }
+}
+
   if(player.hp <= 0){
     player.hp = 0;
     player.respawnAt = Date.now() + 15 * 60 * 1000;
@@ -1366,6 +1392,20 @@ damage = Math.max(1, Math.floor(damage));
 target.currentHp -= damage;
 result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
+const eqBonus = getEquippedBonuses(player);
+const lifesteal = eqBonus.lifesteal || 0;
+
+if (lifesteal > 0 && damage > 0) {
+  const heal = Math.floor(damage * (lifesteal / 100));
+  const beforeHp = player.hp;
+
+  player.hp = Math.min(player.maxHp, player.hp + heal);
+
+  const actualHeal = player.hp - beforeHp;
+  if (actualHeal > 0) {
+    result.logs.push(`🩸 흡혈 +${actualHeal}`);
+  }
+}
 
 if(target.currentHp <= 0){
   target.currentHp = 0;
