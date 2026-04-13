@@ -1332,7 +1332,6 @@ function usePotionInBattle(player, key){
   return { logs };
 }
 
-
 function performAttack(player, dungeonKey){
   const result = { logs:[], killedTarget:null, levelUps:[], clearedDungeon:false };
 
@@ -1359,138 +1358,95 @@ function performAttack(player, dungeonKey){
     return result;
   }
 
-const target = player.run.target;
+  const target = player.run.target;
 
+  // 축성 포함 공격/크리/크뎀/흡혈 계산
+  const eq = getEquippedBonuses(player);
 
-// ⭐ 축성 포함 공격/크리/크뎀/흡혈 계산
-const eq = getEquippedBonuses(player);
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
 
-const wb = getBlessingBonuses(player.equipment.weapon);
-const ab = getBlessingBonuses(player.equipment.armor);
-const rb = getBlessingBonuses(player.equipment.ring);
+  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+  const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
+  const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
+  const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
 
-const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
-const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
-const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
-const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
+  const baseAtk = player.baseAtk + player.stats.atk;
+  const atkBeforeBless = baseAtk + eq.atk;
+  const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+  const finalAtk = atkBeforeBless + blessAtkBonus;
 
-const baseAtk = player.baseAtk + player.stats.atk;
-const atkBeforeBless = baseAtk + eq.atk;
-const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-const finalAtk = atkBeforeBless + blessAtkBonus;
+  const finalCritChance = Math.min(
+    STAT_CAPS.critChance,
+    player.stats.critChance + eq.critChance + totalBlessCritChance
+  );
 
-const finalCritChance = Math.min(STAT_CAPS.critChance, player.stats.critChance + eq.critChance + totalBlessCritChance);
-const finalCritDamage = Math.min(STAT_CAPS.critDamage, player.stats.critDamage + eq.critDamage + totalBlessCritDamage);
+  const finalCritDamage = Math.min(
+    STAT_CAPS.critDamage,
+    player.stats.critDamage + eq.critDamage + totalBlessCritDamage
+  );
 
-const eq = getEquippedBonuses(player);
+  let damage = finalAtk - target.def;
+  let isCrit = false;
 
-const wb = getBlessingBonuses(player.equipment.weapon);
-const ab = getBlessingBonuses(player.equipment.armor);
-const rb = getBlessingBonuses(player.equipment.ring);
-
-const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
-const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
-const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
-
-const baseAtk = player.baseAtk + player.stats.atk;
-const atkBeforeBless = baseAtk + eq.atk;
-const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-const finalAtk = atkBeforeBless + blessAtkBonus;
-
-const finalCritChance = Math.min(
-  STAT_CAPS.critChance,
-  player.stats.critChance + eq.critChance + totalBlessCritChance
-);
-
-const finalCritDamage = Math.min(
-  STAT_CAPS.critDamage,
-  player.stats.critDamage + eq.critDamage + totalBlessCritDamage
-);
-
-let damage = finalAtk - target.def;
-let isCrit = false;
-
-if (chance(finalCritChance)) {
-  damage *= 1.5 + (finalCritDamage / 100);
-  isCrit = true;
-}
-
-
-damage = Math.max(1, Math.floor(damage));
-
-target.currentHp -= damage;
-result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
-
-
-const eqBonus = getEquippedBonuses(player);
-const lifesteal = eqBonus.lifesteal || 0;
-
-// ⭐ 흡혈 적용
-if (totalBlessLifesteal > 0 && damage > 0) {
-  const heal = Math.floor(damage * (totalBlessLifesteal / 100));
-  const beforeHp = player.hp;
-
-  player.hp = Math.min(player.maxHp, player.hp + heal);
-
-  const actualHeal = player.hp - beforeHp;
-  if (actualHeal > 0) {
-    result.logs.push(`🩸 흡혈 +${actualHeal}`);
-  }
-}
-
-
-
-
-if (lifesteal > 0 && damage > 0) {
-  const heal = Math.floor(damage * (lifesteal / 100));
-  const beforeHp = player.hp;
-
-  player.hp = Math.min(player.maxHp, player.hp + heal);
-
-  const actualHeal = player.hp - beforeHp;
-  if (actualHeal > 0) {
-    result.logs.push(`🩸 흡혈 +${actualHeal}`);
-  }
-}
-
-if(target.currentHp <= 0){
-  target.currentHp = 0;
-  result.killedTarget = { ...target };
-  result.logs.push(makeKillLine(target.name));
-
-  const drops = grantDrops(player, target);
-  result.levelUps = drops.levelUps;
-  player.run.lastDrops = drops.lines;
-  result.logs.push(...drops.lines);
-  player.run.kills += 1;
-
-  const dungeon = DUNGEONS[dungeonKey];
-
-  // 현재 타겟 제거
-  player.run.target = null;
-
-  // 랜덤 던전이면 전투 종료
-  if(dungeon.type === 'random'){
-    endBattle(player);
-    result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
-    return result;
+  if (chance(finalCritChance)) {
+    damage *= 1.5 + (finalCritDamage / 100);
+    isCrit = true;
   }
 
-  // 웨이브 던전이면 다음 웨이브 지정
-  if(dungeon.type === 'wave'){
-    player.run.waveIndex += 1;
-    player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
+  damage = Math.max(1, Math.floor(damage));
 
-    if(player.run.nextTarget){
-      result.logs.push(`✨ 다음 몬스터 매칭 예정: ${player.run.nextTarget.name}`);
-    } else {
-      result.logs.push('🏆 모든 웨이브를 클리어했습니다!');
+  target.currentHp -= damage;
+  result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+
+  // 흡혈 적용
+  if (totalBlessLifesteal > 0 && damage > 0) {
+    const heal = Math.floor(damage * (totalBlessLifesteal / 100));
+    const beforeHp = player.hp;
+
+    player.hp = Math.min(player.maxHp, player.hp + heal);
+
+    const actualHeal = player.hp - beforeHp;
+    if (actualHeal > 0) {
+      result.logs.push(`🩸 흡혈 +${actualHeal}`);
+    }
+  }
+
+  if(target.currentHp <= 0){
+    target.currentHp = 0;
+    result.killedTarget = { ...target };
+    result.logs.push(makeKillLine(target.name));
+
+    const drops = grantDrops(player, target);
+    result.levelUps = drops.levelUps;
+    player.run.lastDrops = drops.lines;
+    result.logs.push(...drops.lines);
+    player.run.kills += 1;
+
+    const dungeon = DUNGEONS[dungeonKey];
+
+    player.run.target = null;
+
+    if(dungeon.type === 'random'){
       endBattle(player);
+      result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
+      return result;
     }
 
-    return result;
-  }
+    if(dungeon.type === 'wave'){
+      player.run.waveIndex += 1;
+      player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
 
+      if(player.run.nextTarget){
+        result.logs.push(`✨ 다음 몬스터 매칭 예정: ${player.run.nextTarget.name}`);
+      } else {
+        result.logs.push('🏆 모든 웨이브를 클리어했습니다!');
+        endBattle(player);
+      }
+
+      return result;
+    }
 
     player.run.waveIndex += 1;
     const next = getWaveMonster(dungeonKey, player.run.waveIndex);
