@@ -1891,12 +1891,6 @@ function buildEnhanceMenuButtons(player){
         .setCustomId('bless_select')
         .setLabel('축성')
         .setStyle(ButtonStyle.Success),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('town')
-        .setLabel('↩️ 마을로')
-        .setStyle(ButtonStyle.Secondary),
     )
   ];
 }
@@ -1921,12 +1915,6 @@ function buildTemperButtons(player){
         .setLabel('💍 반지')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!player.equipment?.ring),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('enhance_menu')
-        .setLabel('↩️ 뒤로')
-        .setStyle(ButtonStyle.Secondary),
     )
   ];
 }
@@ -1951,12 +1939,6 @@ function buildEnhanceButtons(player){
         .setLabel('💍 반지')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(!player.equipment?.ring),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('enhance_menu')
-        .setLabel('↩️ 뒤로')
-        .setStyle(ButtonStyle.Secondary),
     )
   ];
 }
