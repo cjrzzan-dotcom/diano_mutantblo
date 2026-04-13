@@ -570,7 +570,8 @@ const MATERIAL_PRICES = {
   '고급장비조각': 500,
   '천상석': 500,
 
-  '디아블로의 뿔': 700,
+  '디아블로의 뿔': 700,  
+  '디아블로의 불': 1,
 
   '천상의 조각': 1000
 };
@@ -2371,12 +2372,7 @@ if(command === '!가방'){
     await message.reply(formatHelp());
     return;
   }
-  if(command === '!초기화'){
-    gameData[message.author.id] = getDefaultPlayer(message.author.id);
-await saveData(gameData);
-    await message.reply('초기화 완료');
-    return;
-  }
+
 
 if (command === '!스탯초기화') {
   if (!isAdmin(message)) {
