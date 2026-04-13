@@ -252,13 +252,15 @@ function getItemStatTextWithBless(item){
 }
 
 function getItemDisplayName(item){
-  if (!item) return '없음';
+  if(!item) return '없음';
 
-  const enhance = `+${item.enhanceLevel || 0}`;
-  const blessMark = item.blessing ? '(축성)' : '';
-  const temper = `[담금질${item.temperCount || 0}/5]`;
+  const enhance = item.enhanceLevel ? `+${item.enhanceLevel}` : '';
+  const bless = item.bless ? '(축성)' : '';
+  const temper = `[담금질 ${item.temperCount || 0}/5]`;
 
-  return `${enhance}${blessMark}${item.name}${temper}${getItemStatTextWithBless(item)}`;
+  const stats = getItemStatTextWithBless(item); // 이미 만든 함수
+
+  return `${enhance}${bless} ${item.name} ${temper}\n(${stats})`;
 }
 
 
