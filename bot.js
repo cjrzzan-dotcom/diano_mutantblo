@@ -217,6 +217,52 @@ function isAdmin(message) {
 return message.author.id === '335720453408817166';
 }
 
+function getBlessingStatText(item){
+  if (!item || !item.blessing) return '';
+
+  const { key, value } = item.blessing;
+
+  if (key === 'critChance') return `크리+${value}%`;
+  if (key === 'critDamage') return `크뎀+${value}%`;
+  if (key === 'dodge') return `회피+${value}%`;
+  if (key === 'atkPercent') return `공+${value}%`;
+  if (key === 'hpPercent') return `HP+${value}%`;
+  if (key === 'reflect') return `반사+${value}%`;
+  if (key === 'lifesteal') return `흡혈+${value}%`;
+
+  return '';
+}
+
+function getItemStatTextWithBless(item){
+  if (!item) return '';
+
+  const parts = [];
+
+  if ((item.atkBonus || 0) !== 0) parts.push(`공+${item.atkBonus}`);
+  if ((item.defBonus || 0) !== 0) parts.push(`방+${item.defBonus}`);
+  if ((item.critChanceBonus || 0) !== 0) parts.push(`크리+${item.critChanceBonus}%`);
+  if ((item.critDamageBonus || 0) !== 0) parts.push(`크뎀+${item.critDamageBonus}%`);
+  if ((item.dodgeBonus || 0) !== 0) parts.push(`회피+${item.dodgeBonus}%`);
+
+  // ⭐ 축성 추가
+  const blessText = getBlessingStatText(item);
+  if (blessText) parts.push(blessText);
+
+  return parts.length ? `(${parts.join(',')})` : '';
+}
+
+function getItemDisplayName(item){
+  if (!item) return '없음';
+
+  const enhance = `+${item.enhanceLevel || 0}`;
+  const blessMark = item.blessing ? '(축성)' : '';
+  const temper = `[담금질${item.temperCount || 0}/5]`;
+
+  return `${enhance}${blessMark}${item.name}${temper}${getItemStatTextWithBless(item)}`;
+}
+
+
+
 function endBattle(player) {
   player.run = null;
 }
@@ -1679,15 +1725,15 @@ const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
 const totalMaxHp = player.maxHp + blessHpBonus;
 
 const weaponText = player.equipment.weapon
-  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} [담금질 ${player.equipment.weapon.temperCount || 0}/5] (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+  ? getItemDisplayName(player.equipment.weapon)
   : '없음';
 
 const armorText = player.equipment.armor
-  ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} [담금질 ${player.equipment.armor.temperCount || 0}/5] (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+  ? getItemDisplayName(player.equipment.armor)
   : '없음';
 
 const ringText = player.equipment.ring
-  ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} [담금질 ${player.equipment.ring.temperCount || 0}/5] (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
+  ? getItemDisplayName(player.equipment.ring)
   : '없음';
 
   return [
