@@ -1382,6 +1382,31 @@ const finalAtk = atkBeforeBless + blessAtkBonus;
 const finalCritChance = Math.min(STAT_CAPS.critChance, player.stats.critChance + eq.critChance + totalBlessCritChance);
 const finalCritDamage = Math.min(STAT_CAPS.critDamage, player.stats.critDamage + eq.critDamage + totalBlessCritDamage);
 
+const eq = getEquippedBonuses(player);
+
+const wb = getBlessingBonuses(player.equipment.weapon);
+const ab = getBlessingBonuses(player.equipment.armor);
+const rb = getBlessingBonuses(player.equipment.ring);
+
+const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
+const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
+
+const baseAtk = player.baseAtk + player.stats.atk;
+const atkBeforeBless = baseAtk + eq.atk;
+const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+const finalAtk = atkBeforeBless + blessAtkBonus;
+
+const finalCritChance = Math.min(
+  STAT_CAPS.critChance,
+  player.stats.critChance + eq.critChance + totalBlessCritChance
+);
+
+const finalCritDamage = Math.min(
+  STAT_CAPS.critDamage,
+  player.stats.critDamage + eq.critDamage + totalBlessCritDamage
+);
+
 let damage = finalAtk - target.def;
 let isCrit = false;
 
@@ -1389,6 +1414,7 @@ if (chance(finalCritChance)) {
   damage *= 1.5 + (finalCritDamage / 100);
   isCrit = true;
 }
+
 
 damage = Math.max(1, Math.floor(damage));
 
