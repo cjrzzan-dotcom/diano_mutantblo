@@ -3035,13 +3035,13 @@ if (id === 'craft_cat_material') {
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} /🧃 ${player.potions.large || 0} / 🍶 ${player.potions.large2 || 0} /🧪 ${player.potions.elixir || 0}`,
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} /🧃 ${player.potions.large2 || 0} / 🍶 ${player.potions.large3 || 0} /🧪 ${player.potions.elixir || 0}`,
       ephemeral: true
     });
     return;
   }
 
-if (id === 'buy_large_10') {
+if (id === 'buy_large2_10') {
   const cost = 5000;
 
   if (player.gold < cost) {
@@ -3053,7 +3053,7 @@ if (id === 'buy_large_10') {
   }
 
   player.gold -= cost;
-  player.potions.large = (player.potions.large || 0) + 10;
+  player.potions.large2 = (player.potions.large2 || 0) + 10;
 
   await saveData(gameData);
 
@@ -3063,13 +3063,13 @@ if (id === 'buy_large_10') {
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧃 ${player.potions.large || 0} / 🍶 ${player.potions.large2 || 0} /🧪 ${player.potions.elixir || 0}`,
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧃 ${player.potions.large2 || 0} / 🍶 ${player.potions.large3 || 0} /🧪 ${player.potions.elixir || 0}`,
     ephemeral: true
   });
   return;
 }
 
-if (id === 'buy_xlarge_10') {
+if (id === 'buy_large3_10') {
   const cost = 7000;
 
   if (player.gold < cost) {
@@ -3081,7 +3081,7 @@ if (id === 'buy_xlarge_10') {
   }
 
   player.gold -= cost;
-  player.potions.xlarge = (player.potions.large2 || 0) + 10;
+  player.potions.large3 = (player.potions.large3 || 0) + 10;
 
   await saveData(gameData);
 
@@ -3099,12 +3099,16 @@ if (id === 'buy_xlarge_10') {
 
 if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_large2' || id === 'buy_large3' || id === 'buy_elixir') {
 const shopMap = {
-  buy_small:  { key: 'small',  name: '작은물약',   price: 10 },
-  buy_mid:    { key: 'mid',    name: '중간물약',   price: 30 },
-  buy_big:    { key: 'big',    name: '큰물약',     price: 100 },
-  buy_large2: { key: 'large2', name: '대량물약',   price: 500 },
-  buy_large3: { key: 'large3', name: '초대량물약', price: 700 },
-  buy_elixir: { key: 'elixir', name: '엘릭서',     price: 3000 },
+  buy_small: { key: 'small', name: '작은물약', price: 10, amount: 1 },
+  buy_mid: { key: 'mid', name: '중간물약', price: 30, amount: 1 },
+  buy_big: { key: 'big', name: '큰물약', price: 100, amount: 1 },
+
+
+  buy_big_10: { key: 'big', name: '큰물약', price: 1000, amount: 10 },
+  buy_huge_10: { key: 'huge', name: '대량물약', price: 5000, amount: 10 },
+  buy_ultra_10: { key: 'ultra', name: '초대량물약', price: 7000, amount: 10 },
+
+  buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000, amount: 1 },
 };
 
     const buy = shopMap[id];
