@@ -621,10 +621,13 @@ const DISPLAY_NAMES = {
 };
 
 const SHOP = {
-  small: { label: '💊 작은물약', heal: 10, price: 10 },
-  mid: { label: '🍗 중간물약', heal: 30, price: 30 },
-  big: { label: '🍖 큰물약', heal: 100, price: 100 },
-  elixir: { label: '🧪 엘릭서', heal: 99999, price: 3000 },
+  small:   { label:'작은물약', heal:30,  price:10 },
+  mid:     { label:'중간물약', heal:80,  price:30 },
+  big:     { label:'큰물약',   heal:200, price:100 },
+  elixir:  { label:'엘릭서',   heal:9999, price:3000 },
+
+  large2:  { label:'대량물약',   heal:200, price:350 },
+  large3:  { label:'초대량물약', heal:300, price:500 },
 };
 
 const STAT_CAPS = { critChance: 35, critDamage: 100, dodge: 25 };
@@ -842,7 +845,7 @@ function getDefaultPlayer(userId){
     gold: 100,
     reviveTickets: 0,
     respawnAt: 0,
-    potions: { small:2, mid:1, big:0, elixir:0 },
+    potions: { small:2, mid:1, big:0, elixir:0,large2: 0,large3: 0, },
     materials: blankMaterials(),
     inventory: [],
     equipment: defaultEquipment(),
@@ -2002,9 +2005,10 @@ function buildShopButtons(){
       new ButtonBuilder().setCustomId('buy_small').setLabel('💊 10G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_mid').setLabel('🍗 30G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_big').setLabel('🍖 100G').setStyle(ButtonStyle.Secondary),
-  
+      new ButtonBuilder().setCustomId('buy_large2').setLabel('🧃 x 10 3500G').setStyle(ButtonStyle.Secondary),
     ),
     new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('buy_large3').setLabel('🍶 x10 5000G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_big_10').setLabel('🍖×10 (1000G)').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_elixir').setLabel('🧪 3000G').setStyle(ButtonStyle.Secondary),
     )
@@ -2887,6 +2891,8 @@ client.on('interactionCreate', async (interaction) => {
 🍗 중간물약 30G
 🍖 큰물약 100G
 🍖 x 10 큰물약 1000G
+🧃 x 10  대량물약 3500G
+🍶 x 10 초대량물약 5000G
 🧪 엘릭서 3000G`,
       components: buildShopButtons(),
       ephemeral: true
@@ -3024,13 +3030,15 @@ if (id === 'craft_cat_material') {
     return;
   }
 
-  if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
-    const shopMap = {
-      buy_small: { key: 'small', name: '작은물약', price: 10 },
-      buy_mid: { key: 'mid', name: '중간물약', price: 30 },
-      buy_big: { key: 'big', name: '큰물약', price: 100 },
-      buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000 },
-    };
+if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_large2' || id === 'buy_large3' || id === 'buy_elixir') {
+const shopMap = {
+  buy_small:  { key: 'small',  name: '작은물약',   price: 10 },
+  buy_mid:    { key: 'mid',    name: '중간물약',   price: 30 },
+  buy_big:    { key: 'big',    name: '큰물약',     price: 100 },
+  buy_large2: { key: 'large2', name: '대량물약',   price: 350 },
+  buy_large3: { key: 'large3', name: '초대량물약', price: 500 },
+  buy_elixir: { key: 'elixir', name: '엘릭서',     price: 3000 },
+};
 
     const buy = shopMap[id];
 
@@ -3060,7 +3068,7 @@ if (id === 'craft_cat_material') {
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧃 ${player.potions.large2 || 0} / 🍶  ${player.potions.large3 || 0} / 🧪 ${player.potions.elixir || 0}`,
       ephemeral: true
     });
     return;
