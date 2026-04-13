@@ -626,8 +626,8 @@ const SHOP = {
   big:     { label:'큰물약',   heal:200, price:100 },
   elixir:  { label:'엘릭서',   heal:9999, price:3000 },
 
-  large2:  { label:'대량물약',   heal:200, price:350 },
-  large3:  { label:'초대량물약', heal:300, price:500 },
+  large2:  { label:'대량물약',   heal:300, price:500 },
+  large3:  { label:'초대량물약', heal:500, price:700 },
 };
 
 const STAT_CAPS = { critChance: 35, critDamage: 100, dodge: 25 };
@@ -2891,8 +2891,8 @@ client.on('interactionCreate', async (interaction) => {
 🍗 중간물약 30G
 🍖 큰물약 100G
 🍖 x 10 큰물약 1000G
-🧃 x 10  대량물약 3500G
-🍶 x 10 초대량물약 5000G
+🧃 x 10  대량물약 5000G
+🍶 x 10 초대량물약 7000G
 🧪 엘릭서 3000G`,
       components: buildShopButtons(),
       ephemeral: true
@@ -3035,8 +3035,8 @@ const shopMap = {
   buy_small:  { key: 'small',  name: '작은물약',   price: 10 },
   buy_mid:    { key: 'mid',    name: '중간물약',   price: 30 },
   buy_big:    { key: 'big',    name: '큰물약',     price: 100 },
-  buy_large2: { key: 'large2', name: '대량물약',   price: 350 },
-  buy_large3: { key: 'large3', name: '초대량물약', price: 500 },
+  buy_large2: { key: 'large2', name: '대량물약',   price: 500 },
+  buy_large3: { key: 'large3', name: '초대량물약', price: 700 },
   buy_elixir: { key: 'elixir', name: '엘릭서',     price: 3000 },
 };
 
