@@ -2976,7 +2976,7 @@ if (command === '!시작') {
 
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
-  await interaction.deferUpdate(); // ⭐ 무조건 먼저
+
 
   const player = getPlayer(interaction.user.id);
   const id = interaction.customId;
