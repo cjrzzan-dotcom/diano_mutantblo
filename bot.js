@@ -14,7 +14,7 @@ const DATA_FILE = path.join(
 console.log("MONGO_URI 있음?", !!process.env.MONGO_URI);
 
 const fs = require('fs');
-const path = require('path');
+
 
 
 const { MongoClient } = require('mongodb');
