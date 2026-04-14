@@ -2042,8 +2042,13 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
 
+await playersCol.deleteOne({ _id: '__backup__' });
+await playersCol.deleteMany({ type: 'rolling_backup' });
+
 if (!gameData) gameData = {};
 });
+
+
 
 
 client.on('messageCreate', async (message) => {
