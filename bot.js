@@ -2952,6 +2952,11 @@ client.on('interactionCreate', async (interaction) => {
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
+// ⭐ 전투 관련 버튼은 먼저 defer
+if (['attack', 'auto'].includes(id)) {
+  await interaction.deferUpdate();
+}
+
   const revived = reviveIfRespawnReady(player);
   if (revived) await safeSave();
 
