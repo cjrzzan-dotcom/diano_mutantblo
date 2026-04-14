@@ -378,6 +378,125 @@ function getWaveMonster(dungeonKey, idx){
   };
 }
 
+function buildBlessButtons(player){
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('bless_weapon')
+        .setLabel('⚔️ 무기')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.weapon),
+
+      new ButtonBuilder()
+        .setCustomId('bless_armor')
+        .setLabel('🛡️ 갑옷')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(!player.equipment?.armor),
+
+      new ButtonBuilder()
+        .setCustomId('bless_ring')
+        .setLabel('💍 반지')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true),
+    )
+  ];
+}
+
+function tryBlessItem(player, item){
+  if (!item) return '❌ 없는 장비입니다.';
+  if (!player.materials) player.materials = {};
+
+  if ((player.materials['축성석'] || 0) < 1) {
+    return '❌ 축성석이 부족합니다.';
+  }
+
+  if (item.blessing) {
+    return `❌ ${item.name}은(는) 이미 축성되었습니다.`;
+  }
+
+  let options = [];
+
+  if (item.type === 'weapon') {
+    options = [
+      { key: 'atkPercent', label: '공격력 15% 증가', value: 15 },
+      { key: 'critChance', label: '크리확률 10% 증가', value: 10 },
+      { key: 'critDamage', label: '크리데미지 20% 증가', value: 20 },
+      { key: 'lifesteal', label: '흡혈 15%', value: 15 },
+    ];
+  } else if (item.type === 'armor') {
+    options = [
+      { key: 'flatDef', label: '방어력 +20', value: 20 },
+      { key: 'dodge', label: '회피 15% 증가', value: 15 },
+      { key: 'hpPercent', label: '체력 15% 증가', value: 15 },
+      { key: 'reflect', label: '데미지반사 15%', value: 15 },
+    ];
+  } else if (item.type === 'ring') {
+    return '❌ 반지는 아직 축성할 수 없습니다.';
+  } else {
+    return '❌ 축성할 수 없는 장비입니다.';
+  }
+
+  const blessed = pick(options);
+
+  player.materials['축성석'] -= 1;
+  item.blessing = {
+    key: blessed.key,
+    label: blessed.label,
+    value: blessed.value,
+  };
+
+  return `✨ ${item.name} 축성 성공!\n[${blessed.label}] 부여됨`;
+}
+
+function getBlessingBonuses(item){
+  const out = {
+    atkPercent: 0,
+    critChance: 0,
+    critDamage: 0,
+    lifesteal: 0,
+    flatDef: 0,
+    dodge: 0,
+    hpPercent: 0,
+    reflect: 0,
+  };
+
+  if (!item || !item.blessing) return out;
+
+  const key = item.blessing.key;
+  const value = item.blessing.value || 0;
+
+  if (key === 'atkPercent') out.atkPercent = value;
+  if (key === 'critChance') out.critChance = value;
+  if (key === 'critDamage') out.critDamage = value;
+  if (key === 'lifesteal') out.lifesteal = value;
+  if (key === 'flatDef') out.flatDef = value;
+  if (key === 'dodge') out.dodge = value;
+  if (key === 'hpPercent') out.hpPercent = value;
+  if (key === 'reflect') out.reflect = value;
+
+  return out;
+}
+
+function getItemStatTextWithBless(item){
+  if (!item) return '';
+
+  const parts = [];
+
+  if ((item.atkBonus || 0) > 0) parts.push(`공+${item.atkBonus}`);
+  if ((item.defBonus || 0) > 0) parts.push(`방+${item.defBonus}`);
+  if ((item.critChanceBonus || 0) > 0) parts.push(`크리+${item.critChanceBonus}%`);
+  if ((item.critDamageBonus || 0) > 0) parts.push(`크뎀+${item.critDamageBonus}%`);
+  if ((item.dodgeBonus || 0) > 0) parts.push(`회피+${item.dodgeBonus}%`);
+
+  return parts.length ? `(${parts.join(' ')})` : '';
+}
+
+function formatItemName(item){
+  if (!item) return '없음';
+
+  return `+${item.enhanceLevel || 0}${item.blessing ? ' (축성)' : ''} ${item.name}[담금질${item.temperCount || 0}/5]${getItemStatTextWithBless(item)}`;
+}
+
 
 function createRunIfNeeded(player, dungeonKey){
   if(!player.run || player.run.dungeon !== dungeonKey){
@@ -958,6 +1077,16 @@ function getAttackPower(player){
   const eq = getEquippedBonuses(player);
   return player.baseAtk + player.stats.atk * 1 + eq.atk;
 }
+function getMaxHpWithBless(player){
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+  const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+
+  return player.maxHp + blessHpBonus;
+}
 
 function getDefensePower(player){
   const eq = getEquippedBonuses(player);
@@ -1144,18 +1273,44 @@ function getEnhancePreviewText(player, item){
   ].join('\n');
 }
 
-
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
 
-  if(chance(getDodge(player))){
+  const eq = getEquippedBonuses(player);
+
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
+  const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
+
+  const baseDef = player.baseDef + Math.floor(player.level / 3);
+  const finalDef = baseDef + eq.def + totalBlessFlatDef;
+
+  const finalDodge = Math.min(
+    STAT_CAPS.dodge,
+    player.stats.dodge + eq.dodge + totalBlessDodge
+  );
+
+  if (chance(finalDodge)) {
     logs.push(makeDodgeLine());
     return;
   }
 
-  const dmg = Math.max(1, target.atk - getDefensePower(player));
+  const dmg = Math.max(1, target.atk - finalDef);
   player.hp -= dmg;
   logs.push(makeEnemyDamageLine(target.name, dmg));
+
+  if (totalBlessReflect > 0 && dmg > 0 && target.currentHp > 0) {
+    const reflectDmg = Math.floor(dmg * (totalBlessReflect / 100));
+
+    if (reflectDmg > 0) {
+      target.currentHp = Math.max(0, target.currentHp - reflectDmg);
+      logs.push(`🔁 데미지반사 ${reflectDmg}`);
+    }
+  }
 
   if(player.hp <= 0){
     player.hp = 0;
@@ -1170,6 +1325,7 @@ function enemyAttack(player, target, logs){
     }
   }
 }
+
 
 function applyAutoHuntPenalty(result) {
   if (!result) return result;
@@ -1243,63 +1399,98 @@ function performAttack(player, dungeonKey){
     return result;
   }
 
-const target = player.run.target;
+  const target = player.run.target;
 
+  // ⭐ 축성 포함 공격/크리/크뎀/흡혈 계산
+  const eq = getEquippedBonuses(player);
 
-let damage = getAttackPower(player) - target.def;
-let isCrit = false;
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
 
+  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+  const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
+  const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
+  const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
 
+  const baseAtk = player.baseAtk + player.stats.atk;
+  const atkBeforeBless = baseAtk + eq.atk;
+  const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+  const finalAtk = atkBeforeBless + blessAtkBonus;
 
-if(chance(getCritChance(player))){
-  damage *= 1.5 + (getCritDamage(player)/100);
-  isCrit = true;
-}
+  const finalCritChance = Math.min(
+    STAT_CAPS.critChance,
+    player.stats.critChance + eq.critChance + totalBlessCritChance
+  );
 
-damage = Math.max(1, Math.floor(damage));
+  const finalCritDamage = Math.min(
+    STAT_CAPS.critDamage,
+    player.stats.critDamage + eq.critDamage + totalBlessCritDamage
+  );
 
-target.currentHp -= damage;
-result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+  let damage = finalAtk - target.def;
+  let isCrit = false;
 
-
-if(target.currentHp <= 0){
-  target.currentHp = 0;
-  result.killedTarget = { ...target };
-  result.logs.push(makeKillLine(target.name));
-
-  const drops = grantDrops(player, target);
-  result.levelUps = drops.levelUps;
-  player.run.lastDrops = drops.lines;
-  result.logs.push(...drops.lines);
-  player.run.kills += 1;
-
-  const dungeon = DUNGEONS[dungeonKey];
-
-  // 현재 타겟 제거
-  player.run.target = null;
-
-  // 랜덤 던전이면 전투 종료
-  if(dungeon.type === 'random'){
-    endBattle(player);
-    result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
-    return result;
+  if (chance(finalCritChance)) {
+    damage *= 1.5 + (finalCritDamage / 100);
+    isCrit = true;
   }
 
-  // 웨이브 던전이면 다음 웨이브 지정
-  if(dungeon.type === 'wave'){
-    player.run.waveIndex += 1;
-    player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
+  damage = Math.max(1, Math.floor(damage));
 
-    if(player.run.nextTarget){
-      result.logs.push(`✨ 다음 몬스터 매칭 예정: ${player.run.nextTarget.name}`);
-    } else {
-      result.logs.push('🏆 모든 웨이브를 클리어했습니다!');
+  target.currentHp -= damage;
+  result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+
+  // ⭐ 흡혈 적용
+  if (totalBlessLifesteal > 0 && damage > 0) {
+    const heal = Math.floor(damage * (totalBlessLifesteal / 100));
+    const beforeHp = player.hp;
+
+    player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
+
+    const actualHeal = player.hp - beforeHp;
+    if (actualHeal > 0) {
+      result.logs.push(`🩸 흡혈 +${actualHeal}`);
+    }
+  }
+
+  if(target.currentHp <= 0){
+    target.currentHp = 0;
+    result.killedTarget = { ...target };
+    result.logs.push(makeKillLine(target.name));
+
+    const drops = grantDrops(player, target);
+    result.levelUps = drops.levelUps;
+    player.run.lastDrops = drops.lines;
+    result.logs.push(...drops.lines);
+    player.run.kills += 1;
+
+    const dungeon = DUNGEONS[dungeonKey];
+
+    // 현재 타겟 제거
+    player.run.target = null;
+
+    // 랜덤 던전이면 전투 종료
+    if(dungeon.type === 'random'){
       endBattle(player);
+      result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
+      return result;
     }
 
-    return result;
-  }
+    // 웨이브 던전이면 다음 웨이브 지정
+    if(dungeon.type === 'wave'){
+      player.run.waveIndex += 1;
+      player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
 
+      if(player.run.nextTarget){
+        result.logs.push(`✨ 다음 몬스터 매칭 예정: ${player.run.nextTarget.name}`);
+      } else {
+        result.logs.push('🏆 모든 웨이브를 클리어했습니다!');
+        endBattle(player);
+      }
+
+      return result;
+    }
 
     player.run.waveIndex += 1;
     const next = getWaveMonster(dungeonKey, player.run.waveIndex);
@@ -1493,15 +1684,15 @@ function tryEnhanceItem(player, item){
 
 function equipmentText(player){
   const weaponText = player.equipment.weapon
-    ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
+    ? formatItemName(player.equipment.weapon)
     : '없음';
 
   const armorText = player.equipment.armor
-    ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
+    ? formatItemName(player.equipment.armor)
     : '없음';
 
   const ringText = player.equipment.ring
-    ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
+    ? formatItemName(player.equipment.ring)
     : '없음';
 
   return [
@@ -1532,53 +1723,58 @@ function inventoryText(player, page = 1){
 
   return player.inventory
     .slice(start, end)
-    .map((it, idx) => `${start + idx + 1}. ${it.name} [${it.type}]`)
+    .map((it, idx) => `${start + idx + 1}. ${formatItemName(it)} [${it.type}]`)
     .join('\n');
 }
 
 function buildFullStatusText(player){
   const eq = getEquippedBonuses(player);
 
-  const baseAtk = player.baseAtk + player.stats.atk * 1;
-  const totalAtk = baseAtk + eq.atk;
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+  const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
+  const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
+  const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
+
+  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
+  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+  const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
+
+  const baseAtk = player.baseAtk + player.stats.atk;
+  const atkBeforeBless = baseAtk + eq.atk;
+  const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+  const totalAtk = atkBeforeBless + blessAtkBonus;
 
   const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const totalDef = baseDef + eq.def;
+  const totalDef = baseDef + eq.def + totalBlessFlatDef;
 
   const baseCrit = player.stats.critChance;
-  const totalCrit = Math.min(STAT_CAPS.critChance, baseCrit + eq.critChance);
+  const totalCrit = Math.min(STAT_CAPS.critChance, baseCrit + eq.critChance + totalBlessCritChance);
 
   const baseCritDmg = player.stats.critDamage;
-  const totalCritDmg = Math.min(STAT_CAPS.critDamage, baseCritDmg + eq.critDamage);
+  const totalCritDmg = Math.min(STAT_CAPS.critDamage, baseCritDmg + eq.critDamage + totalBlessCritDamage);
 
   const baseDodge = player.stats.dodge;
-  const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge);
+  const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge + totalBlessDodge);
 
-const weaponText = player.equipment.weapon
-  ? `${player.equipment.weapon.name} +${player.equipment.weapon.enhanceLevel || 0} [담금질 ${player.equipment.weapon.temperCount || 0}/5] (공+${player.equipment.weapon.atkBonus || 0}, 방+${player.equipment.weapon.defBonus || 0}, 크리+${player.equipment.weapon.critChanceBonus || 0}%, 크뎀+${player.equipment.weapon.critDamageBonus || 0}%, 회피+${player.equipment.weapon.dodgeBonus || 0}%)`
-  : '없음';
-
-const armorText = player.equipment.armor
-  ? `${player.equipment.armor.name} +${player.equipment.armor.enhanceLevel || 0} [담금질 ${player.equipment.armor.temperCount || 0}/5] (공+${player.equipment.armor.atkBonus || 0}, 방+${player.equipment.armor.defBonus || 0}, 크리+${player.equipment.armor.critChanceBonus || 0}%, 크뎀+${player.equipment.armor.critDamageBonus || 0}%, 회피+${player.equipment.armor.dodgeBonus || 0}%)`
-  : '없음';
-
-const ringText = player.equipment.ring
-  ? `${player.equipment.ring.name} +${player.equipment.ring.enhanceLevel || 0} [담금질 ${player.equipment.ring.temperCount || 0}/5] (공+${player.equipment.ring.atkBonus || 0}, 방+${player.equipment.ring.defBonus || 0}, 크리+${player.equipment.ring.critChanceBonus || 0}%, 크뎀+${player.equipment.ring.critDamageBonus || 0}%, 회피+${player.equipment.ring.dodgeBonus || 0}%)`
-  : '없음';
+  const totalMaxHp = getMaxHpWithBless(player);
+  const blessHpBonus = totalMaxHp - player.maxHp;
 
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
-    `❤️ HP: ${player.hp}/${player.maxHp}`,
-    `⚔️ 공격력: ${totalAtk} (${baseAtk} + 장비 ${eq.atk})`,
-    `🛡️ 방어력: ${totalDef} (${baseDef} + 장비 ${eq.def})`,
-    `💥 크리확률: ${totalCrit}% (${baseCrit}% + 장비 ${eq.critChance}%)`,
-    `🔥 크리데미지: +${totalCritDmg}% (${baseCritDmg}% + 장비 ${eq.critDamage}%)`,
-    `💨 회피: ${totalDodge}% (${baseDodge}% + 장비 ${eq.dodge}%)`,
-    ``,
-    `⚔️ 무기: ${weaponText}`,
-    `🛡️ 갑옷: ${armorText}`,
-    `💍 반지: ${ringText}`,
+    `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성 ${blessHpBonus})`,
+    `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 축성 ${blessAtkBonus})`,
+    `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 축성 ${totalBlessFlatDef})`,
+    `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}%)`,
+    `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
+    `💨 회피: ${totalDodge}% (기본 ${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
+    `🩸 흡혈: ${totalBlessLifesteal}%`,
+    `🔁 데미지반사: ${totalBlessReflect}%`,
   ].join('\n');
 }
 
@@ -1588,11 +1784,11 @@ function buildBagText(player){
     .map(([k,v]) => `${k} ${v}`)
     .join(' / ') || '없음';
 
-const items = player.inventory && player.inventory.length
-  ? player.inventory.slice(0,15).map((it,idx)=>
-      `${idx+1}. ${it.name}${getItemStatText(it)} [${it.type}]`
-    ).join('\n')
-  : '비어있음';
+  const items = player.inventory && player.inventory.length
+    ? player.inventory.slice(0, 15).map((it, idx) =>
+        `${idx + 1}. ${formatItemName(it)} [${it.type}]`
+      ).join('\n')
+    : '비어있음';
 
   return [
     `💰 골드: ${player.gold}`,
@@ -1643,7 +1839,19 @@ function getItemStatText(item){
   return parts.length ? ` (${parts.join(', ')})` : '';
 }
 
+function getItemStatTextWithBless(item){
+  if (!item) return '';
 
+  const parts = [];
+
+  if ((item.atkBonus || 0) > 0) parts.push(`공+${item.atkBonus}`);
+  if ((item.defBonus || 0) > 0) parts.push(`방+${item.defBonus}`);
+  if ((item.critChanceBonus || 0) > 0) parts.push(`크리+${item.critChanceBonus}%`);
+  if ((item.critDamageBonus || 0) > 0) parts.push(`크뎀+${item.critDamageBonus}%`);
+  if ((item.dodgeBonus || 0) > 0) parts.push(`회피+${item.dodgeBonus}%`);
+
+  return parts.length ? `(${parts.join(' ')})` : '';
+}
 
 function buildTownButtons(player){
   return [
@@ -1677,12 +1885,6 @@ function buildEnhanceMenuButtons(player){
         .setCustomId('bless_select')
         .setLabel('축성')
         .setStyle(ButtonStyle.Success),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('town')
-        .setLabel('↩️ 마을로')
-        .setStyle(ButtonStyle.Secondary),
     )
   ];
 }
@@ -2475,7 +2677,29 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
+if (id === 'bless_select') {
+  await interaction.update({
+    content: '✨ 축성할 장비를 선택하세요.\n축성석 1개 필요 / 장비당 1회만 가능',
+    components: buildBlessButtons(player),
+  });
+  return;
+}
 
+if (id === 'bless_weapon' || id === 'bless_armor' || id === 'bless_ring') {
+  let item = null;
+  if (id === 'bless_weapon') item = player.equipment.weapon;
+  if (id === 'bless_armor') item = player.equipment.armor;
+  if (id === 'bless_ring') item = player.equipment.ring;
+
+  const result = tryBlessItem(player, item);
+  await saveData();
+
+  await interaction.update({
+    content: result,
+    components: buildBlessButtons(player),
+  });
+  return;
+}
 
 if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
   const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
