@@ -113,6 +113,8 @@ async function loadData(){
   return gameData;
 }
 
+
+
 async function savePlayer(playerOrUserId){
   if (!playersCol) throw new Error('playersCol 없음');
 
@@ -147,6 +149,93 @@ async function savePlayer(playerOrUserId){
   );
 }
 
+
+function isValidGameData(data) {
+  return !!data && typeof data === 'object' && Object.keys(data).length > 0;
+}
+
+async function safeSave() {
+  try {
+    if (!isValidGameData(gameData)) {
+      console.log('❌ 저장 중단: gameData 비어있음');
+      return false;
+    }
+
+    await saveData(gameData); // ⭐ 이게 핵심 (safeSave 아님)
+
+    console.log(`✅ 저장 성공 (유저 수: ${Object.keys(gameData).length})`);
+    return true;
+
+  } catch (e) {
+    console.error('💥 저장 실패:', e);
+    return false;
+  }
+}
+
+async function loadBackupIfEmpty(){
+  try {
+    if (gameData && Object.keys(gameData).length > 0) {
+      return;
+    }
+
+    console.log('⚠️ 메인 데이터 비어있음 → 백업 확인');
+
+    const backup = await playersCol.findOne({ _id: '__backup__' });
+
+    if (backup?.data) {
+      gameData = backup.data;
+      console.log(`✅ 백업 복구 성공 (${Object.keys(gameData).length}명)`);
+    } else {
+      console.log('💀 백업 없음 → 새 데이터');
+      gameData = {};
+    }
+  } catch (e) {
+    console.error('💥 백업 복구 실패:', e);
+    gameData = gameData || {};
+  }
+}
+
+async function saveBackup(data){
+  try{
+    const backupDoc = {
+      type: 'rolling_backup',
+      data: JSON.parse(JSON.stringify(data)),
+      createdAt: Date.now()
+    };
+
+    await playersCol.insertOne(backupDoc);
+
+    // 최근 5개만 유지
+    const oldBackups = await playersCol
+      .find({ type: 'rolling_backup' })
+      .sort({ createdAt: -1 })
+      .skip(5)
+      .toArray();
+
+    if (oldBackups.length > 0) {
+      await playersCol.deleteMany({
+        _id: { $in: oldBackups.map(doc => doc._id) }
+      });
+    }
+
+    // 최신 1개 백업도 따로 유지
+    await playersCol.updateOne(
+      { _id: '__backup__' },
+      {
+        $set: {
+          data: JSON.parse(JSON.stringify(data)),
+          updatedAt: Date.now()
+        }
+      },
+      { upsert: true }
+    );
+
+    console.log('🧠 롤링 백업 저장 완료');
+  } catch(e){
+    console.error('💥 백업 저장 실패:', e);
+  }
+}
+
 async function saveData(){
   if (!playersCol) throw new Error('playersCol 없음');
 
@@ -179,33 +268,12 @@ async function saveData(){
   );
 
   console.log(`✅ saveData 완료 (${entries.length}명)`);
+
+  // ⭐ 메인 저장 성공 후 백업 저장
+  await saveBackup(gameData);
 }
 
 
-console.log("버전2");
-
-const ALLOWED_CATEGORY_IDS = process.env.ALLOWED_CATEGORY_IDS
-  ? process.env.ALLOWED_CATEGORY_IDS.split(',')
-  : [];
-
-
-const {
-  Client,
-  GatewayIntentBits,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  AttachmentBuilder,
-} = require('discord.js');
-const fs = require('fs');
-
-
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
-});
-
-require('dotenv').config();
 
 const AUTO_HUNT_CHARGE_MS = 1 * 60 * 1000; // 1분
 const AUTO_HUNT_MAX_CHARGES = 50;
@@ -294,7 +362,7 @@ async function sendOrUpdateBattleMessage(interaction, player, payload){
   const sent = await channel.send(payload);
   player.battleMessageId = sent.id;
   player.battleChannelId = channel.id;
-  await saveData(gameData);
+  await safeSave();
   return sent;
 }
 
@@ -2316,7 +2384,7 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 
   player.run.target = player.run.nextTarget;
   player.run.nextTarget = null;
-  await saveData(gameData);
+  await safeSave();
 
   await interaction.message.edit(buildIntroPayload(dungeonKey, player.run.target));
   await sleep(INTRO_DELAY_MS);
@@ -2344,7 +2412,24 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
 
+ await loadBackupIfEmpty();
+
 if (!gameData) gameData = {};
+
+console.log('👥 현재 유저 수:', Object.keys(gameData).length);
+
+setInterval(async () => {
+  try {
+    if (!gameData || Object.keys(gameData).length === 0) return;
+
+    await saveBackup(gameData);
+
+    console.log('⏱️ 자동 백업 완료');
+  } catch (e) {
+    console.error('💥 자동 백업 실패:', e);
+  }
+}, 5 * 60 * 1000); // 5분
+
 });
 
 
@@ -2359,6 +2444,148 @@ const args = message.content.trim().split(/\s+/);
 const command = args[0];
 const arg = args[1];
 const dungeonKey = getDungeonByChannel(message.channel.id);
+
+if (command === '!백업복구') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능');
+    return;
+  }
+
+  const backup = await playersCol.findOne({ _id: '__backup__' });
+
+  if (!backup?.data) {
+    await message.reply('❌ 백업 데이터 없음');
+    return;
+  }
+
+  gameData = backup.data;
+
+  await safeSave();
+
+  await message.reply(`✅ 백업 복구 완료 (유저 ${Object.keys(gameData).length}명)`);
+  return;
+}
+
+if (command === '!유저복구') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능');
+    return;
+  }
+
+  const target = message.mentions.users.first();
+  if (!target) {
+    await message.reply('사용법: !유저복구 @유저');
+    return;
+  }
+
+  const backup = await playersCol.findOne({ _id: '__backup__' });
+
+  if (!backup?.data?.[target.id]) {
+    await message.reply('❌ 해당 유저 백업 없음');
+    return;
+  }
+
+  // ⭐ 해당 유저만 복구
+  gameData[target.id] = backup.data[target.id];
+
+  await safeSave();
+
+  await message.reply(`✅ ${target.username} 복구 완료`);
+  return;
+}
+
+if (command === '!백업목록') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능');
+    return;
+  }
+
+  const backups = await playersCol
+    .find({ type: 'rolling_backup' })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .toArray();
+
+  if (!backups.length) {
+    await message.reply('❌ 백업 목록 없음');
+    return;
+  }
+
+  const text = backups.map((b, i) => {
+    const date = new Date(b.createdAt).toLocaleString('ko-KR');
+    const count = b.data ? Object.keys(b.data).length : 0;
+    return `${i + 1}. ${date} / 유저 ${count}명`;
+  }).join('\n');
+
+  await message.reply(`📦 백업 목록\n${text}`);
+  return;
+}
+
+if (command === '!백업복구번호') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능');
+    return;
+  }
+
+  const num = Number(args[1]);
+  if (isNaN(num) || num <= 0) {
+    await message.reply('사용법: !백업복구번호 1');
+    return;
+  }
+
+  const backups = await playersCol
+    .find({ type: 'rolling_backup' })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .toArray();
+
+  const selected = backups[num - 1];
+  if (!selected?.data) {
+    await message.reply('❌ 해당 번호 백업 없음');
+    return;
+  }
+
+  gameData = selected.data;
+
+  await safeSave();
+
+  await message.reply(`✅ ${num}번 백업으로 전체 복구 완료`);
+  return;
+}
+
+if (command === '!유저복구번호') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능');
+    return;
+  }
+
+  const target = message.mentions.users.first();
+  const num = Number(args[2]);
+
+  if (!target || isNaN(num) || num <= 0) {
+    await message.reply('사용법: !유저복구번호 @유저 1');
+    return;
+  }
+
+  const backups = await playersCol
+    .find({ type: 'rolling_backup' })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .toArray();
+
+  const selected = backups[num - 1];
+  if (!selected?.data?.[target.id]) {
+    await message.reply('❌ 해당 유저의 백업 데이터 없음');
+    return;
+  }
+
+  gameData[target.id] = selected.data[target.id];
+
+  await safeSave();
+
+  await message.reply(`✅ ${target.username}을(를) ${num}번 백업으로 복구 완료`);
+  return;
+}
 
   if (command === '!판매') {
     if (!player.materials) player.materials = {};
@@ -2393,7 +2620,7 @@ const dungeonKey = getDungeonByChannel(message.channel.id);
     player.materials[matName] -= amount;
     player.gold += total;
 
-    await saveData(gameData);
+    await safeSave();
 
     await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
     return;
@@ -2403,7 +2630,7 @@ const dungeonKey = getDungeonByChannel(message.channel.id);
 
 if(command === '!가방'){
     console.log("📦 !가방 분기 들어옴");
-    await saveData(gameData);
+    await safeSave();
     await message.reply({ content: buildBagText(player) });
     return;
 }
@@ -2439,7 +2666,7 @@ if (command === '!스탯초기화') {
   // 필요하면 여기 숫자 계산 방식은 나중에 바꿔도 됨
 targetPlayer.statPoints = (targetPlayer.level || 1) * 3;
 
-  await saveData(gameData);
+  await safeSave();
   await message.reply(`✅ ${target.username}의 스탯을 초기화했습니다.`);
   return;
 }
@@ -2476,7 +2703,7 @@ if (command === '!재료주기') {
 
   targetPlayer.materials[matName] = (targetPlayer.materials[matName] || 0) + amount;
 
-  await saveData(gameData);
+  await safeSave();
   await message.reply(`✅ ${target.username}에게 ${matName} ${amount}개를 지급했습니다.`);
   return;
 }
@@ -2505,14 +2732,14 @@ if (command === '!골드주기') {
 
   targetPlayer.gold = (targetPlayer.gold || 0) + amount;
 
-  await saveData(gameData);
+  await safeSave();
   await message.reply(`✅ ${target.username}에게 ${amount}골드를 지급했습니다.`);
   return;
 }
 
 
   if(command === '!상태'){
-    await saveData(gameData);
+    await safeSave();
     await message.reply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
     return;
   }
@@ -2546,7 +2773,7 @@ if(command === '!제작목록'){
       return;
     }
     const res = tryCraft(player, craftId);
-    await saveData(gameData);
+    await safeSave();
     await message.reply(res.text);
     return;
   }
@@ -2554,7 +2781,7 @@ if(command === '!제작목록'){
     const idx = Number(arg) - 1;
     if(Number.isNaN(idx)){ await message.reply('사용법: !장착 1'); return; }
     const text = equipItemByIndex(player, idx);
-    await saveData(gameData);
+    await safeSave();
     await message.reply(text);
     return;
   }
@@ -2583,7 +2810,7 @@ if(command === '!자동'){
   }
 
   player.autoHuntCharges -= 1;
-  await saveData(gameData);
+  await safeSave();
 
   if(!dungeonKey){
     await message.reply('이 명령어는 던전 채널에서만 가능합니다.');
@@ -2596,7 +2823,7 @@ if(command === '!자동'){
   }
 
   createRunIfNeeded(player, dungeonKey);
-  await saveData(gameData);
+  await safeSave();
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -2646,7 +2873,7 @@ if(command === '!자동'){
     if(Date.now() < player.respawnAt) break;
   }
 
-  await saveData(gameData);
+  await safeSave();
 
   // 3) 전투 로그 UI로 전환
   await introMsg.edit(
@@ -2706,7 +2933,7 @@ client.on('interactionCreate', async (interaction) => {
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
   const revived = reviveIfRespawnReady(player);
-  if (revived) await saveData(gameData);
+  if (revived) await safeSave();
 
   // =========================
   // 강화 / 담금질 / 축성
@@ -2752,7 +2979,7 @@ client.on('interactionCreate', async (interaction) => {
     if (id === 'enhance_ring') item = player.equipment.ring;
 
     const result = tryEnhanceItem(player, item);
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.editReply({
       content: result,
@@ -2770,7 +2997,7 @@ client.on('interactionCreate', async (interaction) => {
     if (id === 'temper_ring') item = player.equipment.ring;
 
     const result = tryTemperItem(player, item);
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.editReply({
       content: result,
@@ -2788,7 +3015,7 @@ client.on('interactionCreate', async (interaction) => {
     if (id === 'bless_ring') item = player.equipment.ring;
 
     const result = tryBlessItem(player, item);
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.editReply({
       content: result,
@@ -2823,7 +3050,7 @@ client.on('interactionCreate', async (interaction) => {
     player.inventory.splice(index, 1);
     player.gold += getItemSellPrice(item);
 
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.reply({
       content: '💰 판매 완료',
@@ -2871,7 +3098,7 @@ client.on('interactionCreate', async (interaction) => {
 
     createRunIfNeeded(player, startKey);
     player.run.lastDrops = [];
-    await saveData(gameData);
+    await safeSave();
 
     const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -2897,7 +3124,7 @@ client.on('interactionCreate', async (interaction) => {
   // 마을 / 공통 버튼
   // =========================
   if (id === 'status') {
-    await saveData(gameData);
+    await safeSave();
     await interaction.reply({
       content: buildFullStatusText(player),
       components: buildStatusButtons(player),
@@ -2984,7 +3211,7 @@ if (id === 'craft_cat_material') {
   if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
     const craftId = id.replace('craft_', '');
     const res = tryCraft(player, craftId);
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.reply({
       content: res.text,
@@ -3026,7 +3253,7 @@ if (id === 'craft_cat_material') {
   if (id.startsWith('equip_')) {
     const idx = Number(id.replace('equip_', ''));
     const text = equipItemByIndex(player, idx);
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.reply({
       content: `${text}\n\n${equipmentText(player)}`,
@@ -3053,7 +3280,7 @@ if (id === 'buy_big_10') {
   player.gold -= cost;
   player.potions.big = (player.potions.big || 0) + 10;
 
-  await saveData(gameData);
+  await safeSave();
 
   await interaction.reply({
     content:
@@ -3082,7 +3309,7 @@ if (id === 'buy_large_10') {
   player.gold -= cost;
   player.potions.large = (player.potions.large || 0) + 10;
 
-  await saveData(gameData);
+  await safeSave();
 
   await interaction.reply({
     content:
@@ -3111,7 +3338,7 @@ if (id === 'buy_xlarge_10') {
   player.gold -= cost;
   player.potions.xlarge = (player.potions.xlarge || 0) + 10;
 
-  await saveData(gameData);
+  await safeSave();
 
   await interaction.reply({
     content:
@@ -3159,7 +3386,7 @@ const shopMap = {
 
     player.gold -= buy.price;
     player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.reply({
       content:
@@ -3185,7 +3412,7 @@ const shopMap = {
     };
 
     const text = tryUpgradeStat(player, map[id]);
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.reply({
       content: `${text}\n\n${buildFullStatusText(player)}`,
@@ -3245,7 +3472,7 @@ const shopMap = {
     player.run.isDown = false;
     player.respawnAt = 0;
 
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.update(
       buildBattlePayload(
@@ -3266,7 +3493,7 @@ if (id.startsWith('use_')) {
 
   if (player.run?.target && dungeonKey) {
     const result = usePotionInBattle(player, key);
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.update(
       buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
@@ -3275,7 +3502,7 @@ if (id.startsWith('use_')) {
   }
 
   const text = usePotionOutOfBattle(player, key);
-  await saveData(gameData);
+  await safeSave();
 
   await interaction.reply({
     content: text,
@@ -3314,7 +3541,7 @@ if (id.startsWith('use_')) {
 
     player.autoHuntCharges -= 1;
     createRunIfNeeded(player, dungeonKey);
-    await saveData(gameData);
+    await safeSave();
 
     const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -3363,7 +3590,7 @@ if (id.startsWith('use_')) {
       if (Date.now() < player.respawnAt) break;
     }
 
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.editReply(
       buildBattlePayload(
@@ -3386,7 +3613,7 @@ if (id.startsWith('use_')) {
       player.run.lastDrops = [];
       player.run.target = player.run.nextTarget;
       player.run.nextTarget = null;
-      await saveData(gameData);
+      await safeSave();
 
       await interaction.update(
         buildIntroPayload(dungeonKey, player.run.target)
@@ -3415,7 +3642,7 @@ if (id.startsWith('use_')) {
       if (!player.run?.target && player.run?.nextTarget) break;
     }
 
-    await saveData(gameData);
+    await safeSave();
 
     await interaction.update(
       buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
