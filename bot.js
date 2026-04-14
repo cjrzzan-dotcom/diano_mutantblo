@@ -2430,8 +2430,6 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
 
- await loadBackupIfEmpty();
-
 if (!gameData) gameData = {};
 
 console.log('👥 현재 유저 수:', Object.keys(gameData).length);
