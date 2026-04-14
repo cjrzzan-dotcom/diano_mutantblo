@@ -3125,51 +3125,51 @@ client.on('interactionCreate', async (interaction) => {
   // =========================
   // 개인 시작 버튼
   // =========================
-  if (id.startsWith('private_start_')) {
-    const parts = id.split('_');
-    const ownerId = parts[2];
-    const startKey = parts.slice(3).join('_');
+if (id.startsWith('private_start_')) {
+  const parts = id.split('_');
+  const ownerId = parts[2];
+  const startKey = parts.slice(3).join('_');
 
-    if (interaction.user.id !== ownerId) {
-      await interaction.reply({
-        content: '이 버튼은 만든 사람만 사용할 수 있습니다.',
-        ephemeral: true
-      });
-      return;
-    }
-
-    if (startKey === 'town') {
-      await interaction.reply({
-        content: '🏘️ 마을입니다! 원하는 기능을 선택하세요.',
-        ephemeral: true,
-        components: buildTownButtons(player)
-      });
-      return;
-    }
-
-    createRunIfNeeded(player, startKey);
-    player.run.lastDrops = [];
-    await safeSave();
-
-    const introTarget = player.run?.target || player.run?.nextTarget;
-
+  if (interaction.user.id !== ownerId) {
     await interaction.reply({
-      ...buildIntroPayload(startKey, introTarget),
+      content: '이 버튼은 만든 사람만 사용할 수 있습니다.',
       ephemeral: true
     });
-
-    await sleep(INTRO_DELAY_MS);
-
-    await interaction.editReply(
-      buildBattlePayload(
-        player,
-        interaction.channelId,
-        startKey,
-        '전투 시작!'
-      )
-    );
     return;
   }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  if (startKey === 'town') {
+    await interaction.editReply({
+      content: '🏘️ 마을입니다! 원하는 기능을 선택하세요.',
+      components: buildTownButtons(player)
+    });
+    return;
+  }
+
+  createRunIfNeeded(player, startKey);
+  player.run.lastDrops = [];
+  await safeSave();
+
+  const introTarget = player.run?.target || player.run?.nextTarget;
+
+  await interaction.editReply(
+    buildIntroPayload(startKey, introTarget)
+  );
+
+  await sleep(INTRO_DELAY_MS);
+
+  await interaction.editReply(
+    buildBattlePayload(
+      player,
+      interaction.channelId,
+      startKey,
+      '전투 시작!'
+    )
+  );
+  return;
+}
 
   // =========================
   // 마을 / 공통 버튼
@@ -3559,150 +3559,140 @@ if (id.startsWith('use_')) {
   // =========================
   // 자동사냥
   // =========================
-  if (id === 'auto') {
-    await interaction.deferUpdate();
+if (id === 'auto') {
+  await interaction.deferUpdate();
 
-    if (!DUNGEONS[dungeonKey]?.autoAllowed) {
-      await interaction.editReply({
-        content: '이 던전은 자동사냥이 불가능합니다.',
-        embeds: [],
-        components: []
-      });
-      return;
-    }
-
-    refreshAutoHuntCharges(player);
-
-    if (player.autoHuntCharges <= 0) {
-      const remainMs = getNextAutoHuntChargeRemain(player);
-      const remainMin = Math.floor(remainMs / 60000);
-      const remainSec = Math.floor((remainMs % 60000) / 1000);
-
-      await interaction.editReply({
-        content: `❌ 자동사냥권이 없습니다.
-다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
-        embeds: [],
-        components: []
-      });
-      return;
-    }
-
-    player.autoHuntCharges -= 1;
-    createRunIfNeeded(player, dungeonKey);
-    await safeSave();
-
-    const introTarget = player.run?.target || player.run?.nextTarget;
-
-    await interaction.editReply(
-      buildIntroPayload(dungeonKey, introTarget)
-    );
-
-    await sleep(INTRO_DELAY_MS);
-
-    const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
-
-    for (let i = 0; i < AUTO_HUNT_TURNS; i++) {
-      if (!player.run) break;
-      if (player.run.isDown) break;
-
-      if (player.run.target && player.run.nextTarget) {
-        player.run.lastDrops = [];
-        player.run.target = player.run.nextTarget;
-        player.run.nextTarget = null;
-
-        logs.push(`
-[${i + 1}턴]
-👁️ ${player.run.target.name} 등장! `);
-        continue;
-      }
-
-      const beforeGold = player.gold;
-      const beforeXp = player.xp;
-
-      const result = performAttack(player, dungeonKey);
-
-      const gainedGold = Math.max(0, player.gold - beforeGold);
-      const gainedXp = Math.max(0, player.xp - beforeXp);
-
-      const reducedGold = Math.floor(gainedGold * 0.8);
-      const reducedXp = Math.floor(gainedXp * 0.8);
-
-      player.gold = beforeGold + reducedGold;
-      player.xp = beforeXp + reducedXp;
-
-      if (player.run?.lastDrops) {
-        player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.8);
-      }
-
-      logs.push(`
-[${i + 1}턴]
-${result.logs.join('\n')}`);
-      logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
-
-      if (Date.now() < player.respawnAt) break;
-    }
-
-    await safeSave();
-
-    await interaction.editReply(
-      buildBattlePayload(
-        player,
-        interaction.channelId,
-        dungeonKey,
-        logs.join('\n')
-      )
-    );
+  if (!DUNGEONS[dungeonKey]?.autoAllowed) {
+    await interaction.followUp({
+      content: '이 던전은 자동사냥이 불가능합니다.',
+      ephemeral: true
+    });
     return;
   }
+
+  refreshAutoHuntCharges(player);
+
+  if (player.autoHuntCharges <= 0) {
+    const remainMs = getNextAutoHuntChargeRemain(player);
+    const remainMin = Math.floor(remainMs / 60000);
+    const remainSec = Math.floor((remainMs % 60000) / 1000);
+
+    await interaction.followUp({
+      content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.autoHuntCharges -= 1;
+  createRunIfNeeded(player, dungeonKey);
+  await safeSave();
+
+  const introTarget = player.run?.target || player.run?.nextTarget;
+
+  await interaction.editReply(
+    buildIntroPayload(dungeonKey, introTarget)
+  );
+
+  await sleep(INTRO_DELAY_MS);
+
+  const logs = [`🤖 자동사냥 시작 (남은 자동사냥권: ${player.autoHuntCharges}/${AUTO_HUNT_MAX_CHARGES})`];
+
+  for (let i = 0; i < AUTO_HUNT_TURNS; i++) {
+    if (!player.run) break;
+    if (player.run.isDown) break;
+
+    if (player.run.target && player.run.nextTarget) {
+      player.run.lastDrops = [];
+      player.run.target = player.run.nextTarget;
+      player.run.nextTarget = null;
+
+      logs.push(`\n[${i + 1}턴]\n👁️ ${player.run.target.name} 등장! `);
+      continue;
+    }
+
+    const beforeGold = player.gold;
+    const beforeXp = player.xp;
+
+    const result = performAttack(player, dungeonKey);
+
+    const gainedGold = Math.max(0, player.gold - beforeGold);
+    const gainedXp = Math.max(0, player.xp - beforeXp);
+
+    const reducedGold = Math.floor(gainedGold * 0.8);
+    const reducedXp = Math.floor(gainedXp * 0.8);
+
+    player.gold = beforeGold + reducedGold;
+    player.xp = beforeXp + reducedXp;
+
+    logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
+    logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
+
+    if (Date.now() < player.respawnAt) break;
+  }
+
+  await safeSave();
+
+  await interaction.editReply(
+    buildBattlePayload(
+      player,
+      interaction.channelId,
+      dungeonKey,
+      logs.join('\n')
+    )
+  );
+  return;
+}
 
   // =========================
   // 공격
   // =========================
-  if (id === 'attack') {
-    await interaction.deferUpdate();
+if (id === 'attack') {
+  await interaction.deferUpdate();
 
-    if (!player.run) createRunIfNeeded(player, dungeonKey);
+  if (!player.run) createRunIfNeeded(player, dungeonKey);
 
-    if (!player.run.target && player.run.nextTarget) {
-      player.run.lastDrops = [];
-      player.run.target = player.run.nextTarget;
-      player.run.nextTarget = null;
-      await safeSave();
-
-      await interaction.editReply(
-        buildIntroPayload(dungeonKey, player.run.target)
-      );
-
-      await sleep(INTRO_DELAY_MS);
-
-      await interaction.editReply(
-        buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
-      );
-      return;
-    }
-
-    const logs = [];
-
-    for (let i = 0; i < 3; i++) {
-      if (!player.run) break;
-      if (player.run.isDown) break;
-
-      logs.push(`\n⚔️ [${i + 1}턴]`);
-
-      const result = performAttack(player, dungeonKey);
-      logs.push(...result.logs);
-
-      if (Date.now() < player.respawnAt) break;
-      if (!player.run?.target && player.run?.nextTarget) break;
-    }
-
+  // 🔥 다음 몬스터 등장 처리
+  if (!player.run.target && player.run.nextTarget) {
+    player.run.lastDrops = [];
+    player.run.target = player.run.nextTarget;
+    player.run.nextTarget = null;
     await safeSave();
 
     await interaction.editReply(
-      buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+      buildIntroPayload(dungeonKey, player.run.target)
+    );
+
+    await sleep(INTRO_DELAY_MS);
+
+    await interaction.editReply(
+      buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
     );
     return;
   }
+
+  const logs = [];
+
+  for (let i = 0; i < 3; i++) {
+    if (!player.run) break;
+    if (player.run.isDown) break;
+
+    logs.push(`\n⚔️ [${i + 1}턴]`);
+
+    const result = performAttack(player, dungeonKey);
+    logs.push(...result.logs);
+
+    if (Date.now() < player.respawnAt) break;
+    if (!player.run?.target && player.run?.nextTarget) break;
+  }
+
+  await safeSave();
+
+  await interaction.editReply(
+    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+  );
+  return;
+}
 });
 
 
