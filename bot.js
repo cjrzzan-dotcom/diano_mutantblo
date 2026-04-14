@@ -15,6 +15,28 @@ console.log("MONGO_URI 있음?", !!process.env.MONGO_URI);
 
 const { MongoClient } = require('mongodb');
 
+
+// ⭐ 이거 추가
+const {
+  Client,
+  GatewayIntentBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+  AttachmentBuilder,
+} = require('discord.js');
+
+// ⭐ 이것도 추가
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+});
+
+
 let mongoClient;
 let db;
 let playersCol;
