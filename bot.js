@@ -3519,14 +3519,14 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
 
     await safeSave();
 
-    await interaction.editReply(
-      buildBattlePayload(
-        player,
-        interaction.channelId,
-        player.run.dungeon,
-        '💖 부활권 사용! 부활했습니다.'
-      )
-    );
+await interaction.update(
+  buildBattlePayload(
+    player,
+    interaction.channelId,
+    player.run.dungeon,
+    '💖 부활권 사용! 부활했습니다.'
+  )
+);
     return;
   }
 
@@ -3536,7 +3536,7 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
 if (id.startsWith('use_')) {
   const key = id.replace('use_', '');
 
-  if (dungeonKey) {
+  if (player.run && dungeonKey) {
     const result = usePotionInBattle(player, key);
     await safeSave();
 
