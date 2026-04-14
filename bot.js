@@ -2652,7 +2652,6 @@ if (command === '!시작') {
 
 
 client.on('interactionCreate', async (interaction) => {
-  try {
 
   if (!interaction.isButton()) return;
 
@@ -3362,25 +3361,6 @@ await interaction.editReply(
 );
       return;
     }
-
-  } catch (err) {
-    console.error('🔥 interaction 에러:', err);
-
-    try {
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: '❌ 오류 발생',
-          ephemeral: true
-        });
-      } else if (interaction.deferred) {
-        await interaction.editReply({
-          content: '❌ 오류 발생'
-        });
-      }
-    } catch (e) {
-      console.error('🔥 오류 응답 실패:', e);
-    }
-  }
 });
 
 
