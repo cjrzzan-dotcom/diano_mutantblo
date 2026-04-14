@@ -2661,7 +2661,6 @@ client.on('interactionCreate', async (interaction) => {
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
   const revived = reviveIfRespawnReady(player);
-  if (revived) await safeSave();
 
   if (id === 'enhance_menu') {
     await interaction.update({
@@ -2776,10 +2775,11 @@ if (id.startsWith('private_start_')) {
     return;
   }
 
+  await interaction.deferReply({ ephemeral: true });
+
   if (startKey === 'town') {
-    await interaction.reply({
+    await interaction.editReply({
       content: '🏘️ 마을입니다! 원하는 기능을 선택하세요.',
-      ephemeral: true,
       components: buildTownButtons(player)
     });
     return;
@@ -2791,16 +2791,12 @@ if (id.startsWith('private_start_')) {
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
-  // 1) 먼저 이미지/등장 연출
-  await interaction.reply({
-    ...buildIntroPayload(startKey, introTarget),
-    ephemeral: true
-  });
+  await interaction.editReply(
+    buildIntroPayload(startKey, introTarget)
+  );
 
-  // 2) 1초 대기
   await sleep(INTRO_DELAY_MS);
 
-  // 3) 전투 UI로 전환
   await interaction.editReply(
     buildBattlePayload(
       player,
@@ -2809,7 +2805,6 @@ if (id.startsWith('private_start_')) {
       '전투 시작!'
     )
   );
-
   return;
 }
 
@@ -2991,23 +2986,6 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
   return;
 }
 
-
-
-
-
-if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
-  const page = 1;
-  const totalPages = getInventoryTotalPages(player);
-
-  await interaction.reply({
-    content: `${equipmentText(player)}\n\n인벤토리 (${page}/${totalPages})\n${inventoryText(player, page)}`,
-    components: buildEquipmentButtons(player, page),
-    ephemeral: true
-  });
-  return;
-}
-
-
 if (id === 'enhance_view') {
   await interaction.deferReply({ ephemeral: true });
 
@@ -3139,7 +3117,7 @@ if (id === 'stat_atk' || id === 'stat_crit' || id === 'stat_critdmg' || id === '
   };
 
   const text = tryUpgradeStat(player, map[id]);
-  await safeSave();
+
 
   await interaction.reply({
     content: `${text}\n\n${buildFullStatusText(player)}`,
@@ -3195,8 +3173,6 @@ if (id === 'revive') {
   player.run.isDown = false;
   player.respawnAt = 0;
 
-  await safeSave();
-
   await interaction.update(
     buildBattlePayload(
       player,
@@ -3239,6 +3215,8 @@ if (id.startsWith('use_')) {
 }
 
 if (id === 'auto') {
+  await interaction.deferUpdate();
+
   if (!DUNGEONS[dungeonKey]?.autoAllowed) {
     await interaction.reply({
       content: '이 던전은 자동사냥이 불가능합니다.',
@@ -3272,9 +3250,9 @@ if (id === 'auto') {
   // =========================
   // 1) 이미지 먼저 출력
   // =========================
-  await interaction.update(
-    buildIntroPayload(dungeonKey, introTarget)
-  );
+await interaction.editReply(
+  buildIntroPayload(dungeonKey, introTarget)
+);
 
   // =========================
   // 2) 1초 대기
@@ -3340,7 +3318,8 @@ if (id === 'auto') {
   return;
 }
 
-   if (id === 'attack') {
+if (id === 'attack') {
+  await interaction.deferUpdate();
       if (!player.run) createRunIfNeeded(player, dungeonKey);
 
       if (!player.run.target && player.run.nextTarget) {
@@ -3349,9 +3328,9 @@ if (id === 'auto') {
         player.run.nextTarget = null;
         await safeSave();
 
-        await interaction.update(
-          buildIntroPayload(dungeonKey, player.run.target)
-        );
+await interaction.editReply(
+  buildIntroPayload(dungeonKey, player.run.target)
+);
 
         await sleep(INTRO_DELAY_MS);
 
@@ -3378,9 +3357,9 @@ if (id === 'auto') {
 
       await safeSave();
 
-      await interaction.update(
-        buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
-      );
+await interaction.editReply(
+  buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+);
       return;
     }
 
