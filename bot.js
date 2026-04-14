@@ -41,7 +41,10 @@ async function connectDB(){
   playersCol = db.collection('players');
   legacyGameCol = db.collection('game');
 
- 
+  // ⭐ 백업 삭제는 여기서
+  await playersCol.deleteOne({ _id: '__backup__' });
+  await playersCol.deleteMany({ type: 'rolling_backup' });
+  console.log('🔥 백업 삭제 완료');
 
   console.log('✅ DB 연결 완료');
 }
@@ -2039,13 +2042,13 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 '🏪 상점\n💊  작은물약 10G\n🍗 중간물약 30G\n🍖  큰물약 100G\n🧪 엘릭서 3000G'
 
 
+
+
+
 client.once('ready', async () => {
   console.log(`${client.user.tag} 로그인 완료`);
 
-await playersCol.deleteOne({ _id: '__backup__' });
-await playersCol.deleteMany({ type: 'rolling_backup' });
-
-if (!gameData) gameData = {};
+  if (!gameData) gameData = {};
 });
 
 
