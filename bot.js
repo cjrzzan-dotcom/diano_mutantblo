@@ -1028,6 +1028,9 @@ else if (dungeonKey === '깊은심연의숲') {
   };
 }
 
+function getEnhancePreviewText(player, item){
+  if (!item) return '';
+
 function getFileCandidate(name){
   const candidates = ['.png','.jpg','.jpeg','.webp'].map(ext => path.join(IMAGE_PATH, `${name}${ext}`));
   for(const f of candidates) if(fs.existsSync(f)) return f;
@@ -2649,6 +2652,8 @@ if (command === '!시작') {
 
 
 client.on('interactionCreate', async (interaction) => {
+  try {
+
   if (!interaction.isButton()) return;
 
   const player = getPlayer(interaction.user.id);
@@ -3335,53 +3340,68 @@ if (id === 'auto') {
   return;
 }
 
-if (id === 'attack') {
-  if (!player.run) createRunIfNeeded(player, dungeonKey);
+   if (id === 'attack') {
+      if (!player.run) createRunIfNeeded(player, dungeonKey);
 
-  if (!player.run.target && player.run.nextTarget) {
-    player.run.lastDrops = [];
-    player.run.target = player.run.nextTarget;
-    player.run.nextTarget = null;
-    await safeSave();
+      if (!player.run.target && player.run.nextTarget) {
+        player.run.lastDrops = [];
+        player.run.target = player.run.nextTarget;
+        player.run.nextTarget = null;
+        await safeSave();
 
-    await interaction.update(
-      buildIntroPayload(dungeonKey, player.run.target)
-    );
+        await interaction.update(
+          buildIntroPayload(dungeonKey, player.run.target)
+        );
 
-    await sleep(INTRO_DELAY_MS);
+        await sleep(INTRO_DELAY_MS);
 
-    await interaction.editReply(
-      buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
-    );
-    return;
+        await interaction.editReply(
+          buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
+        );
+        return;
+      }
+
+      const logs = [];
+
+      for (let i = 0; i < 3; i++) {
+        if (!player.run) break;
+        if (player.run.isDown) break;
+
+        logs.push(`\n⚔️ [${i + 1}턴]`);
+
+        const result = performAttack(player, dungeonKey);
+        logs.push(...result.logs);
+
+        if (Date.now() < player.respawnAt) break;
+        if (!player.run?.target && player.run?.nextTarget) break;
+      }
+
+      await safeSave();
+
+      await interaction.update(
+        buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+      );
+      return;
+    }
+
+  } catch (err) {
+    console.error('🔥 interaction 에러:', err);
+
+    try {
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({
+          content: '❌ 오류 발생',
+          ephemeral: true
+        });
+      } else if (interaction.deferred) {
+        await interaction.editReply({
+          content: '❌ 오류 발생'
+        });
+      }
+    } catch (e) {
+      console.error('🔥 오류 응답 실패:', e);
+    }
   }
-
-  const logs = [];
-
-  for (let i = 0; i < 3; i++) {
-    if (!player.run) break;
-    if (player.run.isDown) break;
-
-    logs.push(`\n⚔️ [${i + 1}턴]`);
-
-    const result = performAttack(player, dungeonKey);
-
-    logs.push(...result.logs);
-
-    // 죽으면 중단
-    if (Date.now() < player.respawnAt) break;
-
-    // 몬스터 죽고 다음 몹 대기면 멈춤
-    if (!player.run?.target && player.run?.nextTarget) break;
-  }
-
-  await safeSave();
-
-  await interaction.update(
-    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
-  );
-  return;
-}
 });
 
 
