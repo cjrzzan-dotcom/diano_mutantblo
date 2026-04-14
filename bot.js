@@ -2079,6 +2079,7 @@ function buildCraftCategoryButtons(){
       new ButtonBuilder().setCustomId('craft_cat_weapon').setLabel('⚔️ 무기').setStyle(ButtonStyle.Danger),
       new ButtonBuilder().setCustomId('craft_cat_armor').setLabel('🛡️ 갑옷').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('craft_cat_ring').setLabel('💍 반지').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('craft_cat_material').setLabel('📦 재료').setStyle(ButtonStyle.Secondary),
     )
   ];
 }
@@ -2664,6 +2665,15 @@ client.on('interactionCreate', async (interaction) => {
     });
     return;
   }
+
+if (id === 'craft_cat_material') {
+  await interaction.reply({
+    content: `📦 재료 제작목록\n${craftListTextByType(player, 'material')}`,
+    components: buildCraftButtonsByType('material'),
+    ephemeral: true
+  });
+  return;
+}
 
   if (id === 'temper_select') {
     await interaction.update({
