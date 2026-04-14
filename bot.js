@@ -1726,22 +1726,22 @@ function tryEnhanceItem(player, item){
 
 function equipmentText(player){
   const weaponText = player.equipment.weapon
-    ? formatItemName(player.equipment.weapon)
+    ? `+${player.equipment.weapon.enhanceLevel || 0}${player.equipment.weapon.blessing ? ' (축성)' : ''} ${player.equipment.weapon.name}[담금질${player.equipment.weapon.temperCount || 0}/5]\n${getItemStatTextWithBless(player.equipment.weapon) || '(스탯없음)'}`
     : '없음';
 
   const armorText = player.equipment.armor
-    ? formatItemName(player.equipment.armor)
+    ? `+${player.equipment.armor.enhanceLevel || 0}${player.equipment.armor.blessing ? ' (축성)' : ''} ${player.equipment.armor.name}[담금질${player.equipment.armor.temperCount || 0}/5]\n${getItemStatTextWithBless(player.equipment.armor) || '(스탯없음)'}`
     : '없음';
 
   const ringText = player.equipment.ring
-    ? formatItemName(player.equipment.ring)
+    ? `+${player.equipment.ring.enhanceLevel || 0}${player.equipment.ring.blessing ? ' (축성)' : ''} ${player.equipment.ring.name}[담금질${player.equipment.ring.temperCount || 0}/5]\n${getItemStatTextWithBless(player.equipment.ring) || '(스탯없음)'}`
     : '없음';
 
   return [
     `⚔️ 무기: ${weaponText}`,
     `🛡️ 갑옷: ${armorText}`,
     `💍 반지: ${ringText}`
-  ].join('\n');
+  ].join('\n\n');
 }
 function materialsText(player){
   const rows = Object.entries(player.materials).filter(([,v])=>v>0).map(([k,v])=>`${k} ${v}`);
