@@ -2964,7 +2964,7 @@ if (['attack', 'auto'].includes(id)) {
   // 강화 / 담금질 / 축성
   // =========================
   if (id === 'enhance_menu') {
-    await interaction.update({
+    await interaction.editReply({
       content: '🔨 강화 메뉴\n원하는 기능을 선택하세요.',
       components: buildEnhanceMenuButtons(player),
     });
@@ -2972,7 +2972,7 @@ if (['attack', 'auto'].includes(id)) {
   }
 
   if (id === 'enhance_select') {
-    await interaction.update({
+    await interaction.editReply({
       content: '🔨 강화할 장비를 선택하세요.\n골드를 사용해 강화합니다.',
       components: buildEnhanceButtons(player),
     });
@@ -2980,7 +2980,7 @@ if (['attack', 'auto'].includes(id)) {
   }
 
   if (id === 'temper_select') {
-    await interaction.update({
+    await interaction.editReply({
       content: '⚒️ 담금질할 장비를 선택하세요.\n세계석조각 3개 필요 / 최대 5회',
       components: buildTemperButtons(player),
     });
@@ -2988,7 +2988,7 @@ if (['attack', 'auto'].includes(id)) {
   }
 
   if (id === 'bless_select') {
-    await interaction.update({
+    await interaction.editReply({
       content: '✨ 축성할 장비를 선택하세요.\n축성석 1개 필요 / 장비당 1회만 가능',
       components: buildBlessButtons(player),
     });
@@ -3268,7 +3268,7 @@ if (id === 'craft_cat_material') {
     if (nextPage < 1) nextPage = 1;
     if (nextPage > totalPages) nextPage = totalPages;
 
-    await interaction.update({
+    await interaction.editReply({
       content: `🧰 장비창\n\n${equipmentText(player)}\n\n🎒 인벤토리 (${nextPage}/${totalPages})\n${inventoryText(player, nextPage)}`,
       components: buildEquipmentButtons(player, nextPage)
     });
@@ -3499,7 +3499,7 @@ const shopMap = {
 
     await safeSave();
 
-    await interaction.update(
+    await interaction.editReply(
       buildBattlePayload(
         player,
         interaction.channelId,
@@ -3520,7 +3520,7 @@ if (id.startsWith('use_')) {
     const result = usePotionInBattle(player, key);
     await safeSave();
 
-    await interaction.update(
+    await interaction.editReply(
       buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
     );
     return;
@@ -3570,7 +3570,7 @@ if (id.startsWith('use_')) {
 
     const introTarget = player.run?.target || player.run?.nextTarget;
 
-    await interaction.update(
+    await interaction.editReply(
       buildIntroPayload(dungeonKey, introTarget)
     );
 
@@ -3640,7 +3640,7 @@ if (id.startsWith('use_')) {
       player.run.nextTarget = null;
       await safeSave();
 
-      await interaction.update(
+      await interaction.editReply(
         buildIntroPayload(dungeonKey, player.run.target)
       );
 
