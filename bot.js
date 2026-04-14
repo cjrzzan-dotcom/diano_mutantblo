@@ -693,7 +693,29 @@ const CRAFTS = [
 
 { id:'lilith_sword', label:'천상의 심판', type:'weapon', materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
 { id:'end_armor', label:'천상의 갑주', type:'armor', materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
+{
+  id: 'make_high_frag',
+  label: '고급장비조각',
+  type: 'material',
+  materials: {
+    '낡은장비조각': 5
+  },
+  result: {
+    '고급장비조각': 1
+  }
+},
 
+{
+  id: 'make_bless_stone',
+  label: '축성석',
+  type: 'material',
+  materials: {
+    '세계석조각': 5
+  },
+  result: {
+    '축성석': 1
+  }
+}
 
 ];
 
@@ -1599,12 +1621,32 @@ function tryCraft(player, craftId){
   const recipe = CRAFT_BY_ID[craftId];
   if(!recipe) return { ok:false, text:'없는 제작식입니다.' };
   if(!canCraft(player, recipe)) return { ok:false, text:'재료가 부족합니다.' };
+
+  // 재료 차감
   for(const [mat, need] of Object.entries(recipe.materials)){
     player.materials[mat] -= need;
   }
+
+  // ⭐ 여기 추가된 핵심 (재료 제작)
+  if (recipe.type === 'material') {
+    if (!player.materials) player.materials = {};
+
+    for (const [mat, amount] of Object.entries(recipe.result || {})) {
+      player.materials[mat] = (player.materials[mat] || 0) + amount;
+    }
+
+    const madeText = Object.entries(recipe.result || {})
+      .map(([mat, amount]) => `${mat} ${amount}개`)
+      .join(', ');
+
+    return { ok:true, text:`🛠️ 제작 성공!\n${madeText}` };
+  }
+
+  // ⭐ 장비 제작
   const item = createCraftItem(recipe);
   player.inventory.push(item);
-  return { ok:true, item, text:`🛠️ 제작 성공!\n${item.name}` };
+
+  return { ok:true, item, text:`🛠️ 제작 성공!\n${formatItemName(item)}` };
 }
 function equipItemByIndex(player, idx){
   const item = player.inventory[idx];
@@ -2318,12 +2360,7 @@ if(command === '!가방'){
     await message.reply(formatHelp());
     return;
   }
-  if(command === '!초기화'){
-    gameData[message.author.id] = getDefaultPlayer(message.author.id);
-await saveData(gameData);
-    await message.reply('초기화 완료');
-    return;
-  }
+
 
 if (command === '!스탯초기화') {
   if (!isAdmin(message)) {
