@@ -220,46 +220,31 @@ async function loadBackupIfEmpty(){
   }
 }
 
-async function saveBackup(data){
-  try{
-    const serialized = JSON.stringify(data);
+async function saveBackup(gameData){
+  try {
+    if (!gameData) return;
 
-    const backupDoc = {
-      type: 'rolling_backup',
-      data: serialized,
-      createdAt: Date.now()
-    };
+    const json = JSON.stringify(gameData);
 
-    await playersCol.insertOne(backupDoc);
-
-    // 최근 5개만 유지
-    const oldBackups = await playersCol
-      .find({ type: 'rolling_backup' })
-      .sort({ createdAt: -1 })
-      .skip(5)
-      .toArray();
-
-    if (oldBackups.length > 0) {
-      await playersCol.deleteMany({
-        _id: { $in: oldBackups.map(doc => doc._id) }
-      });
+    // ⭐ 용량 제한 (중요)
+    if (json.length > 1500000) {
+      console.log('⚠️ 백업 스킵 (용량 초과)');
+      return;
     }
 
-    // 최신 1개 백업도 따로 유지
     await playersCol.updateOne(
       { _id: '__backup__' },
       {
         $set: {
-          data: serialized,
-          updatedAt: Date.now()
+          data: json,
+          updatedAt: new Date()
         }
       },
       { upsert: true }
     );
 
-    console.log('🧠 롤링 백업 저장 완료');
-  } catch(e){
-    console.error('💥 백업 저장 실패:', e);
+  } catch (e) {
+    console.error('백업 저장 실패:', e);
   }
 }
 async function saveData(){
@@ -2991,6 +2976,7 @@ if (command === '!시작') {
 
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
+  await interaction.deferUpdate(); // ⭐ 무조건 먼저
 
   const player = getPlayer(interaction.user.id);
   const id = interaction.customId;
