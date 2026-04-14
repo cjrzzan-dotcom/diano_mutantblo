@@ -1,5 +1,4 @@
-
-
+require('dotenv').config();
 const path = require('path');
 
 const MODE = process.env.MODE || 'test';
@@ -187,7 +186,7 @@ async function safeSave() {
       return false;
     }
 
-    await saveData(gameData); // ⭐ 이게 핵심 (safeSave 아님)
+    await saveData();
 
     console.log(`✅ 저장 성공 (유저 수: ${Object.keys(gameData).length})`);
     return true;
@@ -209,7 +208,7 @@ async function loadBackupIfEmpty(){
     const backup = await playersCol.findOne({ _id: '__backup__' });
 
     if (backup?.data) {
-      gameData = backup.data;
+      gameData = JSON.parse(backup.data);
       console.log(`✅ 백업 복구 성공 (${Object.keys(gameData).length}명)`);
     } else {
       console.log('💀 백업 없음 → 새 데이터');
@@ -898,32 +897,6 @@ function makeKillLine(name) {
   return `☠️ **${name} 처치!**`;
 }
 
-async function safeDeleteReply(interaction, delay = 8000){
-  setTimeout(async () => {
-    try {
-      await interaction.deleteReply();
-    } catch (e) {}
-  }, delay);
-}
-
-function cleanupOldBackups(keepCount = 10){
-  try {
-    const files = fs.readdirSync(BACKUP_DIR)
-      .filter(f => f.startsWith('data_rpg_girin_') && f.endsWith('.json'))
-      .map(f => ({
-        name: f,
-        time: fs.statSync(path.join(BACKUP_DIR, f)).mtimeMs
-      }))
-      .sort((a, b) => b.time - a.time);
-
-    const remove = files.slice(keepCount);
-    for (const file of remove) {
-      fs.unlinkSync(path.join(BACKUP_DIR, file.name));
-    }
-  } catch (e) {
-    console.error('백업 정리 실패', e);
-  }
-}
 
 function blankMaterials(){
   const out = {};
@@ -1124,36 +1097,6 @@ function rollRarity(){
   }
   return RARITIES[0];
 }
-function createRingStats(recipeId){
-  const isLilith = recipeId === 'lilith_ring';
-
-  const pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
-  const count = isLilith ? rand(2, 3) : rand(1, 3);
-
-  const picked = [];
-  while (picked.length < count) {
-    const k = pick(pool);
-    if (!picked.includes(k)) picked.push(k);
-  }
-
-  const out = {
-    critChanceBonus: 0,
-    critDamageBonus: 0,
-    dodgeBonus: 0,
-    atkBonus: 0
-  };
-
-  for (const k of picked) {
-    out[k] = isLilith ? rand(4, 8) : rand(2, 5);
-  }
-
-  if (isLilith) {
-    out.atkBonus = rand(10, 18);
-  }
-
-  return out;
-}
-
 function getEquippedBonuses(player){
   const bonus = {
     atk:0,
@@ -1188,24 +1131,58 @@ function getEquippedBonuses(player){
 }
 function getAttackPower(player){
   const eq = getEquippedBonuses(player);
-  return player.baseAtk + player.stats.atk * 1 + eq.atk;
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+
+  const baseAtk = player.baseAtk + player.stats.atk;
+  const atkBeforeBless = baseAtk + eq.atk;
+  const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+
+  return atkBeforeBless + blessAtkBonus;
 }
 
 function getDefensePower(player){
   const eq = getEquippedBonuses(player);
-  return player.baseDef + Math.floor(player.level / 3) + eq.def;
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+
+  return player.baseDef + Math.floor(player.level / 3) + eq.def + totalBlessFlatDef;
 }
 function getCritChance(player){
   const eq = getEquippedBonuses(player);
-  return round1(Math.min(STAT_CAPS.critChance, player.stats.critChance + eq.critChance));
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
+
+  return round1(Math.min(STAT_CAPS.critChance, player.stats.critChance + eq.critChance + totalBlessCritChance));
 }
 function getCritDamage(player){
   const eq = getEquippedBonuses(player);
-  return round1(Math.min(STAT_CAPS.critDamage, player.stats.critDamage + eq.critDamage));
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
+
+  return round1(Math.min(STAT_CAPS.critDamage, player.stats.critDamage + eq.critDamage + totalBlessCritDamage));
 }
 function getDodge(player){
   const eq = getEquippedBonuses(player);
-  return round1(Math.min(STAT_CAPS.dodge, player.stats.dodge + eq.dodge));
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
+
+  return round1(Math.min(STAT_CAPS.dodge, player.stats.dodge + eq.dodge + totalBlessDodge));
 }
 
 function grantMaterial(player, name, amount, lines){
@@ -1379,20 +1356,35 @@ function getEnhancePreviewText(player, item){
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
 
-  if(chance(getDodge(player))){
+  const eq = getEquippedBonuses(player);
+
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
+  const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
+
+  const baseDef = player.baseDef + Math.floor(player.level / 3);
+  const finalDef = baseDef + eq.def + totalBlessFlatDef;
+
+  const finalDodge = Math.min(
+    STAT_CAPS.dodge,
+    player.stats.dodge + eq.dodge + totalBlessDodge
+  );
+
+  if (chance(finalDodge)) {
     logs.push(makeDodgeLine());
     return;
   }
 
-  const dmg = Math.max(1, target.atk - getDefensePower(player));
+  const dmg = Math.max(1, target.atk - finalDef);
   player.hp -= dmg;
   logs.push(makeEnemyDamageLine(target.name, dmg));
 
-  const eqBonus = getEquippedBonuses(player);
-  const reflect = eqBonus.reflect || 0;
-
-  if (reflect > 0 && dmg > 0 && target.currentHp > 0) {
-    const reflectDmg = Math.floor(dmg * (reflect / 100));
+  if (totalBlessReflect > 0 && dmg > 0 && target.currentHp > 0) {
+    const reflectDmg = Math.floor(dmg * (totalBlessReflect / 100));
 
     if (reflectDmg > 0) {
       target.currentHp = Math.max(0, target.currentHp - reflectDmg);
@@ -1426,13 +1418,10 @@ function usePotionOutOfBattle(player, key){
   if (key === 'small') heal = 30;
   else if (key === 'mid') heal = 80;
   else if (key === 'big') heal = 200;
-
-  // ⭐ 추가
   else if (key === 'large') heal = 300;
   else if (key === 'xlarge') heal = 500;
-
   else if (key === 'elixir') {
-    player.hp = player.maxHp;
+    player.hp = getMaxHpWithBless(player);
     player.potions[key]--;
     return '🧪 엘릭서 사용! HP 완전 회복!';
   }
@@ -1440,9 +1429,44 @@ function usePotionOutOfBattle(player, key){
   player.potions[key]--;
 
   const before = player.hp;
-  player.hp = Math.min(player.maxHp, player.hp + heal);
+  player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
 
   return `💊 회복 +${player.hp - before}`;
+}
+
+
+function usePotionInBattle(player, key){
+  if (!player.potions[key] || player.potions[key] <= 0) {
+    return { logs: ['❌ 물약이 없습니다.'] };
+  }
+
+  if (!player.run) {
+    return { logs: ['❌ 전투 중이 아닙니다.'] };
+  }
+
+  if (player.run.isDown) {
+    return { logs: ['❌ 쓰러진 상태입니다.'] };
+  }
+
+  let heal = 0;
+
+  if (key === 'small') heal = 30;
+  else if (key === 'mid') heal = 80;
+  else if (key === 'big') heal = 200;
+  else if (key === 'large') heal = 300;
+  else if (key === 'xlarge') heal = 500;
+  else if (key === 'elixir') {
+    player.hp = getMaxHpWithBless(player);
+    player.potions[key]--;
+    return { logs: ['🧪 엘릭서 사용! HP 완전 회복!'] };
+  }
+
+  player.potions[key]--;
+
+  const before = player.hp;
+  player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
+
+  return { logs: [`💊 회복 +${player.hp - before}`] };
 }
 
 function performAttack(player, dungeonKey){
@@ -1947,14 +1971,12 @@ function buildCompactBattleText(player,target,channelId){
   }
 
   lines.push(`<#${channelId}>`);
-  lines.push(`❤️ ${player.hp}/${player.maxHp}`);
+  lines.push(`❤️ ${player.hp}/${getMaxHpWithBless(player)}`);
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
-
-  // ⭐ 물약 2줄
   lines.push(`💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0}`);
   lines.push(`🧃 ${player.potions.large || 0} / 🍶 ${player.potions.xlarge || 0} / 🧪 ${player.potions.elixir || 0}`);
 
-  return lines.join('\n');
+  return lines.join('\\n');
 }
 
 function getItemStatText(item){
@@ -2974,10 +2996,6 @@ client.on('interactionCreate', async (interaction) => {
   const id = interaction.customId;
   const dungeonKey = getDungeonByChannel(interaction.channelId);
 
-// ⭐ 전투 관련 버튼은 먼저 defer
-if (['attack', 'auto'].includes(id)) {
-  await interaction.deferUpdate();
-}
 
   const revived = reviveIfRespawnReady(player);
   if (revived) await safeSave();
@@ -2986,7 +3004,7 @@ if (['attack', 'auto'].includes(id)) {
   // 강화 / 담금질 / 축성
   // =========================
   if (id === 'enhance_menu') {
-    await interaction.editReply({
+    await interaction.update({
       content: '🔨 강화 메뉴\n원하는 기능을 선택하세요.',
       components: buildEnhanceMenuButtons(player),
     });
@@ -2994,7 +3012,7 @@ if (['attack', 'auto'].includes(id)) {
   }
 
   if (id === 'enhance_select') {
-    await interaction.editReply({
+    await interaction.update({
       content: '🔨 강화할 장비를 선택하세요.\n골드를 사용해 강화합니다.',
       components: buildEnhanceButtons(player),
     });
@@ -3002,7 +3020,7 @@ if (['attack', 'auto'].includes(id)) {
   }
 
   if (id === 'temper_select') {
-    await interaction.editReply({
+    await interaction.update({
       content: '⚒️ 담금질할 장비를 선택하세요.\n세계석조각 3개 필요 / 최대 5회',
       components: buildTemperButtons(player),
     });
@@ -3010,7 +3028,7 @@ if (['attack', 'auto'].includes(id)) {
   }
 
   if (id === 'bless_select') {
-    await interaction.editReply({
+    await interaction.update({
       content: '✨ 축성할 장비를 선택하세요.\n축성석 1개 필요 / 장비당 1회만 가능',
       components: buildBlessButtons(player),
     });
@@ -3290,7 +3308,7 @@ if (id === 'craft_cat_material') {
     if (nextPage < 1) nextPage = 1;
     if (nextPage > totalPages) nextPage = totalPages;
 
-    await interaction.editReply({
+    await interaction.update({
       content: `🧰 장비창\n\n${equipmentText(player)}\n\n🎒 인벤토리 (${nextPage}/${totalPages})\n${inventoryText(player, nextPage)}`,
       components: buildEquipmentButtons(player, nextPage)
     });
@@ -3399,19 +3417,13 @@ if (id === 'buy_xlarge_10') {
   return;
 }
 
-if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_large' || id === 'buy_xlarge' || id === 'buy_elixir') {
-const shopMap = {
-  buy_small: { key: 'small', name: '작은물약', price: 10, amount: 1 },
-  buy_mid: { key: 'mid', name: '중간물약', price: 30, amount: 1 },
-  buy_big: { key: 'big', name: '큰물약', price: 100, amount: 1 },
-
-
-  buy_big_10: { key: 'big', name: '큰물약', price: 1000, amount: 10 },
-  buy_huge_10: { key: 'large', name: '대량물약', price: 5000, amount: 10 },
-  buy_ultra_10: { key: 'xlarge', name: '초대량물약', price: 7000, amount: 10 },
-
-  buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000, amount: 1 },
-};
+if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
+    const shopMap = {
+      buy_small: { key: 'small', name: '작은물약', price: 10, amount: 1 },
+      buy_mid: { key: 'mid', name: '중간물약', price: 30, amount: 1 },
+      buy_big: { key: 'big', name: '큰물약', price: 100, amount: 1 },
+      buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000, amount: 1 },
+    };
 
     const buy = shopMap[id];
 
@@ -3432,16 +3444,16 @@ const shopMap = {
     }
 
     player.gold -= buy.price;
-    player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
+    player.potions[buy.key] = (player.potions[buy.key] || 0) + (buy.amount || 1);
     await safeSave();
 
     await interaction.reply({
       content:
-`✅ ${buy.name} 1개 구매 완료!
+`✅ ${buy.name} ${buy.amount || 1}개 구매 완료!
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧃 ${player.potions.large || 0} / 🍶  ${player.potions.xlarge || 0} / 🧪 ${player.potions.elixir || 0}`,
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧃 ${player.potions.large || 0} / 🍶 ${player.potions.xlarge || 0} / 🧪 ${player.potions.elixir || 0}`,
       ephemeral: true
     });
     return;
@@ -3515,7 +3527,7 @@ const shopMap = {
     }
 
     player.reviveTickets -= 1;
-    player.hp = Math.max(1, Math.floor(player.maxHp));
+    player.hp = Math.max(1, Math.floor(getMaxHpWithBless(player)));
     player.run.isDown = false;
     player.respawnAt = 0;
 
@@ -3538,11 +3550,11 @@ const shopMap = {
 if (id.startsWith('use_')) {
   const key = id.replace('use_', '');
 
-  if (player.run?.target && dungeonKey) {
+  if (dungeonKey) {
     const result = usePotionInBattle(player, key);
     await safeSave();
 
-    await interaction.editReply(
+    await interaction.update(
       buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
     );
     return;
@@ -3562,12 +3574,14 @@ if (id.startsWith('use_')) {
   // 자동사냥
   // =========================
   if (id === 'auto') {
+    await interaction.deferUpdate();
+
     if (!DUNGEONS[dungeonKey]?.autoAllowed) {
-      await interaction.reply({
+      await interaction.editReply({
         content: '이 던전은 자동사냥이 불가능합니다.',
-        ephemeral: true
+        embeds: [],
+        components: []
       });
-      await safeDeleteReply(interaction, 3000);
       return;
     }
 
@@ -3578,11 +3592,12 @@ if (id.startsWith('use_')) {
       const remainMin = Math.floor(remainMs / 60000);
       const remainSec = Math.floor((remainMs % 60000) / 1000);
 
-      await interaction.reply({
-        content: `❌ 자동사냥권이 없습니다.\n다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
-        ephemeral: true
+      await interaction.editReply({
+        content: `❌ 자동사냥권이 없습니다.
+다음 충전까지 ${remainMin}분 ${remainSec}초 남았습니다.`,
+        embeds: [],
+        components: []
       });
-      await safeDeleteReply(interaction, 4000);
       return;
     }
 
@@ -3609,7 +3624,9 @@ if (id.startsWith('use_')) {
         player.run.target = player.run.nextTarget;
         player.run.nextTarget = null;
 
-        logs.push(`\n[${i + 1}턴]\n👁️ ${player.run.target.name} 등장! `);
+        logs.push(`
+[${i + 1}턴]
+👁️ ${player.run.target.name} 등장! `);
         continue;
       }
 
@@ -3631,7 +3648,9 @@ if (id.startsWith('use_')) {
         player.run.lastDrops = player.run.lastDrops.filter(() => Math.random() < 0.8);
       }
 
-      logs.push(`\n[${i + 1}턴]\n${result.logs.join('\n')}`);
+      logs.push(`
+[${i + 1}턴]
+${result.logs.join('\n')}`);
       logs.push(`💰 자동사냥 보상 적용: 골드 ${gainedGold} → ${reducedGold}, 경험치 ${gainedXp} → ${reducedXp}`);
 
       if (Date.now() < player.respawnAt) break;
@@ -3654,6 +3673,8 @@ if (id.startsWith('use_')) {
   // 공격
   // =========================
   if (id === 'attack') {
+    await interaction.deferUpdate();
+
     if (!player.run) createRunIfNeeded(player, dungeonKey);
 
     if (!player.run.target && player.run.nextTarget) {
@@ -3691,7 +3712,7 @@ if (id.startsWith('use_')) {
 
     await safeSave();
 
-    await interaction.update(
+    await interaction.editReply(
       buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
     );
     return;
@@ -3699,7 +3720,7 @@ if (id.startsWith('use_')) {
 });
 
 
-require('dotenv').config();
+
 
 console.log('MODE =', MODE);
 console.log('DATA_FILE_PROD =', process.env.DATA_FILE_PROD);
