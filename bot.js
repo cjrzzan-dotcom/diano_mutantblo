@@ -223,9 +223,11 @@ async function loadBackupIfEmpty(){
 
 async function saveBackup(data){
   try{
+    const serialized = JSON.stringify(data);
+
     const backupDoc = {
       type: 'rolling_backup',
-      data: JSON.parse(JSON.stringify(data)),
+      data: serialized,
       createdAt: Date.now()
     };
 
@@ -249,7 +251,7 @@ async function saveBackup(data){
       { _id: '__backup__' },
       {
         $set: {
-          data: JSON.parse(JSON.stringify(data)),
+          data: serialized,
           updatedAt: Date.now()
         }
       },
@@ -261,7 +263,6 @@ async function saveBackup(data){
     console.error('💥 백업 저장 실패:', e);
   }
 }
-
 async function saveData(){
   if (!playersCol) throw new Error('playersCol 없음');
 
@@ -2478,7 +2479,7 @@ if (command === '!백업복구') {
     return;
   }
 
-  gameData = backup.data;
+  gameData = JSON.parse(backup.data);
 
   await safeSave();
 
@@ -2500,13 +2501,19 @@ if (command === '!유저복구') {
 
   const backup = await playersCol.findOne({ _id: '__backup__' });
 
-  if (!backup?.data?.[target.id]) {
+  if (!backup?.data) {
+    await message.reply('❌ 백업 데이터 없음');
+    return;
+  }
+
+  const backupData = JSON.parse(backup.data);
+
+  if (!backupData?.[target.id]) {
     await message.reply('❌ 해당 유저 백업 없음');
     return;
   }
 
-  // ⭐ 해당 유저만 복구
-  gameData[target.id] = backup.data[target.id];
+  gameData[target.id] = backupData[target.id];
 
   await safeSave();
 
@@ -2532,8 +2539,16 @@ if (command === '!백업목록') {
   }
 
   const text = backups.map((b, i) => {
+    let count = 0;
+
+    try {
+      const parsed = JSON.parse(b.data);
+      count = parsed ? Object.keys(parsed).length : 0;
+    } catch {
+      count = 0;
+    }
+
     const date = new Date(b.createdAt).toLocaleString('ko-KR');
-    const count = b.data ? Object.keys(b.data).length : 0;
     return `${i + 1}. ${date} / 유저 ${count}명`;
   }).join('\n');
 
@@ -2565,7 +2580,7 @@ if (command === '!백업복구번호') {
     return;
   }
 
-  gameData = selected.data;
+  gameData = JSON.parse(selected.data);
 
   await safeSave();
 
@@ -2594,12 +2609,19 @@ if (command === '!유저복구번호') {
     .toArray();
 
   const selected = backups[num - 1];
-  if (!selected?.data?.[target.id]) {
+  if (!selected?.data) {
+    await message.reply('❌ 해당 번호 백업 없음');
+    return;
+  }
+
+  const selectedData = JSON.parse(selected.data);
+
+  if (!selectedData?.[target.id]) {
     await message.reply('❌ 해당 유저의 백업 데이터 없음');
     return;
   }
 
-  gameData[target.id] = selected.data[target.id];
+  gameData[target.id] = selectedData[target.id];
 
   await safeSave();
 
