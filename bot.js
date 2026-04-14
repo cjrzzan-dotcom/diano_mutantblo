@@ -847,10 +847,6 @@ function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 function round1(v){ return Math.round(v*10)/10; }
 
-const BACKUP_DIR = path.join(__dirname, 'backup');
-if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
-
-
 function isEquippedItem(player, item){
   return (
     player.equipment.weapon === item ||
