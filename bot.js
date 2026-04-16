@@ -3123,11 +3123,11 @@ if (id === 'enhance_equipped_armor') {
 if (id === 'enhance_select') {
   const enhanceable = player.inventory
     .map((item, idx) => ({ item, idx }))
-    .filter(({ item }) => item && ['weapon', 'armor', 'ring'].includes(item.type));
+    .filter(({ item }) => item && ['weapon','armor','ring'].includes(item.type));
 
   if (enhanceable.length === 0) {
     await interaction.reply({
-      content: '강화할 수 있는 아이템이 없습니다.',
+      content: '강화할 아이템 없음',
       ephemeral: true
     });
     return;
@@ -3138,11 +3138,13 @@ if (id === 'enhance_select') {
   for (let i = 0; i < enhanceable.length; i += 5) {
     const chunk = enhanceable.slice(i, i + 5);
 
+    if (chunk.length === 0) continue; // 🔥 중요
+
     const row = new ActionRowBuilder().addComponents(
       chunk.map(({ item, idx }) =>
         new ButtonBuilder()
           .setCustomId(`enhance_item_${idx}`)
-          .setLabel(`${item.name}`.slice(0, 80))
+          .setLabel(item.name.slice(0, 80))
           .setStyle(ButtonStyle.Secondary)
       )
     );
@@ -3151,10 +3153,11 @@ if (id === 'enhance_select') {
   }
 
   await interaction.reply({
-    content: '🔨 강화할 아이템을 선택하세요.',
+    content: '🔨 강화할 아이템 선택',
     components: rows,
     ephemeral: true
   });
+
   return;
 }
 
