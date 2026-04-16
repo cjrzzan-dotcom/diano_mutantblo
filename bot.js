@@ -404,6 +404,51 @@ function buildBlessButtons(player){
   ];
 }
 
+function createRandomOptionsByRarity(rarityKey){
+  const optionPool = [
+    'atkBonus',
+    'defBonus',
+    'critChanceBonus',
+    'critDamageBonus',
+    'dodgeBonus'
+  ];
+
+  let min = 0, max = 0;
+
+  if (rarityKey === 'common') { min = 0; max = 0; }
+  if (rarityKey === 'rare') { min = 0; max = 1; }
+  if (rarityKey === 'epic') { min = 1; max = 2; }
+  if (rarityKey === 'unique') { min = 2; max = 3; }
+  if (rarityKey === 'legendary') { min = 3; max = 4; }
+
+  const count = randInt(min, max);
+
+  const picked = [];
+  while (picked.length < count) {
+    const p = pick(optionPool);
+    if (!picked.includes(p)) picked.push(p);
+  }
+
+  const out = {
+    atkBonus: 0,
+    defBonus: 0,
+    critChanceBonus: 0,
+    critDamageBonus: 0,
+    dodgeBonus: 0,
+  };
+
+  for (const p of picked) {
+    if (p === 'atkBonus') out[p] += randInt(2, 6);
+    if (p === 'defBonus') out[p] += randInt(2, 6);
+    if (p === 'critChanceBonus') out[p] += randInt(2, 8);   // %
+    if (p === 'critDamageBonus') out[p] += randInt(5, 15);   // %
+    if (p === 'dodgeBonus') out[p] += randInt(2, 8);         // %
+  }
+
+  return out;
+}
+
+
 function tryBlessItem(player, item){
   if (!item) return '❌ 없는 장비입니다.';
   if (!player.materials) player.materials = {};
@@ -1574,18 +1619,33 @@ function canCraft(player, recipe){
 
 function createCraftItem(recipe){
   const rarity = rollRarity();
+
   const item = {
     name: `${rarity.icon} ${recipe.label}`,
     type: recipe.type,
     rarity: rarity.key,
     rarityLabel: rarity.label,
+
     atkBonus: recipe.base.atk + rarity.atk,
     defBonus: recipe.base.def + rarity.def,
+
     critChanceBonus: 0,
     critDamageBonus: 0,
     dodgeBonus: 0,
   };
 
+  // 🔥 여기 추가 (무기/방어구 랜덤 옵션)
+  if (recipe.type === 'weapon' || recipe.type === 'armor') {
+    const randomOptions = createRandomOptionsByRarity(rarity.key);
+
+    item.atkBonus += randomOptions.atkBonus;
+    item.defBonus += randomOptions.defBonus;
+    item.critChanceBonus += randomOptions.critChanceBonus;
+    item.critDamageBonus += randomOptions.critDamageBonus;
+    item.dodgeBonus += randomOptions.dodgeBonus;
+  }
+
+  // 기존 반지 랜덤 유지
   if (recipe.ringRandom) {
     Object.assign(item, createRingStats(recipe.id));
   }
@@ -2204,7 +2264,7 @@ function buildEnhanceItemButtons(player){
         new ActionRowBuilder().addComponents(
           ...player.inventory.slice(i, i + 4).map((item, idx) =>
             new ButtonBuilder()
-              .setCustomId(`enhance_item_${i + idx}`)
+              .setCustomId(`enhance_item_${ i }`)
               .setLabel(`${i + idx + 1}. ${item.name}`)
               .setStyle(ButtonStyle.Secondary)
           )
@@ -3060,6 +3120,41 @@ if (id === 'enhance_equipped_armor') {
 
   await interaction.editReply({
     content: `${text}\n\n${getEnhancePreviewText(player, item)}`
+  });
+  return;
+}
+
+if (id === 'enhance_select') {
+  const items = player.inventory
+    .map((item, i) => ({ item, i }))
+    .filter(({ item }) => ['weapon', 'armor', 'ring'].includes(item.type));
+
+  if (items.length === 0) {
+    await interaction.reply({
+      content: '강화할 수 있는 아이템이 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const rows = [];
+  const buttons = items.map(({ item, i }) =>
+    new ButtonBuilder()
+      .setCustomId(`enhance_item_${i}`)
+      .setLabel(`${item.name}${getEnhanceLevelText(item)}`)
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  for (let j = 0; j < buttons.length; j += 5) {
+    rows.push(
+      new ActionRowBuilder().addComponents(buttons.slice(j, j + 5))
+    );
+  }
+
+  await interaction.reply({
+    content: '강화할 아이템을 선택하세요.',
+    components: rows,
+    ephemeral: true
   });
   return;
 }
