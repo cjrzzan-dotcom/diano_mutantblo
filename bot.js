@@ -2226,7 +2226,7 @@ function buildEnhanceItemButtons(player){
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('enhance_equipped_weapon')
-          .setLabel(`⚔️ 착용 무기: ${player.equipment.weapon.name}`.slice(0, 80))
+          .setLabel(`⚔️ 착용 무기`.slice(0, 80))
           .setStyle(ButtonStyle.Danger)
       )
     );
@@ -2237,7 +2237,7 @@ function buildEnhanceItemButtons(player){
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('enhance_equipped_armor')
-          .setLabel(`🛡️ 착용 갑옷: ${player.equipment.armor.name}`.slice(0, 80))
+          .setLabel(`🛡️ 착용 갑옷`.slice(0, 80))
           .setStyle(ButtonStyle.Primary)
       )
     );
@@ -2248,7 +2248,7 @@ function buildEnhanceItemButtons(player){
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('enhance_equipped_ring')
-          .setLabel(`💍 착용 반지: ${player.equipment.ring.name}`.slice(0, 80))
+          .setLabel(`💍 착용 반지`.slice(0, 80))
           .setStyle(ButtonStyle.Success)
       )
     );
@@ -2259,6 +2259,8 @@ function buildEnhanceItemButtons(player){
     .filter(({ item }) => item && ['weapon', 'armor', 'ring'].includes(item.type));
 
   for (let i = 0; i < inventoryItems.length; i += 5) {
+    if (rows.length >= 5) break; // 🔥 최대 5줄 제한
+
     const chunk = inventoryItems.slice(i, i + 5);
     if (!chunk.length) continue;
 
@@ -3137,7 +3139,7 @@ if (id === 'enhance_select') {
   }
 
   await interaction.reply({
-    content: `🔨 강화할 아이템을 선택하세요.\n\n${inventoryText(player)}`,
+    content: '🔨 강화할 아이템을 선택하세요.',
     components: rows,
     ephemeral: true
   });
