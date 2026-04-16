@@ -323,7 +323,7 @@ function reviveIfRespawnReady(player){
   if(Date.now() < player.respawnAt) return false;
 
   player.run.isDown = false;
-  player.hp = Math.max(1, Math.floor(player.maxHp));
+  player.hp = Math.max(1, Math.floor(getMaxHpWithBless(player)));
   player.respawnAt = 0;
   return true;
 }
@@ -1426,7 +1426,7 @@ function usePotionOutOfBattle(player, key){
   if((player.potions[key]||0) <= 0) return `${item.label}이 없습니다.`;
   player.potions[key] -= 1;
   player.hp = Math.min(player.maxHp, player.hp + item.heal);
-  return `${item.label} 사용! HP ${player.hp}/${player.maxHp}`;
+  return `${item.label} 사용! HP ${player.hp}/${getMaxHpWithBless(player)}`;
 }
 function usePotionInBattle(player, key){
   const item = SHOP[key];
