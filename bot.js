@@ -3144,33 +3144,6 @@ if (id === 'enhance_select') {
   return;
 }
 
-  const rows = [];
-
-  for (let i = 0; i < enhanceable.length; i += 5) {
-    const chunk = enhanceable.slice(i, i + 5);
-
-    if (chunk.length === 0) continue; // 🔥 중요
-
-    const row = new ActionRowBuilder().addComponents(
-      chunk.map(({ item, idx }) =>
-        new ButtonBuilder()
-          .setCustomId(`enhance_item_${idx}`)
-          .setLabel(item.name.slice(0, 80))
-          .setStyle(ButtonStyle.Secondary)
-      )
-    );
-
-    rows.push(row);
-  }
-
-  await interaction.reply({
-    content: '🔨 강화할 아이템 선택',
-    components: rows,
-    ephemeral: true
-  });
-
-  return;
-};
 
 if (id === 'enhance_equipped_ring') {
   await interaction.deferReply({ ephemeral: true });
