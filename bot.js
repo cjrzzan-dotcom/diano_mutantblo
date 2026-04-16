@@ -638,7 +638,8 @@ const MATERIAL_PRICES = {
 
   '디아블로의 뿔': 700,
 
-  '천상의 조각': 1000
+  '천상의 조각': 1000,
+  '디아블로의 불': 1,
 };
 
 const DUNGEON_CHANNELS_PROD = {
