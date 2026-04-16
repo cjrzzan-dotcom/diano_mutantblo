@@ -1032,6 +1032,7 @@ else if (dungeonKey === '깊은심연의숲') {
 
 function getEnhancePreviewText(player, item){
   if (!item) return '';
+  return '';
 }
 function getFileCandidate(name){
   const candidates = ['.png','.jpg','.jpeg','.webp'].map(ext => path.join(IMAGE_PATH, `${name}${ext}`));
