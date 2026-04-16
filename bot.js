@@ -2221,52 +2221,57 @@ function buildEquipmentButtons(player, page = 1){
 function buildEnhanceItemButtons(player){
   const rows = [];
 
-  if(player.equipment.weapon){
+  if (player.equipment?.weapon) {
     rows.push(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('enhance_equipped_weapon')
-          .setLabel(`⚔️ 착용 무기: ${player.equipment.weapon.name}`)
+          .setLabel(`⚔️ 착용 무기: ${player.equipment.weapon.name}`.slice(0, 80))
           .setStyle(ButtonStyle.Danger)
       )
     );
   }
 
-  if(player.equipment.armor){
+  if (player.equipment?.armor) {
     rows.push(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('enhance_equipped_armor')
-          .setLabel(`🛡️ 착용 갑옷: ${player.equipment.armor.name}`)
+          .setLabel(`🛡️ 착용 갑옷: ${player.equipment.armor.name}`.slice(0, 80))
           .setStyle(ButtonStyle.Primary)
       )
     );
   }
 
-  if(player.equipment.ring){
+  if (player.equipment?.ring) {
     rows.push(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('enhance_equipped_ring')
-          .setLabel(`💍 착용 반지: ${player.equipment.ring.name}`)
+          .setLabel(`💍 착용 반지: ${player.equipment.ring.name}`.slice(0, 80))
           .setStyle(ButtonStyle.Success)
       )
     );
   }
 
-  if(player.inventory.length){
-    for(let i = 0; i < Math.min(12, player.inventory.length); i += 4){
-      rows.push(
-        new ActionRowBuilder().addComponents(
-          ...player.inventory.slice(i, i + 4).map((item, idx) =>
-            new ButtonBuilder()
-              .setCustomId(`enhance_item_${ i }`)
-              .setLabel(`${i + idx + 1}. ${item.name}`)
-              .setStyle(ButtonStyle.Secondary)
-          )
+  const inventoryItems = (player.inventory || [])
+    .map((item, idx) => ({ item, idx }))
+    .filter(({ item }) => item && ['weapon', 'armor', 'ring'].includes(item.type));
+
+  for (let i = 0; i < inventoryItems.length; i += 5) {
+    const chunk = inventoryItems.slice(i, i + 5);
+    if (!chunk.length) continue;
+
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        ...chunk.map(({ item, idx }) =>
+          new ButtonBuilder()
+            .setCustomId(`enhance_item_${idx}`)
+            .setLabel(`${item.name}${getEnhanceLevelText(item)}`.slice(0, 80))
+            .setStyle(ButtonStyle.Secondary)
         )
-      );
-    }
+      )
+    );
   }
 
   return rows;
@@ -3121,17 +3126,23 @@ if (id === 'enhance_equipped_armor') {
 }
 
 if (id === 'enhance_select') {
-  const enhanceable = player.inventory
-    .map((item, idx) => ({ item, idx }))
-    .filter(({ item }) => item && ['weapon','armor','ring'].includes(item.type));
+  const rows = buildEnhanceItemButtons(player);
 
-  if (enhanceable.length === 0) {
+  if (!rows.length) {
     await interaction.reply({
-      content: '강화할 아이템 없음',
+      content: '강화할 아이템이 없습니다.',
       ephemeral: true
     });
     return;
   }
+
+  await interaction.reply({
+    content: `🔨 강화할 아이템을 선택하세요.\n\n${inventoryText(player)}`,
+    components: rows,
+    ephemeral: true
+  });
+  return;
+}
 
   const rows = [];
 
