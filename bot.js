@@ -1075,10 +1075,6 @@ else if (dungeonKey === '깊은심연의숲') {
   };
 }
 
-function getEnhancePreviewText(player, item){
-  if (!item) return '';
-  return '';
-}
 function getFileCandidate(name){
   const candidates = ['.png','.jpg','.jpeg','.webp'].map(ext => path.join(IMAGE_PATH, `${name}${ext}`));
   for(const f of candidates) if(fs.existsSync(f)) return f;
@@ -3125,11 +3121,11 @@ if (id === 'enhance_equipped_armor') {
 }
 
 if (id === 'enhance_select') {
-  const items = player.inventory
-    .map((item, i) => ({ item, i }))
-    .filter(({ item }) => ['weapon', 'armor', 'ring'].includes(item.type));
+  const enhanceable = player.inventory
+    .map((item, idx) => ({ item, idx }))
+    .filter(({ item }) => item && ['weapon', 'armor', 'ring'].includes(item.type));
 
-  if (items.length === 0) {
+  if (enhanceable.length === 0) {
     await interaction.reply({
       content: '강화할 수 있는 아이템이 없습니다.',
       ephemeral: true
@@ -3138,21 +3134,24 @@ if (id === 'enhance_select') {
   }
 
   const rows = [];
-  const buttons = items.map(({ item, i }) =>
-    new ButtonBuilder()
-      .setCustomId(`enhance_item_${i}`)
-      .setLabel(`${item.name}${getEnhanceLevelText(item)}`)
-      .setStyle(ButtonStyle.Secondary)
-  );
 
-  for (let j = 0; j < buttons.length; j += 5) {
-    rows.push(
-      new ActionRowBuilder().addComponents(buttons.slice(j, j + 5))
+  for (let i = 0; i < enhanceable.length; i += 5) {
+    const chunk = enhanceable.slice(i, i + 5);
+
+    const row = new ActionRowBuilder().addComponents(
+      chunk.map(({ item, idx }) =>
+        new ButtonBuilder()
+          .setCustomId(`enhance_item_${idx}`)
+          .setLabel(`${item.name}`.slice(0, 80))
+          .setStyle(ButtonStyle.Secondary)
+      )
     );
+
+    rows.push(row);
   }
 
   await interaction.reply({
-    content: '강화할 아이템을 선택하세요.',
+    content: '🔨 강화할 아이템을 선택하세요.',
     components: rows,
     ephemeral: true
   });
