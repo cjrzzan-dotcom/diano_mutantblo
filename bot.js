@@ -3170,7 +3170,7 @@ if (id === 'enhance_select') {
   });
 
   return;
-}
+};
 
 if (id === 'enhance_equipped_ring') {
   await interaction.deferReply({ ephemeral: true });
