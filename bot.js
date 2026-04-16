@@ -640,6 +640,7 @@ const MATERIAL_PRICES = {
 
   '천상의 조각': 1000,
   '디아블로의 불': 1,
+ '세계석조각': 2,
 };
 
 const DUNGEON_CHANNELS_PROD = {
