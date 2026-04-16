@@ -1,6 +1,8 @@
-
+require('dotenv').config();
 
 const path = require('path');
+const fs = require('fs');
+const { MongoClient } = require('mongodb');
 
 const MODE = process.env.MODE || 'test';
 
@@ -12,8 +14,6 @@ const DATA_FILE = path.join(
 );
 
 console.log("MONGO_URI 있음?", !!process.env.MONGO_URI);
-
-const { MongoClient } = require('mongodb');
 
 let mongoClient;
 let db;
@@ -150,6 +150,14 @@ async function savePlayer(playerOrUserId){
   );
 }
 
+async function safeSave(playerOrUserId){
+  try {
+    await savePlayer(playerOrUserId);
+  } catch (err) {
+    console.error('❌ safeSave 실패:', err);
+  }
+}
+
 async function saveData(){
   if (!playersCol) throw new Error('playersCol 없음');
 
@@ -184,7 +192,6 @@ async function saveData(){
   console.log(`✅ saveData 완료 (${entries.length}명)`);
 }
 
-
 console.log("버전2");
 
 const ALLOWED_CATEGORY_IDS = process.env.ALLOWED_CATEGORY_IDS
@@ -201,14 +208,12 @@ const {
   EmbedBuilder,
   AttachmentBuilder,
 } = require('discord.js');
-const fs = require('fs');
-
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
-require('dotenv').config();
+
 
 const AUTO_HUNT_CHARGE_MS = 1 * 60 * 1000; // 1분
 const AUTO_HUNT_MAX_CHARGES = 50;
@@ -248,7 +253,7 @@ async function sendOrUpdateBattleMessage(interaction, player, payload){
   const sent = await channel.send(payload);
   player.battleMessageId = sent.id;
   player.battleChannelId = channel.id;
-  await safeSave();
+  await safeSave(player);
   return sent;
 }
 
@@ -310,9 +315,6 @@ function tryTemperItem(player, item){
   return '❌ 담금질할 수 없는 아이템 종류입니다.';
 }
 
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
 
 function reviveIfRespawnReady(player){
   if(!player.run) return false;
@@ -2265,7 +2267,7 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
 
   player.run.target = player.run.nextTarget;
   player.run.nextTarget = null;
-  await safeSave();
+  await safeSave(player);
 
   await interaction.message.edit(buildIntroPayload(dungeonKey, player.run.target));
   await sleep(INTRO_DELAY_MS);
@@ -2346,7 +2348,7 @@ client.on('messageCreate', async (message) => {
     player.materials[matName] -= amount;
     player.gold += total;
 
-    await safeSave();
+    await safeSave(player);
 
     await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
     return;
@@ -2355,7 +2357,7 @@ client.on('messageCreate', async (message) => {
 
 if(command === '!가방'){
     console.log("📦 !가방 분기 들어옴");
-    await safeSave();
+    await safeSave(player);
     await message.reply({ content: buildBagText(player) });
     return;
 }
@@ -2391,7 +2393,7 @@ if (command === '!스탯초기화') {
   // 필요하면 여기 숫자 계산 방식은 나중에 바꿔도 됨
 targetPlayer.statPoints = (targetPlayer.level || 1) * 3;
 
-  await safeSave();
+  await safeSave(player);
   await message.reply(`✅ ${target.username}의 스탯을 초기화했습니다.`);
   return;
 }
@@ -2428,7 +2430,7 @@ if (command === '!재료주기') {
 
   targetPlayer.materials[matName] = (targetPlayer.materials[matName] || 0) + amount;
 
-  await safeSave();
+  await safeSave(player);
   await message.reply(`✅ ${target.username}에게 ${matName} ${amount}개를 지급했습니다.`);
   return;
 }
@@ -2457,14 +2459,14 @@ if (command === '!골드주기') {
 
   targetPlayer.gold = (targetPlayer.gold || 0) + amount;
 
-  await safeSave();
+  await safeSave(player);
   await message.reply(`✅ ${target.username}에게 ${amount}골드를 지급했습니다.`);
   return;
 }
 
 
   if(command === '!상태'){
-    await safeSave();
+    await safeSave(player);
     await message.reply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
     return;
   }
@@ -2498,7 +2500,7 @@ if(command === '!제작목록'){
       return;
     }
     const res = tryCraft(player, craftId);
-    await safeSave();
+    await safeSave(player);
     await message.reply(res.text);
     return;
   }
@@ -2506,7 +2508,7 @@ if(command === '!제작목록'){
     const idx = Number(arg) - 1;
     if(Number.isNaN(idx)){ await message.reply('사용법: !장착 1'); return; }
     const text = equipItemByIndex(player, idx);
-    await safeSave();
+    await safeSave(player);
     await message.reply(text);
     return;
   }
@@ -2535,7 +2537,7 @@ if(command === '!자동'){
   }
 
   player.autoHuntCharges -= 1;
-  await safeSave();
+  await safeSave(player);
 
   if(!dungeonKey){
     await message.reply('이 명령어는 던전 채널에서만 가능합니다.');
@@ -2548,7 +2550,7 @@ if(command === '!자동'){
   }
 
   createRunIfNeeded(player, dungeonKey);
-  await safeSave();
+  await safeSave(player);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -2598,7 +2600,7 @@ if(command === '!자동'){
     if(Date.now() < player.respawnAt) break;
   }
 
-  await safeSave();
+  await safeSave(player);
 
   // 3) 전투 로그 UI로 전환
   await introMsg.edit(
@@ -2697,7 +2699,7 @@ if (id === 'craft_cat_material') {
 
     const result = tryTemperItem(player, item);
 
-    await safeSave();
+    await safeSave(player);
 
     await interaction.editReply({
       content: result,
@@ -2718,7 +2720,7 @@ if (id === 'craft_cat_material') {
     player.inventory.splice(index, 1);
     player.gold += getItemSellPrice(item);
 
-    await safeSave();
+    await safeSave(player);
 
     await interaction.reply({
       content: `💰 판매 완료`,
@@ -2742,7 +2744,7 @@ if (id === 'bless_weapon' || id === 'bless_armor' || id === 'bless_ring') {
   if (id === 'bless_ring') item = player.equipment.ring;
 
   const result = tryBlessItem(player, item);
-  await saveData();
+  await safeSave(player);
 
   await interaction.update({
     content: result,
@@ -2786,7 +2788,7 @@ if (id.startsWith('private_start_')) {
 
   createRunIfNeeded(player, startKey);
   player.run.lastDrops = [];
-  await safeSave();
+  await safeSave(player);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -2809,7 +2811,7 @@ if (id.startsWith('private_start_')) {
 
   // 마을/던전 공통으로 열려야 하는 버튼들
 if (id === 'status') {
-  await safeSave();
+  await safeSave(player);
   await interaction.reply({
     content: buildFullStatusText(player),
     components: buildStatusButtons(player),
@@ -2928,7 +2930,7 @@ if (id === 'buy_big_10') {
   player.gold -= cost;
   player.potions.big = (player.potions.big || 0) + 10;
 
-  await safeSave();
+  await safeSave(player);
 
   await interaction.reply({
     content:
@@ -2971,7 +2973,7 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
   player.gold -= buy.price;
   player.potions[buy.key] = (player.potions[buy.key] || 0) + 1;
 
-  await safeSave();
+  await safeSave(player);
 
   await interaction.reply({
     content:
@@ -3011,7 +3013,7 @@ if (id.startsWith('enhance_item_')) {
   }
 
   const text = tryEnhanceItem(player, item);
-  await saveData();
+  await safeSave(player);
 
   await interaction.editReply({
     content: `${text}\n\n${getEnhancePreviewText(player, item)}`
@@ -3032,7 +3034,7 @@ if (id === 'enhance_equipped_weapon') {
   }
 
   const text = tryEnhanceItem(player, item);
-  await saveData();
+  await safeSave(player);
 
   await interaction.editReply({
     content: `${text}\n\n${getEnhancePreviewText(player, item)}`
@@ -3053,7 +3055,7 @@ if (id === 'enhance_equipped_armor') {
   }
 
   const text = tryEnhanceItem(player, item);
-  await saveData();
+  await safeSave(player);
 
   await interaction.editReply({
     content: `${text}\n\n${getEnhancePreviewText(player, item)}`
@@ -3074,7 +3076,7 @@ if (id === 'enhance_equipped_ring') {
   }
 
   const text = tryEnhanceItem(player, item);
-  await saveData();
+  await safeSave(player);
 
   await interaction.editReply({
     content: `${text}\n\n${getEnhancePreviewText(player, item)}`
@@ -3088,7 +3090,7 @@ if (id === 'enhance_equipped_ring') {
 if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
   const craftId = id.replace('craft_', '');
   const res = tryCraft(player, craftId);
-  await safeSave();
+  await safeSave(player);
   await interaction.reply({
     content: res.text,
     ephemeral: true
@@ -3099,7 +3101,7 @@ if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_
 if (id.startsWith('equip_')) {
   const idx = Number(id.replace('equip_', ''));
   const text = equipItemByIndex(player, idx);
-  await safeSave();
+  await safeSave(player);
   await interaction.reply({
     content: `${text}\n\n${equipmentText(player)}`,
     ephemeral: true
@@ -3184,7 +3186,7 @@ if (id === 'revive') {
 }
 
 
-  await safeSave();
+  await safeSave(player);
 
 
 
@@ -3194,7 +3196,7 @@ if (id.startsWith('use_')) {
 
   if (player.run?.target && dungeonKey) {
     const result = usePotionInBattle(player, key);
-    await safeSave();
+    await safeSave(player);
 
     await interaction.update(
       buildBattlePayload(player, interaction.channelId, dungeonKey, result.logs.join('\n'))
@@ -3203,7 +3205,7 @@ if (id.startsWith('use_')) {
   }
 
   const text = usePotionOutOfBattle(player, key);
-  await safeSave();
+  await safeSave(player);
 
   await interaction.reply({
     content: text,
@@ -3242,7 +3244,7 @@ if (id === 'auto') {
 
   player.autoHuntCharges -= 1;
   createRunIfNeeded(player, dungeonKey);
-  await safeSave();
+  await safeSave(player);
 
   const introTarget = player.run?.target || player.run?.nextTarget;
 
@@ -3300,7 +3302,7 @@ await interaction.editReply(
     if (Date.now() < player.respawnAt) break;
   }
 
-  await safeSave();
+  await safeSave(player);
 
   // =========================
   // 4) 전투 로그 UI 출력
@@ -3325,7 +3327,7 @@ if (id === 'attack') {
         player.run.lastDrops = [];
         player.run.target = player.run.nextTarget;
         player.run.nextTarget = null;
-        await safeSave();
+        await safeSave(player);
 
 await interaction.editReply(
   buildIntroPayload(dungeonKey, player.run.target)
@@ -3354,7 +3356,7 @@ await interaction.editReply(
         if (!player.run?.target && player.run?.nextTarget) break;
       }
 
-      await safeSave();
+      await safeSave(player);
 
 await interaction.editReply(
   buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
