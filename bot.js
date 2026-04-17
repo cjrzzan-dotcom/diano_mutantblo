@@ -419,7 +419,7 @@ function createRandomOptionsByRarity(rarityKey){
   if (rarityKey === 'rare') { min = 0; max = 1; }
   if (rarityKey === 'epic') { min = 1; max = 2; }
   if (rarityKey === 'unique') { min = 2; max = 3; }
-  if (rarityKey === 'legendary') { min = 3; max = 4; }
+  if (rarityKey === 'legendary') { min = 5; max = 5; }
 
   const count = randInt(min, max);
 
