@@ -1922,6 +1922,8 @@ function buildCompactBattleText(player,target,channelId){
   }
 
   const maxHp = getMaxHpWithBless(player); // 🔥 핵심
+  if (player.hp > maxHp) player.hp = maxHp;
+
 
   lines.push(`<#${channelId}>`);
   lines.push(`❤️ ${player.hp}/${maxHp}`); // 🔥 여기 바뀜
