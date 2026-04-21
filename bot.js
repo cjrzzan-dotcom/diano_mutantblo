@@ -2052,18 +2052,26 @@ function buildBattleButtons(player, dungeonKey){
   const down = !!player.run?.isDown;
 
   return [
+    // 1줄
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('attack').setLabel('⚔️ 공격').setStyle(ButtonStyle.Danger).setDisabled(down),
       new ButtonBuilder().setCustomId('use_small').setLabel('💊').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_mid').setLabel('🍗').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
     ),
+
+    // 2줄
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),     
       new ButtonBuilder().setCustomId('use_big').setLabel('🍖').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_elixir').setLabel('🧪').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('auto').setLabel(canAuto ? '🤖 자동' : '자동불가').setStyle(canAuto ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canAuto || down),
-      
+    ),
+
+    // 🔥 3줄 (신규 물약)
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('use_large').setLabel('🥩').setStyle(ButtonStyle.Secondary).setDisabled(down),
+      new ButtonBuilder().setCustomId('use_huge').setLabel('🍖🍖').setStyle(ButtonStyle.Secondary).setDisabled(down),
     ),
   ];
 }
