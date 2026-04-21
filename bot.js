@@ -745,7 +745,7 @@ const CRAFTS = [
 { id:'lightning_sword', label:'천상의 심판', type:'weapon', materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
 { id:'lightning_armor', label:'천상의 갑주', type:'armor', materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
 
-{ id:'corrupted_judgement, label:'오염된 천상의 심판', type:'weapon', materials:{ '오염된세계석파편':5, '고급장비조각' :100 },  base:{atk:95,def:15} },
+{ id:'corrupted_judgement', label:'오염된 천상의 심판', type:'weapon', materials:{ '오염된세계석파편':5, '고급장비조각' :100 },  base:{atk:95,def:15} },
 { id:'corrupted_armor', label:'오염된 천상의 갑주', type:'armor', materials:{ '오염된세계석파편':5, '고급장비조각' :100 }, base:{atk:15,def:80} },
 
 
