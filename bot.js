@@ -2095,7 +2095,6 @@ function buildShopButtons(){
 
     // 3줄: 묶음
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('buy_big_10').setLabel('🍖×10 (1000G)').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_large_10').setLabel('🥩×10 (3500G)').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_huge_10').setLabel('🍖🍖×10 (5000G)').setStyle(ButtonStyle.Secondary),
     )
