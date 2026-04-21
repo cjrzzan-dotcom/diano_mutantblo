@@ -742,8 +742,13 @@ const CRAFTS = [
 { id:'lilith_ring', label:'릴리트의 반지', type:'ring', materials:{ '릴리트의 뿔':20 }, ringRandom:true, base:{atk:0,def:0} },
 { id:'end_sword', label:'종말의검', type:'weapon', materials:{ '디아블로의 뿔':20 }, base:{atk:88,def:0} },
 
-{ id:'lilith_sword', label:'천상의 심판', type:'weapon', materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
-{ id:'end_armor', label:'천상의 갑주', type:'armor', materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
+{ id:'lightning_sword', label:'천상의 심판', type:'weapon', materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
+{ id:'lightning_armor', label:'천상의 갑주', type:'armor', materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
+
+{ id:'corrupted_judgement, label:'오염된 천상의 심판', type:'weapon', materials:{ '오염된세계석파편':5, '고급장비조각' :100 },  base:{atk:95,def:15} },
+{ id:'corrupted_armor', label:'오염된 천상의 갑주', type:'armor', materials:{ '오염된세계석파편':5, '고급장비조각' :100 }, base:{atk:15,def:80} },
+
+
 {
   id: 'make_high_frag',
   label: '고급장비조각',
@@ -1249,6 +1254,25 @@ if(['메피스토','디아블로'].includes(monsterName) && chance(35)) {
 if(monsterName === '종말의 화신 디아블로' && chance(40)) {
   drops.push(['세계석조각', 1]);
 }
+
+const uberHellSet = [
+  '우버 레오릭 왕',
+  '우버 안다리엘',
+  '우버 두리엘',
+  '우버 바알',
+  '우버 디아블로',
+  '우버 메피스토',
+  '우버 릴리트',
+  '우버 종말의 화신 디아블로'
+];
+
+if (uberHellSet.includes(monsterName)) {
+  if (chance(35)) drops.push(['오염된세계석조각', 1]);
+  if (chance(50)) drops.push(['고급장비조각', 1]);
+}
+
+
+
   return drops;
 }
 
