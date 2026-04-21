@@ -1452,23 +1452,31 @@ function usePotionOutOfBattle(player, key){
   const item = SHOP[key];
   if(!item) return '잘못된 물약입니다.';
   if((player.potions[key]||0) <= 0) return `${item.label}이 없습니다.`;
+
+  const maxHp = getMaxHpWithBless(player);
+
   player.potions[key] -= 1;
-  player.hp = Math.min(player.maxHp, player.hp + item.heal);
-  return `${item.label} 사용! HP ${player.hp}/${getMaxHpWithBless(player)}`;
+  player.hp = Math.min(maxHp, player.hp + item.heal);
+
+  return `${item.label} 사용! HP ${player.hp}/${maxHp}`;
 }
+
 function usePotionInBattle(player, key){
   const item = SHOP[key];
   if(!item) return { logs:['잘못된 물약입니다.'] };
   if((player.potions[key]||0) <= 0) return { logs:[`${item.label}이 없습니다.`] };
   if(!player.run?.target) return { logs:['현재 전투 중인 몬스터가 없습니다.'] };
   if(player.run.isDown) return { logs:['쓰러진 상태입니다. 먼저 부활권을 사용하세요.'] };
+
+  const maxHp = getMaxHpWithBless(player);
+
   player.potions[key] -= 1;
-  player.hp = Math.min(player.maxHp, player.hp + item.heal);
-  const logs = [`${item.label} 사용! HP ${player.hp}/${player.maxHp}`];
+  player.hp = Math.min(maxHp, player.hp + item.heal);
+
+  const logs = [`${item.label} 사용! HP ${player.hp}/${maxHp}`];
   enemyAttack(player, player.run.target, logs);
   return { logs };
 }
-
 
 function performAttack(player, dungeonKey){
   const result = { logs:[], killedTarget:null, levelUps:[], clearedDungeon:false };
@@ -3350,7 +3358,7 @@ if (id === 'revive') {
   }
 
   player.reviveTickets -= 1;
-  player.hp = Math.max(1, Math.floor(player.maxHp));
+  player.hp = Math.max(1, Math.floor(getMaxHpWithBless(player)));
   player.run.isDown = false;
   player.respawnAt = 0;
 
