@@ -1910,6 +1910,7 @@ function buildBagText(player){
 
 function buildCompactBattleText(player,target,channelId){
   const lines = [];
+
   if(target){
     lines.push(`👿 ${target.name}`);
     lines.push(`❤️ ${target.currentHp}/${target.hp}`);
@@ -1919,10 +1920,17 @@ function buildCompactBattleText(player,target,channelId){
     lines.push('👿 몬스터 없음');
     lines.push('━━━━━━━━━━');
   }
+
+  const maxHp = getMaxHpWithBless(player); // 🔥 핵심
+
   lines.push(`<#${channelId}>`);
-  lines.push(`❤️ ${player.hp}/${player.maxHp}`);
+  lines.push(`❤️ ${player.hp}/${maxHp}`); // 🔥 여기 바뀜
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
-  lines.push(`💊 ${player.potions.small} / 🍗 ${player.potions.mid} / 🍖 ${player.potions.big} / 🧪 ${player.potions.elixir}`);
+
+  // 🔥 물약 표시 확장
+  lines.push(
+    `💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`
+  );
 
   return lines.join('\n');
 }
