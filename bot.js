@@ -690,6 +690,8 @@ const SHOP = {
   small: { label: '💊 작은물약', heal: 10, price: 10 },
   mid: { label: '🍗 중간물약', heal: 30, price: 30 },
   big: { label: '🍖 큰물약', heal: 100, price: 100 },
+  large: { label: '🥩 대형물약', heal: 200, price: 350 },
+  huge: { label: '🍖🍖 특대물약', heal: 300, price: 500 },
   elixir: { label: '🧪 엘릭서', heal: 99999, price: 3000 },
 };
 
@@ -2077,19 +2079,28 @@ function buildStatusButtons(player){
 }
 function buildShopButtons(){
   return [
+    // 1줄: 기본 물약
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('buy_small').setLabel('💊 10G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_mid').setLabel('🍗 30G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_big').setLabel('🍖 100G').setStyle(ButtonStyle.Secondary),
-  
     ),
+
+    // 2줄: 신규 물약
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('buy_large').setLabel('🥩 350G').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_huge').setLabel('🍖🍖 500G').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_elixir').setLabel('🧪 3000G').setStyle(ButtonStyle.Secondary),
+    ),
+
+    // 3줄: 묶음
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('buy_big_10').setLabel('🍖×10 (1000G)').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('buy_elixir').setLabel('🧪 3000G').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_large_10').setLabel('🥩×10 (3500G)').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_huge_10').setLabel('🍖🍖×10 (5000G)').setStyle(ButtonStyle.Secondary),
     )
   ];
 }
-
 function craftListText(player){
   return CRAFTS.map(c => {
     const mats = Object.entries(c.materials)
@@ -2536,7 +2547,7 @@ if (command === '!골드주기') {
     await message.reply({ content:buildFullStatusText(player), components:buildStatusButtons(player) });
     return;
   }
-   if(command === '!상점'){
+if(command === '!상점'){
   await message.reply({
     content:
 `🏪 상점
@@ -2546,6 +2557,8 @@ if (command === '!골드주기') {
 💊 작은물약 10G
 🍗 중간물약 30G
 🍖 큰물약 100G
+🥩 대형물약 350G
+🍖🍖 특대물약 500G
 🧪 엘릭서 3000G`,
     components: buildShopButtons()
   });
@@ -2898,9 +2911,9 @@ if (id === 'status') {
 
 
 
-  if (id === 'shop') {
-    await interaction.reply({
-      content:
+if (id === 'shop') {
+  await interaction.reply({
+    content:
 `🏪 상점
 
 💰 보유 골드: ${player.gold}
@@ -2909,12 +2922,16 @@ if (id === 'status') {
 🍗 중간물약 30G
 🍖 큰물약 100G
 🍖 x 10 큰물약 1000G
+🥩 대형물약 350G
+🥩 x 10 대형물약 3500G
+🍖🍖 특대물약 500G
+🍖🍖 x 10 특대물약 5000G
 🧪 엘릭서 3000G`,
-      components: buildShopButtons(),
-      ephemeral: true
-    });
-    return;
-  }
+    components: buildShopButtons(),
+    ephemeral: true
+  });
+  return;
+}
 
 if (id === 'craft_list') {
   await interaction.reply({
@@ -2982,42 +2999,78 @@ if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
   return;
 }
 
-if (id === 'buy_big_10') {
-  const cost = 1000;
+if (id === 'buy_large_10') {
+  const cost = 3500;
 
   if (player.gold < cost) {
     await interaction.reply({
-      content: '❌ 골드가 부족합니다. (큰물약 10개 1000G)',
+      content: '❌ 골드가 부족합니다. (대형물약 10개 3500G)',
       ephemeral: true
     });
     return;
   }
 
   player.gold -= cost;
-  player.potions.big = (player.potions.big || 0) + 10;
+  player.potions.large = (player.potions.large || 0) + 10;
 
   await safeSave(player);
 
   await interaction.reply({
     content:
-`✅ 큰물약 10개 구매 완료!
+`✅ 대형물약 10개 구매 완료!
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`,
     ephemeral: true
   });
   return;
 }
 
-if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_elixir') {
-  const shopMap = {
-    buy_small: { key: 'small', name: '작은물약', price: 10 },
-    buy_mid: { key: 'mid', name: '중간물약', price: 30 },
-    buy_big: { key: 'big', name: '큰물약', price: 100 },
-    buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000 },
-  };
+if (id === 'buy_huge_10') {
+  const cost = 5000;
 
+  if (player.gold < cost) {
+    await interaction.reply({
+      content: '❌ 골드가 부족합니다. (특대물약 10개 5000G)',
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.gold -= cost;
+  player.potions.huge = (player.potions.huge || 0) + 10;
+
+  await safeSave(player);
+
+  await interaction.reply({
+    content:
+`✅ 특대물약 10개 구매 완료!
+
+💰 남은 골드: ${player.gold}
+🧪 보유 물약:
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`,
+    ephemeral: true
+  });
+  return;
+}
+
+if (
+  id === 'buy_small' ||
+  id === 'buy_mid' ||
+  id === 'buy_big' ||
+  id === 'buy_large' ||
+  id === 'buy_huge' ||
+  id === 'buy_elixir'
+) {
+const shopMap = {
+  buy_small: { key: 'small', name: '작은물약', price: 10 },
+  buy_mid: { key: 'mid', name: '중간물약', price: 30 },
+  buy_big: { key: 'big', name: '큰물약', price: 100 },
+  buy_large: { key: 'large', name: '대형물약', price: 350 },
+  buy_huge: { key: 'huge', name: '특대물약', price: 500 },
+  buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000 },
+};
   const buy = shopMap[id];
 
   if (!buy) {
@@ -3041,15 +3094,15 @@ if (id === 'buy_small' || id === 'buy_mid' || id === 'buy_big' || id === 'buy_el
 
   await safeSave(player);
 
-  await interaction.reply({
-    content:
+await interaction.reply({
+  content:
 `✅ ${buy.name} 1개 구매 완료!
 
 💰 남은 골드: ${player.gold}
 🧪 보유 물약:
-💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🧪 ${player.potions.elixir || 0}`,
-    ephemeral: true
-  });
+💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`,
+  ephemeral: true
+});
   return;
 }
 
