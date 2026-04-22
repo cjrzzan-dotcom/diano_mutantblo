@@ -596,8 +596,10 @@ function getItemSellPrice(item){
 const IMAGE_PATH = path.join(__dirname, 'images');
 const INTRO_DELAY_MS = 1000;
 const TEMP_DROP_DELETE_MS = 5000;
-const TOWN_CHANNEL_ID = '1487955862940024862';
-
+const TOWN_CHANNEL_IDS = new Set([
+  '1487955862940024862',
+  '1486949446171365449'
+]);
 
 
 const MATERIAL_PRICES = {
@@ -709,7 +711,9 @@ const MATERIALS = [
   '슬라임젤리', '늑대가죽', '고블린뼈조각', '오우거가죽', '작은 용비늘', '낡은장비조각',
   '드래곤 비늘', '드래곤 발톱', '번개조각', '얼음조각', '붉은화염조각', '푸른화염조각', '어둠조각',
   '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각', '암흑의 조각',
-  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','천상의 조각','천상석','세계석조각','오염된세계석조각',
+  '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', 
+  '릴리트의 뿔', '디아블로의 뿔', '고급장비조각',
+  '천상의 조각','천상석','세계석조각','오염된세계석조각',
 ];
 
 const CRAFTS = [
@@ -2781,7 +2785,7 @@ if (command === '!시작') {
     return;
   }
 
-  const isTown = message.channel.id === TOWN_CHANNEL_ID;
+  const isTown = TOWN_CHANNEL_IDS.has(message.channel.id)
 
 
   const startKey = isTown ? 'town' : dungeonKey;
