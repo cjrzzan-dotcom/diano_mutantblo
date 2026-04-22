@@ -1646,6 +1646,10 @@ function canCraft(player, recipe){
   for(const [mat, need] of Object.entries(recipe.materials)){
     if((player.materials[mat]||0) < need) return false;
   }
+
+  // 🔥 골드 체크 추가
+  if ((player.gold || 0) < (recipe.gold || 0)) return false;
+
   return true;
 }
 
@@ -1666,7 +1670,7 @@ function createCraftItem(recipe){
     dodgeBonus: 0,
   };
 
-  // 🔥 여기 추가 (무기/방어구 랜덤 옵션)
+  // 🔥 무기/방어구 랜덤 옵션
   if (recipe.type === 'weapon' || recipe.type === 'armor') {
     const randomOptions = createRandomOptionsByRarity(rarity.key);
 
@@ -1677,7 +1681,7 @@ function createCraftItem(recipe){
     item.dodgeBonus += randomOptions.dodgeBonus;
   }
 
-  // 기존 반지 랜덤 유지
+  // 반지 랜덤
   if (recipe.ringRandom) {
     Object.assign(item, createRingStats(recipe.id));
   }
@@ -1693,7 +1697,7 @@ function createRingStats(recipeId){
 
   const picked = [];
   while (picked.length < count) {
-    const k = pick(pool);
+    const k = pick(pool); // 🔥 버그 수정
     if (!picked.includes(k)) picked.push(k);
   }
 
@@ -1718,14 +1722,22 @@ function createRingStats(recipeId){
 function tryCraft(player, craftId){
   const recipe = CRAFT_BY_ID[craftId];
   if(!recipe) return { ok:false, text:'없는 제작식입니다.' };
-  if(!canCraft(player, recipe)) return { ok:false, text:'재료가 부족합니다.' };
 
-  // 재료 차감
+  if(!canCraft(player, recipe)){
+    return { ok:false, text:'❌ 재료 또는 골드가 부족합니다.' };
+  }
+
+  const needGold = recipe.gold || 0;
+
+  // 🔥 재료 차감
   for(const [mat, need] of Object.entries(recipe.materials)){
     player.materials[mat] -= need;
   }
 
-  // ⭐ 여기 추가된 핵심 (재료 제작)
+  // 🔥 골드 차감
+  player.gold -= needGold;
+
+  // 🔥 재료 제작
   if (recipe.type === 'material') {
     if (!player.materials) player.materials = {};
 
@@ -1737,15 +1749,24 @@ function tryCraft(player, craftId){
       .map(([mat, amount]) => `${mat} ${amount}개`)
       .join(', ');
 
-    return { ok:true, text:`🛠️ 제작 성공!\n${madeText}` };
+    return { 
+      ok:true, 
+      text:`🛠️ 제작 성공!\n${madeText}${needGold ? ` (-${needGold}G)` : ''}` 
+    };
   }
 
-  // ⭐ 장비 제작
+  // 🔥 장비 제작
   const item = createCraftItem(recipe);
   player.inventory.push(item);
 
-  return { ok:true, item, text:`🛠️ 제작 성공!\n${formatItemName(item)}` };
+  return { 
+    ok:true, 
+    item, 
+    text:`🛠️ 제작 성공!\n${formatItemName(item)}${needGold ? ` (-${needGold}G)` : ''}` 
+  };
 }
+
+
 function equipItemByIndex(player, idx){
   const item = player.inventory[idx];
   if(!item) return '없는 아이템입니다.';
