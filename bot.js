@@ -2675,7 +2675,7 @@ if (command === '!아이템지급') {
     };
   } else if (kind === '링') {
     item = {
-      name: '🔥 절대반지,
+      name: '🔥 절대반지',
       type: 'ring',
       rarity: 'legendary',
       rarityLabel: '전설',
