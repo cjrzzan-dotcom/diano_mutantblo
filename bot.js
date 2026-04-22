@@ -1894,6 +1894,20 @@ function inventoryText(player, page = 1){
     .join('\n');
 }
 
+function getEquippedText(player){
+  const w = player.equipment?.weapon;
+  const a = player.equipment?.armor;
+  const r = player.equipment?.ring;
+
+  return [
+    `⚔️ 무기: ${w ? formatItemName(w) : '없음'}`,
+    `🛡️ 방어구: ${a ? formatItemName(a) : '없음'}`,
+    `💍 반지: ${r ? formatItemName(r) : '없음'}`
+  ].join('\n');
+}
+
+
+
 function buildFullStatusText(player){
   const eq = getEquippedBonuses(player);
 
