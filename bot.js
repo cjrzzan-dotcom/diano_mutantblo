@@ -2631,18 +2631,18 @@ if (command === '!아이템지급') {
 
   if (kind === '검') {
     item = {
-      name: '🔥 관리자 지급 검',
+      name: '🔥 절대검',
       type: 'weapon',
       rarity: 'legendary',
       rarityLabel: '전설',
 
-      atkBonus: 143,
-      defBonus: 26,
-      critChanceBonus: 0,
-      critDamageBonus: 8,
-      dodgeBonus: 0,
+      atkBonus: 50000,
+      defBonus: 1000,
+      critChanceBonus: 100,
+      critDamageBonus: 100,
+      dodgeBonus: 100,
 
-      enhanceLevel: 9,
+      enhanceLevel: 10,
       temperCount: 5,
 
       blessing: {
@@ -2653,40 +2653,40 @@ if (command === '!아이템지급') {
     };
   } else if (kind === '갑옷') {
     item = {
-      name: '🔥 관리자 지급 갑옷',
+      name: '🔥 절대갑옷',
       type: 'armor',
       rarity: 'legendary',
       rarityLabel: '전설',
 
-      atkBonus: 14,
-      defBonus: 118,
-      critChanceBonus: 0,
-      critDamageBonus: 13,
-      dodgeBonus: 2,
+      atkBonus: 10000,
+      defBonus: 10000,
+      critChanceBonus: 100,
+      critDamageBonus: 100,
+      dodgeBonus: 100,
 
-      enhanceLevel: 9,
+      enhanceLevel: 10,
       temperCount: 5,
 
       blessing: {
-        key: 'flatDef',
-        label: '방어력 +20',
-        value: 20
+        key: 'reflect',
+        label: '데미지반사 50000%',
+        value: 50000
       }
     };
   } else if (kind === '링') {
     item = {
-      name: '🔥 관리자 지급 링',
+      name: '🔥 절대반지,
       type: 'ring',
       rarity: 'legendary',
       rarityLabel: '전설',
 
       atkBonus: 23,
-      defBonus: 18,
-      critChanceBonus: 15,
-      critDamageBonus: 23,
-      dodgeBonus: 15,
+      defBonus: 100,
+      critChanceBonus: 35,
+      critDamageBonus: 500,
+      dodgeBonus: 30,
 
-      enhanceLevel: 9,
+      enhanceLevel: 10,
       temperCount: 5
     };
   } else {
