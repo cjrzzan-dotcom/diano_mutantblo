@@ -2609,6 +2609,98 @@ if (command === '!재료주기') {
   return;
 }
 
+if (command === '!아이템지급') {
+  if (!isAdmin(message)) return;
+
+  const target = message.mentions.users.first();
+  if (!target) {
+    await message.reply('유저 멘션 필요');
+    return;
+  }
+
+  const args = message.content.trim().split(/\s+/);
+  const kind = args[2];
+
+  if (!kind) {
+    await message.reply('사용법: !아이템지급 @유저 검/갑옷/링');
+    return;
+  }
+
+  const player = getPlayer(target.id);
+  let item;
+
+  if (kind === '검') {
+    item = {
+      name: '🔥 관리자 지급 검',
+      type: 'weapon',
+      rarity: 'legendary',
+      rarityLabel: '전설',
+
+      atkBonus: 143,
+      defBonus: 26,
+      critChanceBonus: 0,
+      critDamageBonus: 8,
+      dodgeBonus: 0,
+
+      enhanceLevel: 9,
+      temperCount: 5,
+
+      blessing: {
+        key: 'lifesteal',
+        label: '흡혈 15%',
+        value: 15
+      }
+    };
+  } else if (kind === '갑옷') {
+    item = {
+      name: '🔥 관리자 지급 갑옷',
+      type: 'armor',
+      rarity: 'legendary',
+      rarityLabel: '전설',
+
+      atkBonus: 14,
+      defBonus: 118,
+      critChanceBonus: 0,
+      critDamageBonus: 13,
+      dodgeBonus: 2,
+
+      enhanceLevel: 9,
+      temperCount: 5,
+
+      blessing: {
+        key: 'flatDef',
+        label: '방어력 +20',
+        value: 20
+      }
+    };
+  } else if (kind === '링') {
+    item = {
+      name: '🔥 관리자 지급 링',
+      type: 'ring',
+      rarity: 'legendary',
+      rarityLabel: '전설',
+
+      atkBonus: 23,
+      defBonus: 18,
+      critChanceBonus: 15,
+      critDamageBonus: 23,
+      dodgeBonus: 15,
+
+      enhanceLevel: 9,
+      temperCount: 5
+    };
+  } else {
+    await message.reply('종류는 검 / 갑옷 / 링 중 하나로 입력');
+    return;
+  }
+
+  player.inventory.push(item);
+  await safeSave(player);
+
+  await message.reply(`✅ ${target.username}에게 ${formatItemName(item)} 지급 완료`);
+}
+
+
 if (command === '!골드주기') {
   if (!isAdmin(message)) {
     await message.reply('❌ 관리자만 사용 가능합니다.');
