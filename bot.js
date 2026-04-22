@@ -1931,18 +1931,22 @@ function buildFullStatusText(player){
   const totalMaxHp = getMaxHpWithBless(player);
   const blessHpBonus = totalMaxHp - player.maxHp;
 
-  return [
-    `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
-    `🎯 스탯포인트: ${player.statPoints}`,
-    `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성 ${blessHpBonus})`,
-    `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 축성 ${blessAtkBonus})`,
-    `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 축성 ${totalBlessFlatDef})`,
-    `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}%)`,
-    `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
-    `💨 회피: ${totalDodge}% (기본 ${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
-    `🩸 흡혈: ${totalBlessLifesteal}%`,
-    `🔁 데미지반사: ${totalBlessReflect}%`,
-  ].join('\n');
+return [
+  `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
+  `🎯 스탯포인트: ${player.statPoints}`,
+  '',
+  `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성 ${blessHpBonus})`,
+  `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 축성 ${blessAtkBonus})`,
+  `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 축성 ${totalBlessFlatDef})`,
+  `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}%)`,
+  `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
+  `💨 회피: ${totalDodge}% (기본 ${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
+  `🩸 흡혈: ${totalBlessLifesteal}%`,
+  `🔁 데미지반사: ${totalBlessReflect}%`,
+  '',
+  `📦 장착 장비`,
+  getEquippedText(player) // 🔥 핵심
+].join('\n');
 }
 
 function buildBagText(player){
