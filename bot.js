@@ -744,15 +744,15 @@ const CRAFTS = [
 { id:'butcher_axe', label:'도살자의도끼', type:'weapon', materials:{ '고급장비조각':10, '도살자의 도끼조각':15 }, base:{atk:52,def:0} },
 { id:'leoric_armor', label:'레오릭왕의갑옷', type:'armor', materials:{ '고급장비조각':15, '레오릭왕의 뼈조각':15 }, base:{atk:0,def:55} },
 { id:'demon_cloak', label:'악마의망토', type:'armor', materials:{ '고급장비조각':20, '악마의 살점':20 }, base:{atk:0,def:68} },
-{ id:'demon_sword', label:'악마의검', type:'weapon', gold:100000,  materials:{ '고급장비조각':20, '악마의 정수':20 }, base:{atk:70,def:0} },
-{ id:'lilith_ring', label:'릴리트의 반지', type:'ring', gold:100000,  materials:{ '릴리트의 뿔':20 }, ringRandom:true, base:{atk:0,def:0} },
-{ id:'end_sword', label:'종말의검', type:'weapon', gold:130000,  materials:{ '디아블로의 뿔':20 }, base:{atk:88,def:0} },
+{ id:'demon_sword', label:'악마의검', type:'weapon', gold:20000,  materials:{ '고급장비조각':20, '악마의 정수':20 }, base:{atk:70,def:0} },
+{ id:'lilith_ring', label:'릴리트의 반지', type:'ring', gold:30000,  materials:{ '릴리트의 뿔':20 }, ringRandom:true, base:{atk:0,def:0} },
+{ id:'end_sword', label:'종말의검', type:'weapon', gold:40000,  materials:{ '디아블로의 뿔':20 }, base:{atk:88,def:0} },
 
-{ id:'corrupted_judgement', label:'오염된 천상의 심판', type:'weapon', gold:150000, materials:{ '오염된세계석조각':5, '고급장비조각':100 }, base:{atk:95,def:15} },
-{ id:'corrupted_heaven_armor', label:'오염된 천상의 갑주', type:'armor', gold:150000, materials:{ '오염된세계석조각':5, '고급장비조각':100 }, base:{atk:15,def:80} },
+{ id:'corrupted_judgement', label:'오염된 천상의 심판', type:'weapon', gold:50000, materials:{ '오염된세계석조각':5, '고급장비조각':80 }, base:{atk:95,def:15} },
+{ id:'corrupted_heaven_armor', label:'오염된 천상의 갑주', type:'armor', gold:50000, materials:{ '오염된세계석조각':5, '고급장비조각':80 }, base:{atk:15,def:80} },
 
-{ id:'lightning_sword', label:'천상의 심판', type:'weapon', gold:200000,  materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
-{ id:'lightning_armor', label:'천상의 갑주', type:'armor',  gold:200000, materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
+{ id:'lightning_sword', label:'천상의 심판', type:'weapon', gold:100000,  materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
+{ id:'lightning_armor', label:'천상의 갑주', type:'armor',  gold:100000, materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
 
 
 {
