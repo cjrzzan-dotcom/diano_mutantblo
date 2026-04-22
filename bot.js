@@ -598,7 +598,9 @@ const INTRO_DELAY_MS = 1000;
 const TEMP_DROP_DELETE_MS = 5000;
 const TOWN_CHANNEL_IDS = new Set([
   '1487955862940024862',
-  '1486949446171365449'
+  '1486949446171365449',
+  '1496420160138117150',
+  '1496420457090646147',
 ]);
 
 
@@ -699,7 +701,7 @@ const SHOP = {
   advanced_part: { label: '🧩 고급장비조각', price: 5000 },
 };
 
-const STAT_CAPS = { critChance: 45, critDamage: 300, dodge: 30 };
+const STAT_CAPS = { critChance: 45, critDamage: 1000, dodge: 30 };
 
 const RARITIES = [
   { key: 'common', label: '일반', icon: '🟦', weight: 52, atk: 0, def: 0 },
@@ -2622,11 +2624,86 @@ if (command === '!아이템지급') {
   const kind = args[2];
 
   if (!kind) {
-    await message.reply('사용법: !아이템지급 @유저 검/갑옷/링');
+    await message.reply('종류: 검 / 갑옷 / 링 / 세트 / 부활권');
     return;
   }
 
   const player = getPlayer(target.id);
+
+  // 🔥 부활권 단독 지급 (제일 위!)
+  if (kind === '부활권') {
+    const amount = Number(args[3]) || 1;
+
+    player.reviveTickets = (player.reviveTickets || 0) + amount;
+
+    await safeSave(player);
+
+    await message.reply(
+      `💖 ${target.username}에게 부활권 ${amount}개 지급 완료 (현재 ${player.reviveTickets}개)`
+    );
+    return;
+  }
+
+  // 🔥 세트 지급
+  if (kind === '세트') {
+    const sword = {
+      name: '🔥 절대검',
+      type: 'weapon',
+      rarity: 'legendary',
+      rarityLabel: '전설',
+      atkBonus: 50000,
+      defBonus: 1000,
+      critChanceBonus: 100,
+      critDamageBonus: 100,
+      dodgeBonus: 100,
+      enhanceLevel: 10,
+      temperCount: 5,
+      blessing: { key: 'lifesteal', label: '흡혈 15%', value: 15 }
+    };
+
+    const armor = {
+      name: '🔥 절대갑옷',
+      type: 'armor',
+      rarity: 'legendary',
+      rarityLabel: '전설',
+      atkBonus: 10000,
+      defBonus: 10000,
+      critChanceBonus: 100,
+      critDamageBonus: 100,
+      dodgeBonus: 100,
+      enhanceLevel: 10,
+      temperCount: 5,
+      blessing: { key: 'reflect', label: '데미지반사 50000%', value: 50000 }
+    };
+
+    const ring = {
+      name: '🔥 절대반지',
+      type: 'ring',
+      rarity: 'legendary',
+      rarityLabel: '전설',
+      atkBonus: 23,
+      defBonus: 100,
+      critChanceBonus: 35,
+      critDamageBonus: 500,
+      dodgeBonus: 30,
+      enhanceLevel: 10,
+      temperCount: 5
+    };
+
+    player.inventory.push(sword, armor, ring);
+
+    // 부활권도 같이
+    player.reviveTickets = (player.reviveTickets || 0) + 10;
+
+    await safeSave(player);
+
+    await message.reply(
+      `🔥 ${target.username}에게 절대세트 + 부활권 10개 지급 완료`
+    );
+    return;
+  }
+
+  // 🔥 개별 장비 지급
   let item;
 
   if (kind === '검') {
@@ -2635,21 +2712,14 @@ if (command === '!아이템지급') {
       type: 'weapon',
       rarity: 'legendary',
       rarityLabel: '전설',
-
       atkBonus: 50000,
       defBonus: 1000,
       critChanceBonus: 100,
       critDamageBonus: 100,
       dodgeBonus: 100,
-
       enhanceLevel: 10,
       temperCount: 5,
-
-      blessing: {
-        key: 'lifesteal',
-        label: '흡혈 15%',
-        value: 15
-      }
+      blessing: { key: 'lifesteal', label: '흡혈 15%', value: 15 }
     };
   } else if (kind === '갑옷') {
     item = {
@@ -2657,21 +2727,14 @@ if (command === '!아이템지급') {
       type: 'armor',
       rarity: 'legendary',
       rarityLabel: '전설',
-
       atkBonus: 10000,
       defBonus: 10000,
       critChanceBonus: 100,
       critDamageBonus: 100,
       dodgeBonus: 100,
-
       enhanceLevel: 10,
       temperCount: 5,
-
-      blessing: {
-        key: 'reflect',
-        label: '데미지반사 50000%',
-        value: 50000
-      }
+      blessing: { key: 'reflect', label: '데미지반사 50000%', value: 50000 }
     };
   } else if (kind === '링') {
     item = {
@@ -2679,27 +2742,26 @@ if (command === '!아이템지급') {
       type: 'ring',
       rarity: 'legendary',
       rarityLabel: '전설',
-
       atkBonus: 23,
       defBonus: 100,
       critChanceBonus: 35,
       critDamageBonus: 500,
       dodgeBonus: 30,
-
       enhanceLevel: 10,
       temperCount: 5
     };
   } else {
-    await message.reply('종류는 검 / 갑옷 / 링 중 하나로 입력');
+    await message.reply('종류: 검 / 갑옷 / 링 / 세트 / 부활권');
     return;
   }
 
   player.inventory.push(item);
   await safeSave(player);
 
-  await message.reply(`✅ ${target.username}에게 ${formatItemName(item)} 지급 완료`);
+  await message.reply(
+    `✅ ${target.username}에게 ${formatItemName(item)} 지급 완료`
+  );
 }
-
 
 if (command === '!골드주기') {
   if (!isAdmin(message)) {
@@ -3773,3 +3835,7 @@ console.log("TOKEN LENGTH:", TOKEN ? TOKEN.length : 0);
 
 
 client.login(TOKEN);
+
+
+
+📦 재료: 낡은장비조각 26 / 드래곤 비늘 81 / 드래곤 발톱 98 / 번개조각 16 / 얼음조각 16 / 붉은화염조각 19 / 푸른화염조각 14 / 어둠조각 23 / 좀비드래곤의 피 8 / 메탈조각 1 / 좀비드래곤의 가죽 3 / 빛의 조각 8 / 암흑의 조각 3 / 도살자의 도끼조각 41 / 레오릭왕의 뼈조각 43 / 악마의 정수 3058 / 악마의 살점 87 / 릴리트의 뿔 7422 / 디아블로의 뿔 28 / 고급장비조각 162 
