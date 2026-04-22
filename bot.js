@@ -690,12 +690,12 @@ const SHOP = {
   small: { label: '💊 작은물약', heal: 10, price: 10 },
   mid: { label: '🍗 중간물약', heal: 30, price: 30 },
   big: { label: '🍖 큰물약', heal: 100, price: 100 },
-  large: { label: '🥩 대형물약', heal: 200, price: 350 },
-  huge: { label: '🍖🍖 특대물약', heal: 300, price: 500 },
+  large: { label: '🥩 대형물약', heal: 200, price: 500 },
+  huge: { label: '🍖🍖 특대물약', heal: 300, price: 1000 },
   elixir: { label: '🧪 엘릭서', heal: 99999, price: 3000 },
 };
 
-const STAT_CAPS = { critChance: 35, critDamage: 100, dodge: 25 };
+const STAT_CAPS = { critChance: 45, critDamage: 300, dodge: 30 };
 
 const RARITIES = [
   { key: 'common', label: '일반', icon: '🟦', weight: 52, atk: 0, def: 0 },
@@ -2627,8 +2627,8 @@ if(command === '!상점'){
 💊 작은물약 10G
 🍗 중간물약 30G
 🍖 큰물약 100G
-🥩 대형물약 350G
-🍖🍖 특대물약 500G
+🥩 대형물약 500G
+🍖🍖 특대물약 1000G
 🧪 엘릭서 3000G`,
     components: buildShopButtons()
   });
@@ -2992,10 +2992,10 @@ if (id === 'shop') {
 🍗 중간물약 30G
 🍖 큰물약 100G
 🍖 x 10 큰물약 1000G
-🥩 대형물약 350G
-🥩 x 10 대형물약 3500G
-🍖🍖 특대물약 500G
-🍖🍖 x 10 특대물약 5000G
+🥩 대형물약 500G
+🥩 x 10 대형물약 5000G
+🍖🍖 특대물약 1000G
+🍖🍖 x 10 특대물약 10000G
 🧪 엘릭서 3000G`,
     components: buildShopButtons(),
     ephemeral: true
@@ -3070,11 +3070,11 @@ if (id.startsWith('equipment_prev_') || id.startsWith('equipment_next_')) {
 }
 
 if (id === 'buy_large_10') {
-  const cost = 3500;
+  const cost = 5000;
 
   if (player.gold < cost) {
     await interaction.reply({
-      content: '❌ 골드가 부족합니다. (대형물약 10개 3500G)',
+      content: '❌ 골드가 부족합니다. (대형물약 10개 5000G)',
       ephemeral: true
     });
     return;
@@ -3098,11 +3098,11 @@ if (id === 'buy_large_10') {
 }
 
 if (id === 'buy_huge_10') {
-  const cost = 5000;
+  const cost = 10000;
 
   if (player.gold < cost) {
     await interaction.reply({
-      content: '❌ 골드가 부족합니다. (특대물약 10개 5000G)',
+      content: '❌ 골드가 부족합니다. (특대물약 10개 10000G)',
       ephemeral: true
     });
     return;
@@ -3137,8 +3137,8 @@ const shopMap = {
   buy_small: { key: 'small', name: '작은물약', price: 10 },
   buy_mid: { key: 'mid', name: '중간물약', price: 30 },
   buy_big: { key: 'big', name: '큰물약', price: 100 },
-  buy_large: { key: 'large', name: '대형물약', price: 350 },
-  buy_huge: { key: 'huge', name: '특대물약', price: 500 },
+  buy_large: { key: 'large', name: '대형물약', price: 500 },
+  buy_huge: { key: 'huge', name: '특대물약', price: 1000 },
   buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000 },
 };
   const buy = shopMap[id];
