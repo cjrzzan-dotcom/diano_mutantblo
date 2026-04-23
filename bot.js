@@ -1630,9 +1630,9 @@ function formatItemSimpleText(item) {
   if (!item) return '없음';
 
   const enhanceText = item.enhanceLevel ? `+${item.enhanceLevel} ` : '';
-  const blessText = item.blessing ? '(✨축성✨) ' : '';
+  const blessText = item.blessing ? '✨ ' : '';
   const temperText =
-    item.temperCount !== undefined ? ` 담금질[${item.temperCount}/5]` : '';
+    item.temperCount !== undefined ? `⚒️[${item.temperCount}/5]` : '';
 
   const statParts = [];
   if (item.atkBonus) statParts.push(`공+${item.atkBonus}`);
@@ -2706,6 +2706,7 @@ function buildFullStatusText(player){
   const baseAtk = player.baseAtk + player.stats.atk;
   let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
 
+
   // 불사의 심장 조건부 공격력
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
   const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
@@ -2747,17 +2748,60 @@ function buildFullStatusText(player){
   );
 
   const blessHpBonus = totalMaxHp - player.maxHp;
+  const buildStatDetail = (parts) => parts.filter(Boolean).join(' + ');
+const hpDetail = buildStatDetail([
+  `기본 ${player.maxHp}`,
+  blessHpBonus ? `축성/룬/조합 ${blessHpBonus}` : null
+]);
+
+const atkDetail = buildStatDetail([
+  `기본 ${baseAtk}`,
+  eq.atk ? `장비 ${eq.atk}` : null,
+  runeBonus.atk ? `룬 ${runeBonus.atk}` : null,
+  setBonus.atk ? `조합 ${setBonus.atk}` : null,
+  blessAtkBonus ? `축성 ${blessAtkBonus}` : null
+]);
+
+const defDetail = buildStatDetail([
+  `기본 ${baseDef}`,
+  eq.def ? `장비 ${eq.def}` : null,
+  runeBonus.def ? `룬 ${runeBonus.def}` : null,
+  setBonus.def ? `조합 ${setBonus.def}` : null,
+  totalBlessFlatDef ? `축성 ${totalBlessFlatDef}` : null
+]);
+
+const critDetail = buildStatDetail([
+  `기본 ${baseCrit}%`,
+  eq.critChance ? `장비 ${eq.critChance}%` : null,
+  totalBlessCritChance ? `축성 ${totalBlessCritChance}%` : null,
+  setBonus.critChance ? `조합 ${setBonus.critChance}%` : null
+]);
+
+const critDmgDetail = buildStatDetail([
+  `기본 ${baseCritDmg}%`,
+  eq.critDamage ? `장비 ${eq.critDamage}%` : null,
+  runeBonus.critDamage ? `룬 ${runeBonus.critDamage}%` : null,
+  setBonus.critDamage ? `조합 ${setBonus.critDamage}%` : null,
+  totalBlessCritDamage ? `축성 ${totalBlessCritDamage}%` : null
+]);
+
+const dodgeDetail = buildStatDetail([
+  `기본 ${baseDodge}%`,
+  eq.dodge ? `장비 ${eq.dodge}%` : null,
+  totalBlessDodge ? `축성 ${totalBlessDodge}%` : null
+]);
+
 
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
     '',
-    `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성/룬/조합 ${blessHpBonus})`,
-    `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 룬 ${runeBonus.atk} + 조합 ${setBonus.atk} + 축성 ${blessAtkBonus})`,
-    `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 룬 ${runeBonus.def} + 조합 ${setBonus.def} + 축성 ${totalBlessFlatDef})`,
-    `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}% + 조합 ${setBonus.critChance}%)`,
-    `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 룬 ${runeBonus.critDamage}% + 조합 ${setBonus.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
-    `💨 회피: ${totalDodge}% (기본 ${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
+`❤️ HP: ${player.hp}/${totalMaxHp} (${hpDetail})`,
+`⚔️ 공격력: ${totalAtk} (${atkDetail})`,
+`🛡️ 방어력: ${totalDef} (${defDetail})`,
+`💥 크리확률: ${totalCrit}% (${critDetail})`,
+`🔥 크리데미지: +${totalCritDmg}% (${critDmgDetail})`,
+`💨 회피: ${totalDodge}% (${dodgeDetail})`,
     `🩸 흡혈: ${totalBlessLifesteal + setBonus.lifesteal}%`,
     `🔁 데미지반사: ${totalBlessReflect}%`,
     '',
@@ -3496,6 +3540,8 @@ if (command === '!아이템지급') {
     );
     return;
   }
+
+
 
   // 🔥 세트 지급
   if (kind === '세트') {
