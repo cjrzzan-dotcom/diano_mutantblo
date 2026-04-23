@@ -1017,6 +1017,196 @@ function blankMaterials(){
   for(const m of MATERIALS) out[m] = 0;
   return out;
 }
+
+function formatRuneStats(stats) {
+  const lines = [];
+
+  if (stats.atk) lines.push(`공격력 ${stats.atk > 0 ? '+' : ''}${stats.atk}`);
+  if (stats.def) lines.push(`방어력 ${stats.def > 0 ? '+' : ''}${stats.def}`);
+  if (stats.critDamage) lines.push(`크리티컬 데미지 +${stats.critDamage}%`);
+  if (stats.hpPercent) lines.push(`체력 +${stats.hpPercent}%`);
+
+  return lines.join(' / ') || '옵션 없음';
+}
+
+function getRuneListText(player) {
+  if (!player.runes || player.runes.length === 0) {
+    return '🎒 보유한 룬이 없습니다.';
+  }
+
+  const lines = ['🎒 보유 룬 목록', ''];
+
+  player.runes.forEach((rune, index) => {
+    lines.push(`${index + 1}. ${rune.name}`);
+    lines.push(`   └ ${formatRuneStats(rune.stats)}`);
+  });
+
+  return lines.join('\n');
+}
+
+function getEquippedRuneText(player) {
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+
+  const lines = ['🪄 룬 슬롯', ''];
+
+  player.equippedRunes.forEach((rune, index) => {
+    if (!rune) {
+      lines.push(`${index + 1}번 슬롯: 비어 있음`);
+    } else {
+      lines.push(`${index + 1}번 슬롯: ${rune.name}`);
+      lines.push(`   └ ${formatRuneStats(rune.stats)}`);
+    }
+  });
+
+  return lines.join('\n');
+}
+
+function findFirstEmptyRuneSlot(player) {
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+  return player.equippedRunes.findIndex(v => v === null);
+}
+
+function prepareRuneEquip(player, runeIndex) {
+  if (!player.runes) player.runes = [];
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+
+  if (!Number.isInteger(runeIndex)) {
+    return { ok: false, text: '❌ 장착할 룬 번호를 올바르게 입력하세요.' };
+  }
+
+  const realIndex = runeIndex - 1;
+  const rune = player.runes[realIndex];
+
+  if (!rune) {
+    return { ok: false, text: '❌ 해당 번호의 룬이 없습니다.' };
+  }
+
+  const emptySlot = findFirstEmptyRuneSlot(player);
+  if (emptySlot === -1) {
+    return { ok: false, text: '❌ 룬 슬롯이 가득 찼습니다. 먼저 해제하세요.' };
+  }
+
+  player.pendingRuneAction = {
+    type: 'equip',
+    runeIndex: realIndex,
+    slotIndex: emptySlot
+  };
+
+  return {
+    ok: true,
+    text: [
+      `🪄 ${emptySlot + 1}번 슬롯에 ${rune.name}을(를) 장착합니다.`,
+      `효과: ${formatRuneStats(rune.stats)}`,
+      ``,
+      `⚠️ 장착한 룬은 해제하면 사라집니다.`,
+      `정말 장착하시겠습니까?`,
+      `확인: !룬장착확인`,
+      `취소: !룬취소`
+    ].join('\n')
+  };
+}
+
+function confirmRuneEquip(player) {
+  if (!player.pendingRuneAction || player.pendingRuneAction.type !== 'equip') {
+    return { ok: false, text: '❌ 진행 중인 룬 장착이 없습니다.' };
+  }
+
+  if (!player.runes) player.runes = [];
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+
+  const { runeIndex, slotIndex } = player.pendingRuneAction;
+  const rune = player.runes[runeIndex];
+
+  if (!rune) {
+    player.pendingRuneAction = null;
+    return { ok: false, text: '❌ 장착할 룬을 찾을 수 없습니다.' };
+  }
+
+  if (player.equippedRunes[slotIndex] !== null) {
+    player.pendingRuneAction = null;
+    return { ok: false, text: '❌ 해당 슬롯이 이미 사용 중입니다.' };
+  }
+
+  player.equippedRunes[slotIndex] = rune;
+  player.runes.splice(runeIndex, 1);
+  player.pendingRuneAction = null;
+
+  return {
+    ok: true,
+    text: [
+      `✅ ${slotIndex + 1}번 슬롯에 ${rune.name} 장착 완료!`,
+      `효과: ${formatRuneStats(rune.stats)}`
+    ].join('\n')
+  };
+}
+
+function prepareRuneRemove(player, slotNumber) {
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+
+  if (!Number.isInteger(slotNumber) || slotNumber < 1 || slotNumber > 4) {
+    return { ok: false, text: '❌ 해제할 슬롯 번호는 1~4만 가능합니다.' };
+  }
+
+  const slotIndex = slotNumber - 1;
+  const rune = player.equippedRunes[slotIndex];
+
+  if (!rune) {
+    return { ok: false, text: '❌ 해당 슬롯은 비어 있습니다.' };
+  }
+
+  player.pendingRuneAction = {
+    type: 'remove',
+    slotIndex
+  };
+
+  return {
+    ok: true,
+    text: [
+      `🗑 ${slotNumber}번 슬롯의 ${rune.name}을(를) 해제합니다.`,
+      `효과: ${formatRuneStats(rune.stats)}`,
+      ``,
+      `⚠️ 해제한 룬은 복구되지 않고 사라집니다.`,
+      `정말 해제하시겠습니까?`,
+      `확인: !룬해제확인`,
+      `취소: !룬취소`
+    ].join('\n')
+  };
+}
+
+function confirmRuneRemove(player) {
+  if (!player.pendingRuneAction || player.pendingRuneAction.type !== 'remove') {
+    return { ok: false, text: '❌ 진행 중인 룬 해제가 없습니다.' };
+  }
+
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+
+  const { slotIndex } = player.pendingRuneAction;
+  const rune = player.equippedRunes[slotIndex];
+
+  if (!rune) {
+    player.pendingRuneAction = null;
+    return { ok: false, text: '❌ 해제할 룬이 없습니다.' };
+  }
+
+  player.equippedRunes[slotIndex] = null;
+  player.pendingRuneAction = null;
+
+  return {
+    ok: true,
+    text: `✅ ${slotIndex + 1}번 슬롯의 ${rune.name}을(를) 해제했습니다.\n🗑 룬은 사라졌습니다.`
+  };
+}
+
+function cancelPendingRuneAction(player) {
+  if (!player.pendingRuneAction) {
+    return { ok: false, text: '❌ 진행 중인 작업이 없습니다.' };
+  }
+
+  player.pendingRuneAction = null;
+  return { ok: true, text: '✅ 룬 작업을 취소했습니다.' };
+}
+
+
 function defaultEquipment(){
   return { weapon:null, armor:null, ring:null };
 }
@@ -1039,6 +1229,7 @@ function getDefaultPlayer(userId){
     inventory: [],
     runes:[],
     equippedRunes: [null, null, null, null],
+    pendingRuneAction: null,
     equipment: defaultEquipment(),
     stats: { atk:0, critChance:0, critDamage:0, dodge:0 },
     run: null,
@@ -1062,10 +1253,11 @@ function getPlayer(userId) {
 
   const player = gameData[userId];
 
-  // 기존 유저 데이터 보정
   if (!player.inventory) player.inventory = [];
   if (!player.materials) player.materials = {};
   if (!player.runes) player.runes = [];
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+  if (!player.pendingRuneAction) player.pendingRuneAction = null;
 
   return player;
 }
@@ -2274,12 +2466,20 @@ function buildBattleButtons(player, dungeonKey){
 
 function buildStatusButtons(player){
   const noPoints = player.statPoints <= 0;
-  return [new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('stat_atk').setLabel('⚔️ 공격 +').setStyle(ButtonStyle.Danger).setDisabled(noPoints),
-    new ButtonBuilder().setCustomId('stat_crit').setLabel('💥 크리 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritChance(player)>=STAT_CAPS.critChance),
-    new ButtonBuilder().setCustomId('stat_critdmg').setLabel('🔥 크뎀 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritDamage(player)>=STAT_CAPS.critDamage),
-    new ButtonBuilder().setCustomId('stat_dodge').setLabel('💨 회피 +').setStyle(ButtonStyle.Success).setDisabled(noPoints || getDodge(player)>=STAT_CAPS.dodge),
-  )];
+
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('stat_atk').setLabel('⚔️ 공격 +').setStyle(ButtonStyle.Danger).setDisabled(noPoints),
+      new ButtonBuilder().setCustomId('stat_crit').setLabel('💥 크리 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritChance(player)>=STAT_CAPS.critChance),
+      new ButtonBuilder().setCustomId('stat_critdmg').setLabel('🔥 크뎀 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritDamage(player)>=STAT_CAPS.critDamage),
+      new ButtonBuilder().setCustomId('stat_dodge').setLabel('💨 회피 +').setStyle(ButtonStyle.Success).setDisabled(noPoints || getDodge(player)>=STAT_CAPS.dodge)
+    ),
+
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('rune_draw').setLabel('🎲 룬뽑기').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('🪄 룬장착').setStyle(ButtonStyle.Primary)
+    )
+  ];
 }
 function buildShopButtons(){
   return [
@@ -2637,6 +2837,8 @@ client.on('messageCreate', async (message) => {
     await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
     return;
   }
+
+
 
 
 if(command === '!가방'){
@@ -3199,7 +3401,126 @@ if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
   });
   return;
 }
+if (id === 'rune_draw') {
+  if ((player.materials['룬소환석'] || 0) < 1) {
+    await interaction.reply({
+      content: '❌ 룬소환석이 부족합니다.',
+      ephemeral: true
+    });
+    return;
+  }
 
+  player.materials['룬소환석'] -= 1;
+
+  const rune = drawRune();
+  if (!player.runes) player.runes = [];
+  player.runes.push(rune);
+
+  await safeSave(player);
+
+  await interaction.reply({
+    content:
+`🎲 룬소환석 1개 사용!
+
+획득: ${rune.name}
+효과: ${formatRuneStats(rune.stats)}
+
+⚠️ 룬은 장착 후 해제 시 사라집니다.`,
+    ephemeral: true
+  });
+  return;
+}
+if (id === 'rune_equip_menu') {
+  if (!player.runes || player.runes.length === 0) {
+    await interaction.reply({
+      content: '❌ 보유한 룬이 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const row = new ActionRowBuilder();
+
+  player.runes.slice(0, 5).forEach((rune, i) => {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`rune_pick_${i}`)
+        .setLabel(rune.name.replace(/^[^\s]+ /, '')) // 이모지 제거해서 짧게
+        .setStyle(ButtonStyle.Secondary)
+    );
+  });
+
+  await interaction.reply({
+    content: '🪄 장착할 룬을 선택하세요.',
+    components: [row],
+    ephemeral: true
+  });
+  return;
+}
+if (id.startsWith('rune_pick_')) {
+  const index = Number(id.split('_')[2]);
+  const rune = player.runes[index];
+
+  if (!rune) return;
+
+  const emptySlot = player.equippedRunes.findIndex(v => v === null);
+
+  if (emptySlot === -1) {
+    await interaction.reply({
+      content: '❌ 룬 슬롯이 가득 찼습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  await interaction.reply({
+    content:
+`${emptySlot + 1}번 슬롯에 ${rune.name}을 장착합니다.
+효과: ${formatRuneStats(rune.stats)}
+
+⚠️ 해제 시 룬은 사라집니다.
+정말 장착하시겠습니까?`,
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`rune_confirm_${index}`).setLabel('✅ 장착').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('rune_cancel').setLabel('❌ 취소').setStyle(ButtonStyle.Danger)
+      )
+    ],
+    ephemeral: true
+  });
+
+  return;
+}
+
+if (id.startsWith('rune_confirm_')) {
+  const index = Number(id.split('_')[2]);
+  const rune = player.runes[index];
+
+  if (!rune) return;
+
+  const slot = player.equippedRunes.findIndex(v => v === null);
+  if (slot === -1) return;
+
+  player.equippedRunes[slot] = rune;
+  player.runes.splice(index, 1);
+
+  await safeSave(player);
+
+  await interaction.update({
+    content: `✅ ${slot + 1}번 슬롯에 ${rune.name} 장착 완료!`,
+    components: []
+  });
+
+  return;
+}
+
+if (id === 'rune_cancel') {
+  await interaction.update({
+    content: '❌ 취소되었습니다.',
+    components: []
+  });
+  return;
+}
 
 if (id.startsWith('private_start_')) {
   const parts = interaction.customId.split('_');
