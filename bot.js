@@ -2490,7 +2490,15 @@ function buildStatusButtons(player){
 
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('rune_draw').setLabel('🎲 룬뽑기').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('룬장착').setStyle(ButtonStyle.Primary)
+      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('룬장착').setStyle(ButtonStyle.Primary),
+
+new ActionRowBuilder().addComponents(
+  new ButtonBuilder().setCustomId('rune_remove_1').setLabel('1번 해제').setStyle(ButtonStyle.Danger),
+  new ButtonBuilder().setCustomId('rune_remove_2').setLabel('2번 해제').setStyle(ButtonStyle.Danger),
+  new ButtonBuilder().setCustomId('rune_remove_3').setLabel('3번 해제').setStyle(ButtonStyle.Danger),
+  new ButtonBuilder().setCustomId('rune_remove_4').setLabel('4번 해제').setStyle(ButtonStyle.Danger)
+)
+
     )
   ];
 }
