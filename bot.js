@@ -1626,6 +1626,26 @@ function formatItemFullText(item) {
   return lines.join('\n');
 }
 
+function formatItemSimpleText(item) {
+  if (!item) return '없음';
+
+  const enhanceText = item.enhanceLevel ? `+${item.enhanceLevel} ` : '';
+  const blessText = item.blessing ? '(✨축성✨) ' : '';
+  const temperText =
+    item.temperCount !== undefined ? ` 담금질[${item.temperCount}/5]` : '';
+
+  const statParts = [];
+  if (item.atkBonus) statParts.push(`공+${item.atkBonus}`);
+  if (item.defBonus) statParts.push(`방+${item.defBonus}`);
+  if (item.critChanceBonus) statParts.push(`크확+${item.critChanceBonus}%`);
+  if (item.critDamageBonus) statParts.push(`크뎀+${item.critDamageBonus}%`);
+  if (item.dodgeBonus) statParts.push(`회+${item.dodgeBonus}%`);
+
+  const statLine = statParts.length ? statParts.join(' ') : '옵션 없음';
+
+  return `${enhanceText}${blessText}${item.name}${temperText}\n${statLine}`;
+}
+
 
 function getRandomMonster(dungeonKey) {
   const dungeon = DUNGEONS[dungeonKey];
@@ -2658,9 +2678,9 @@ function getEquippedText(player){
   const r = player.equipment?.ring;
 
   return [
-    `⚔️ 무기\n${formatItemFullText(w)}`,
-    `🛡️ 방어구\n${formatItemFullText(a)}`,
-    `💍 반지\n${formatItemFullText(r)}`
+    `⚔️ 무기: ${formatItemSimpleText(w)}`,
+    `🛡️ 방어구: ${formatItemSimpleText(a)}`,
+    `💍 반지: ${formatItemSimpleText(r)}`
   ].join('\n\n');
 }
 
