@@ -574,6 +574,20 @@ function generateAllRuneComboKeys() {
   return out;
 }
 
+function formatRuneStats(stats) {
+  if (!stats) return '없음';
+
+  const lines = [];
+
+  if (stats.atk) lines.push(`⚔️ 공격력 +${stats.atk}`);
+  if (stats.def) lines.push(`🛡️ 방어력 +${stats.def}`);
+  if (stats.critChance) lines.push(`💥 크확 +${stats.critChance}%`);
+  if (stats.critDamage) lines.push(`🔥 크뎀 +${stats.critDamage}%`);
+  if (stats.hpPercent) lines.push(`❤️ 체력 +${stats.hpPercent}%`);
+
+  return lines.length ? lines.join(', ') : '옵션 없음';
+}
+
 function buildAutoComboTable() {
   const allKeys = generateAllRuneComboKeys();
 
@@ -2770,24 +2784,31 @@ function buildCompactBattleText(player,target,channelId){
   return lines.join('\n');
 }
 
-function getItemStatText(item){
-  if(!item) return '';
-
-  const atk = item.atkBonus || 0;
-  const def = item.defBonus || 0;
-  const crit = item.critChanceBonus || 0;
-  const critDmg = item.critDamageBonus || 0;
-  const dodge = item.dodgeBonus || 0;
+function getItemStatText(item) {
+  if (!item) return '';
 
   const parts = [];
 
-  if(atk) parts.push(`공+${atk}`);
-  if(def) parts.push(`방+${def}`);
-  if(crit) parts.push(`크리+${crit}%`);
-  if(critDmg) parts.push(`크뎀+${critDmg}%`);
-  if(dodge) parts.push(`회피+${dodge}%`);
+  if (item.atkBonus) parts.push(`공+${item.atkBonus}`);
+  if (item.defBonus) parts.push(`방+${item.defBonus}`);
+  if (item.critChanceBonus) parts.push(`크확+${item.critChanceBonus}%`);
+  if (item.critDamageBonus) parts.push(`크뎀+${item.critDamageBonus}%`);
+  if (item.dodgeBonus) parts.push(`회피+${item.dodgeBonus}%`);
+  if (item.hpBonus) parts.push(`HP+${item.hpBonus}`);
+  if (item.hpPercentBonus) parts.push(`HP+${item.hpPercentBonus}%`);
 
   return parts.length ? ` (${parts.join(', ')})` : '';
+}
+
+function formatItemName(item) {
+  if (!item) return '알 수 없는 아이템';
+
+  const enhanceText =
+    item.enhanceLevel && item.enhanceLevel > 0
+      ? `+${item.enhanceLevel} `
+      : '';
+
+  return `${enhanceText}${item.name || '이름 없는 아이템'}${getItemStatText(item)}`;
 }
 
 function getItemStatTextWithBless(item){
