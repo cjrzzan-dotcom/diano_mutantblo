@@ -1048,33 +1048,6 @@ const SHOP = {
   rune_stone: { label: '🌠 룬소환석', price: 500000 }, // ⭐ 이모지 추가
 };
 
-const RUNES = [
-  {
-    key: 'destroy',
-    name: '🔥 파괴의 룬',
-    stats: { atk: 15 }
-  },
-  {
-    key: 'guard',
-    name: '🛡 수호의 룬',
-    stats: { def: 15 }
-  },
-  {
-    key: 'rage',
-    name: '⚡ 광폭의 룬',
-    stats: { atk: 5, critDamage: 20, def: -5 }
-  },
-  {
-    key: 'life',
-    name: '🌿 생명의 룬',
-    stats: { hpPercent: 10, atk: -15 }
-  },
-  {
-    key: 'balance',
-    name: '⚖️ 균형의 룬',
-    stats: { atk: 5, def: 5, critDamage: 10 }
-  }
-];
 
 function drawRune() {
   const rune = RUNES[Math.floor(Math.random() * RUNES.length)];
