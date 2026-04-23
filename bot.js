@@ -1877,6 +1877,23 @@ function grantMaterial(player, name, amount, lines){
   player.materials[name] = (player.materials[name] || 0) + amount;
   lines.push(`📦 ${name} +${amount}`);
 }
+
+
+
+function formatItemName(item) {
+  if (!item) return '알 수 없는 아이템';
+
+  const enhanceText =
+    item.enhanceLevel && item.enhanceLevel > 0
+      ? `+${item.enhanceLevel} `
+      : '';
+
+  return `${enhanceText}${item.name || '이름 없는 아이템'}`;
+}
+
+
+
+
 function getMaterialDrops(monsterName){
   const drops = [];
   if(chance(40)) drops.push(['낡은장비조각',1]);
