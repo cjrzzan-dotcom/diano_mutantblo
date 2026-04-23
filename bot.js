@@ -704,6 +704,96 @@ const SHOP = {
   rune_stone: { label: '🌠 룬소환석', price: 500000 }, // ⭐ 이모지 추가
 };
 
+const RUNES = [
+  {
+    key: 'destroy',
+    name: '🔥 파괴의 룬',
+    stats: { atk: 15 }
+  },
+  {
+    key: 'guard',
+    name: '🛡 수호의 룬',
+    stats: { def: 15 }
+  },
+  {
+    key: 'rage',
+    name: '⚡ 광폭의 룬',
+    stats: { atk: 5, critDamage: 20, def: -5 }
+  },
+  {
+    key: 'life',
+    name: '🌿 생명의 룬',
+    stats: { hpPercent: 10, atk: -15 }
+  },
+  {
+    key: 'balance',
+    name: '⚖️ 균형의 룬',
+    stats: { atk: 5, def: 5, critDamage: 10 }
+  }
+];
+
+function drawRune() {
+  const rune = RUNES[Math.floor(Math.random() * RUNES.length)];
+  return JSON.parse(JSON.stringify(rune));
+}
+
+function formatRuneStats(stats) {
+  const lines = [];
+
+  if (stats.atk) {
+    lines.push(`공격력 ${stats.atk > 0 ? '+' : ''}${stats.atk}`);
+  }
+
+  if (stats.def) {
+    lines.push(`방어력 ${stats.def > 0 ? '+' : ''}${stats.def}`);
+  }
+
+  if (stats.critDamage) {
+    lines.push(`크리티컬 데미지 +${stats.critDamage}%`);
+  }
+
+  if (stats.hpPercent) {
+    lines.push(`체력 +${stats.hpPercent}%`);
+  }
+
+  return lines.join(' / ');
+}
+
+function formatRuneDraw(rune) {
+  return [
+    `🎲 룬소환석 1개 사용!`,
+    ``,
+    `획득: ${rune.name}`,
+    `효과: ${formatRuneStats(rune.stats)}`,
+    ``,
+    `⚠️ 룬은 장착 후 해제 시 사라집니다.`,
+    `⚠️ 신중하게 사용하세요.`
+  ].join('\n');
+}
+
+function doRuneDraw(player) {
+  if (!player.materials) player.materials = {};
+  if (!player.runes) player.runes = [];
+
+  if ((player.materials['룬소환석'] || 0) < 1) {
+    return {
+      ok: false,
+      text: '❌ 룬소환석이 부족합니다.'
+    };
+  }
+
+  player.materials['룬소환석'] -= 1;
+
+  const rune = drawRune();
+  player.runes.push(rune);
+
+  return {
+    ok: true,
+    rune,
+    text: formatRuneDraw(rune)
+  };
+}
+
 const STAT_CAPS = { critChance: 45, critDamage: 1000, dodge: 30 };
 
 const RARITIES = [
@@ -947,6 +1037,8 @@ function getDefaultPlayer(userId){
     potions: { small:2, mid:1, big:0, elixir:0 },
     materials: blankMaterials(),
     inventory: [],
+    runes:[],
+    equippedRunes: [null, null, null, null],
     equipment: defaultEquipment(),
     stats: { atk:0, critChance:0, critDamage:0, dodge:0 },
     run: null,
@@ -962,12 +1054,20 @@ function getDefaultPlayer(userId){
 
 
 function getPlayer(userId) {
-  if (!gameData) gameData = {}; // ⭐ 이 줄 추가
+  if (!gameData) gameData = {};
 
   if (!gameData[userId]) {
     gameData[userId] = getDefaultPlayer(userId);
   }
-  return gameData[userId];
+
+  const player = gameData[userId];
+
+  // 기존 유저 데이터 보정
+  if (!player.inventory) player.inventory = [];
+  if (!player.materials) player.materials = {};
+  if (!player.runes) player.runes = [];
+
+  return player;
 }
 
 
