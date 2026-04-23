@@ -2254,8 +2254,6 @@ function getEquippedText(player){
   ].join('\n');
 }
 
-
-
 function buildFullStatusText(player){
   const eq = getEquippedBonuses(player);
   const runeBonus = getRuneBonus(player);
@@ -2545,19 +2543,19 @@ function buildStatusButtons(player){
   return [
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('stat_atk').setLabel('⚔️ 공격 +').setStyle(ButtonStyle.Danger).setDisabled(noPoints),
-      new ButtonBuilder().setCustomId('stat_crit').setLabel('💥 크리 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritChance(player)>=STAT_CAPS.critChance),
-      new ButtonBuilder().setCustomId('stat_critdmg').setLabel('🔥 크뎀 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritDamage(player)>=STAT_CAPS.critDamage),
-      new ButtonBuilder().setCustomId('stat_dodge').setLabel('💨 회피 +').setStyle(ButtonStyle.Success).setDisabled(noPoints || getDodge(player)>=STAT_CAPS.dodge)
+      new ButtonBuilder().setCustomId('stat_crit').setLabel('💥 크리 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritChance(player) >= STAT_CAPS.critChance),
+      new ButtonBuilder().setCustomId('stat_critdmg').setLabel('🔥 크뎀 +').setStyle(ButtonStyle.Primary).setDisabled(noPoints || getCritDamage(player) >= STAT_CAPS.critDamage),
+      new ButtonBuilder().setCustomId('stat_dodge').setLabel('💨 회피 +').setStyle(ButtonStyle.Success).setDisabled(noPoints || getDodge(player) >= STAT_CAPS.dodge)
     ),
 
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('rune_draw').setLabel('🎲 룬뽑기').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('룬장착').setStyle(ButtonStyle.Primary),
-    )
-
+      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('🪄 룬장착').setStyle(ButtonStyle.Primary)
     )
   ];
 }
+
+
 function buildShopButtons(){
   return [
     new ActionRowBuilder().addComponents(
