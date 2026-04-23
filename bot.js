@@ -3253,46 +3253,46 @@ if (command === '!아이템지급') {
   // 🔥 세트 지급
   if (kind === '세트') {
     const sword = {
-      name: '🔥 절대검',
+      name: '🔥 짭버검',
       type: 'weapon',
       rarity: 'legendary',
       rarityLabel: '전설',
-      atkBonus: 50000,
-      defBonus: 1000,
-      critChanceBonus: 100,
-      critDamageBonus: 100,
-      dodgeBonus: 100,
-      enhanceLevel: 10,
+      atkBonus: 128,
+      defBonus: 4,
+      critChanceBonus: 4,
+      critDamageBonus: 0,
+      dodgeBonus: 0,
+      enhanceLevel: 9,
       temperCount: 5,
       blessing: { key: 'lifesteal', label: '흡혈 15%', value: 15 }
     };
 
     const armor = {
-      name: '🔥 절대갑옷',
+      name: '🔥 짭버갑',
       type: 'armor',
       rarity: 'legendary',
       rarityLabel: '전설',
-      atkBonus: 10000,
-      defBonus: 10000,
-      critChanceBonus: 100,
-      critDamageBonus: 100,
-      dodgeBonus: 100,
-      enhanceLevel: 10,
+      atkBonus: 11,
+      defBonus: 110,
+      critChanceBonus: 8,
+      critDamageBonus: 0,
+      dodgeBonus: 7,
+      enhanceLevel: 9,
       temperCount: 5,
-      blessing: { key: 'reflect', label: '데미지반사 50000%', value: 50000 }
+      blessing: { key: 'reflect', label: '데미지반사 15%', value: 15 }
     };
 
     const ring = {
-      name: '🔥 절대반지',
+      name: '🔥 짭반',
       type: 'ring',
       rarity: 'legendary',
       rarityLabel: '전설',
-      atkBonus: 23,
-      defBonus: 100,
-      critChanceBonus: 35,
-      critDamageBonus: 500,
+      atkBonus: 29,
+      defBonus: 25,
+      critChanceBonus: 18,
+      critDamageBonus: 25,
       dodgeBonus: 30,
-      enhanceLevel: 10,
+      enhanceLevel: 9,
       temperCount: 5
     };
 
