@@ -2260,9 +2260,12 @@ return [
   `🔁 데미지반사: ${totalBlessReflect}%`,
   '',
   `📦 장착 장비`,
-  getEquippedText(player) // 🔥 핵심
+  getEquippedText(player),
+  '',
+  `🔮 장착 룬`,
+  getEquippedRuneStatusText(player)
 ].join('\n');
-}
+
 
 function buildBagText(player){
   const mats = Object.entries(player.materials || {})
@@ -2464,6 +2467,16 @@ function buildBattleButtons(player, dungeonKey){
   ];
 }
 
+function getEquippedRuneStatusText(player) {
+  if (!player.equippedRunes) {
+    player.equippedRunes = [null, null, null, null];
+  }
+
+  return player.equippedRunes.map((rune, index) => {
+    return `${index + 1}번 슬롯: ${rune ? rune.name : '비어 있음'}`;
+  }).join('\n');
+}
+
 function buildStatusButtons(player){
   const noPoints = player.statPoints <= 0;
 
@@ -2477,7 +2490,7 @@ function buildStatusButtons(player){
 
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('rune_draw').setLabel('🎲 룬뽑기').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('🪄 룬장착').setStyle(ButtonStyle.Primary)
+      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('룬장착').setStyle(ButtonStyle.Primary)
     )
   ];
 }
@@ -3577,7 +3590,6 @@ if (id === 'status') {
     ephemeral: true
   });
 
-  await safeDeleteReply(interaction, 8000);
   return;
 }
 
