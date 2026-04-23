@@ -380,6 +380,29 @@ function getWaveMonster(dungeonKey, idx){
   };
 }
 
+function getGroupedRunes(player) {
+  if (!player.runes) player.runes = [];
+
+  const map = new Map();
+
+  for (const rune of player.runes) {
+    if (!rune) continue;
+
+    if (!map.has(rune.key)) {
+      map.set(rune.key, {
+        key: rune.key,
+        name: rune.name,
+        stats: rune.stats,
+        count: 0
+      });
+    }
+
+    map.get(rune.key).count += 1;
+  }
+
+  return Array.from(map.values());
+}
+
 function buildBlessButtons(player){
   return [
     new ActionRowBuilder().addComponents(
@@ -614,59 +637,204 @@ const LEGENDARY_RUNE_COMBOS = {
   }
 };
 
+const AUTO_COMBO_DISTRIBUTION = {
+  unique: 15,
+  epic: 20,
+  rare: 35,
+  normal: 45
+};
+
+const AUTO_COMBO_STATS = {
+  unique: {
+    atk: 18,
+    def: 18,
+    critDamage: 35
+  },
+  epic: {
+    atk: 12,
+    def: 12,
+    critDamage: 22
+  },
+  rare: {
+    atk: 8,
+    def: 8,
+    critDamage: 15
+  },
+  normal: {
+    atk: 0,
+    def: 0,
+    critDamage: 0
+  }
+};
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function generateAllRuneComboKeys() {
+  const keys = RUNES.map(r => r.key);
+  const out = [];
+
+  for (const a of keys) {
+    for (const b of keys) {
+      if (b === a) continue;
+      for (const c of keys) {
+        if (c === a || c === b) continue;
+        for (const d of keys) {
+          if (d === a || d === b || d === c) continue;
+          out.push(`${a}-${b}-${c}-${d}`);
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+function buildAutoComboTable() {
+  const allKeys = generateAllRuneComboKeys();
+
+  const legendaryKeys = new Set(Object.keys(LEGENDARY_RUNE_COMBOS));
+  const normalKeys = allKeys.filter(key => !legendaryKeys.has(key));
+
+  // 해시 기준으로 고정 정렬
+  normalKeys.sort((a, b) => {
+    const ha = simpleHash(a);
+    const hb = simpleHash(b);
+    if (ha !== hb) return ha - hb;
+    return a.localeCompare(b);
+  });
+
+  const table = {};
+
+  let index = 0;
+
+  const assignTierBlock = (tier, count) => {
+    for (let i = 0; i < count; i++) {
+      const comboKey = normalKeys[index++];
+      if (!comboKey) break;
+
+      // 타입 배정: 공 / 방 / 크댐 순환
+      const typeIndex = i % 3;
+      let type = 'atk';
+      if (typeIndex === 1) type = 'def';
+      if (typeIndex === 2) type = 'critDamage';
+
+      table[comboKey] = {
+        tier,
+        type,
+        name:
+          tier === 'unique' ? '유니크 조합' :
+          tier === 'epic' ? '에픽 조합' :
+          tier === 'rare' ? '레어 조합' :
+          '일반 조합',
+        atk: type === 'atk' ? AUTO_COMBO_STATS[tier].atk : 0,
+        def: type === 'def' ? AUTO_COMBO_STATS[tier].def : 0,
+        critChance: 0,
+        critDamage: type === 'critDamage' ? AUTO_COMBO_STATS[tier].critDamage : 0,
+        hpPercent: 0,
+        lifesteal: 0,
+        damageReduce: 0,
+        extraHitChance: 0,
+        extraHitDamageRate: 0,
+        lowHpAtkPercent: 0,
+        lowHpThreshold: 0
+      };
+    }
+  };
+
+  assignTierBlock('unique', AUTO_COMBO_DISTRIBUTION.unique);
+  assignTierBlock('epic', AUTO_COMBO_DISTRIBUTION.epic);
+  assignTierBlock('rare', AUTO_COMBO_DISTRIBUTION.rare);
+
+  // 남은 건 전부 일반
+  while (index < normalKeys.length) {
+    const comboKey = normalKeys[index++];
+    table[comboKey] = {
+      tier: 'normal',
+      type: 'none',
+      name: '일반 조합',
+      atk: 0,
+      def: 0,
+      critChance: 0,
+      critDamage: 0,
+      hpPercent: 0,
+      lifesteal: 0,
+      damageReduce: 0,
+      extraHitChance: 0,
+      extraHitDamageRate: 0,
+      lowHpAtkPercent: 0,
+      lowHpThreshold: 0
+    };
+  }
+
+  return table;
+}
+
+const AUTO_RUNE_COMBOS = buildAutoComboTable();
 function getRuneSetBonus(player) {
   const comboKey = getRuneComboKey(player);
-  if (!comboKey) {
+
+  const empty = {
+    tier: null,
+    name: null,
+    atk: 0,
+    def: 0,
+    critChance: 0,
+    critDamage: 0,
+    hpPercent: 0,
+    lifesteal: 0,
+    damageReduce: 0,
+    extraHitChance: 0,
+    extraHitDamageRate: 0,
+    lowHpAtkPercent: 0,
+    lowHpThreshold: 0
+  };
+
+  if (!comboKey) return empty;
+
+  // 전설 우선
+  const legendary = LEGENDARY_RUNE_COMBOS[comboKey];
+  if (legendary) {
     return {
-      tier: null,
-      name: null,
-      atk: 0,
-      def: 0,
-      critChance: 0,
-      critDamage: 0,
-      hpPercent: 0,
-      lifesteal: 0,
-      damageReduce: 0,
-      extraHitChance: 0,
-      extraHitDamageRate: 0,
-      lowHpAtkPercent: 0,
-      lowHpThreshold: 0
+      tier: legendary.tier || 'legendary',
+      name: legendary.name || '전설 조합',
+      atk: legendary.atk || 0,
+      def: legendary.def || 0,
+      critChance: legendary.critChance || 0,
+      critDamage: legendary.critDamage || 0,
+      hpPercent: legendary.hpPercent || 0,
+      lifesteal: legendary.lifesteal || 0,
+      damageReduce: legendary.damageReduce || 0,
+      extraHitChance: legendary.extraHitChance || 0,
+      extraHitDamageRate: legendary.extraHitDamageRate || 0,
+      lowHpAtkPercent: legendary.lowHpAtkPercent || 0,
+      lowHpThreshold: legendary.lowHpThreshold || 0
     };
   }
 
-  const found = LEGENDARY_RUNE_COMBOS[comboKey];
-  if (!found) {
-    return {
-      tier: null,
-      name: null,
-      atk: 0,
-      def: 0,
-      critChance: 0,
-      critDamage: 0,
-      hpPercent: 0,
-      lifesteal: 0,
-      damageReduce: 0,
-      extraHitChance: 0,
-      extraHitDamageRate: 0,
-      lowHpAtkPercent: 0,
-      lowHpThreshold: 0
-    };
-  }
+  // 자동 생성 조합
+  const auto = AUTO_RUNE_COMBOS[comboKey];
+  if (!auto) return empty;
 
   return {
-    tier: found.tier || null,
-    name: found.name || null,
-    atk: found.atk || 0,
-    def: found.def || 0,
-    critChance: found.critChance || 0,
-    critDamage: found.critDamage || 0,
-    hpPercent: found.hpPercent || 0,
-    lifesteal: found.lifesteal || 0,
-    damageReduce: found.damageReduce || 0,
-    extraHitChance: found.extraHitChance || 0,
-    extraHitDamageRate: found.extraHitDamageRate || 0,
-    lowHpAtkPercent: found.lowHpAtkPercent || 0,
-    lowHpThreshold: found.lowHpThreshold || 0
+    tier: auto.tier,
+    name: auto.name,
+    atk: auto.atk || 0,
+    def: auto.def || 0,
+    critChance: auto.critChance || 0,
+    critDamage: auto.critDamage || 0,
+    hpPercent: auto.hpPercent || 0,
+    lifesteal: auto.lifesteal || 0,
+    damageReduce: auto.damageReduce || 0,
+    extraHitChance: auto.extraHitChance || 0,
+    extraHitDamageRate: auto.extraHitDamageRate || 0,
+    lowHpAtkPercent: auto.lowHpAtkPercent || 0,
+    lowHpThreshold: auto.lowHpThreshold || 0
   };
 }
 
@@ -677,7 +845,14 @@ function getRuneSetText(player) {
     return '발동 중인 조합 없음';
   }
 
-  const lines = [`${setBonus.name} (${setBonus.tier === 'legendary' ? '전설' : setBonus.tier})`];
+  const tierLabel =
+    setBonus.tier === 'legendary' ? '전설' :
+    setBonus.tier === 'unique' ? '유니크' :
+    setBonus.tier === 'epic' ? '에픽' :
+    setBonus.tier === 'rare' ? '레어' :
+    '일반';
+
+  const lines = [`${setBonus.name} (${tierLabel})`];
 
   if (setBonus.atk) lines.push(`공격력 +${setBonus.atk}`);
   if (setBonus.def) lines.push(`방어력 +${setBonus.def}`);
@@ -688,7 +863,9 @@ function getRuneSetText(player) {
   if (setBonus.damageReduce) lines.push(`피해감소 +${setBonus.damageReduce}%`);
   if (setBonus.extraHitChance) lines.push(`추가타 확률 +${setBonus.extraHitChance}%`);
   if (setBonus.extraHitDamageRate) lines.push(`추가타 피해 +${Math.round(setBonus.extraHitDamageRate * 100)}%`);
-  if (setBonus.lowHpAtkPercent) lines.push(`체력 ${setBonus.lowHpThreshold}% 이하 시 공격력 +${setBonus.lowHpAtkPercent}%`);
+  if (setBonus.lowHpAtkPercent) {
+    lines.push(`체력 ${setBonus.lowHpThreshold}% 이하 시 공격력 +${setBonus.lowHpAtkPercent}%`);
+  }
 
   return lines.join('\n');
 }
@@ -3745,14 +3922,17 @@ if (id === 'rune_equip_menu') {
 
   const rows = [];
 
-  if (player.runes.length > 0) {
+  const groupedRunes = getGroupedRunes(player);
+
+  // 👉 버튼 (종류별 1개)
+  if (groupedRunes.length > 0) {
     let row = new ActionRowBuilder();
 
-    player.runes.slice(0, 5).forEach((rune, i) => {
+    groupedRunes.slice(0, 5).forEach((runeGroup) => {
       row.addComponents(
         new ButtonBuilder()
-          .setCustomId(`rune_pick_${i}`)
-          .setLabel(rune.name)
+          .setCustomId(`rune_pick_key_${runeGroup.key}`)
+          .setLabel(`${runeGroup.name} x${runeGroup.count}`)
           .setStyle(ButtonStyle.Secondary)
       );
     });
@@ -3762,10 +3942,20 @@ if (id === 'rune_equip_menu') {
 
   rows.push(
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('rune_remove_menu').setLabel('🗑 룬해제').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId('rune_cancel').setLabel('❌ 닫기').setStyle(ButtonStyle.Secondary)
+      new ButtonBuilder()
+        .setCustomId('rune_remove_menu')
+        .setLabel('🗑 룬해제')
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId('rune_cancel')
+        .setLabel('❌ 닫기')
+        .setStyle(ButtonStyle.Secondary)
     )
   );
+
+  const runeBagText = groupedRunes.length
+    ? groupedRunes.map(r => `${r.name} x${r.count} (${formatRuneStats(r.stats)})`).join('\n')
+    : '보유한 룬이 없습니다.';
 
   await interaction.reply({
     content:
@@ -3774,21 +3964,26 @@ if (id === 'rune_equip_menu') {
 [현재 장착 슬롯]
 ${getEquippedRuneStatusText(player)}
 
+[보유 룬]
+${runeBagText}
+
 ${player.runes.length ? '장착할 룬을 선택하세요.' : '보유한 룬이 없습니다.'}`,
     components: rows,
     ephemeral: true
   });
+
   return;
 }
 
 
 // 🎯 룬 선택
-if (id.startsWith('rune_pick_')) {
+if (id.startsWith('rune_pick_key_')) {
   if (!player.runes) player.runes = [];
   if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
 
-  const index = Number(id.split('_')[2]);
-  const rune = player.runes[index];
+  const runeKey = id.replace('rune_pick_key_', '');
+  const index = player.runes.findIndex(r => r && r.key === runeKey);
+  const rune = index >= 0 ? player.runes[index] : null;
 
   if (!rune) {
     await interaction.reply({
@@ -3826,7 +4021,7 @@ if (id.startsWith('rune_pick_')) {
     components: [
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`rune_confirm_${index}`)
+          .setCustomId(`rune_confirm_key_${rune.key}`)
           .setLabel('✅ 장착')
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
@@ -3843,12 +4038,13 @@ if (id.startsWith('rune_pick_')) {
 
 
 // ✅ 장착 확정
-if (id.startsWith('rune_confirm_')) {
+if (id.startsWith('rune_confirm_key_')) {
   if (!player.runes) player.runes = [];
   if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
 
-  const index = Number(id.split('_')[2]);
-  const rune = player.runes[index];
+  const runeKey = id.replace('rune_confirm_key_', '');
+  const index = player.runes.findIndex(r => r && r.key === runeKey);
+  const rune = index >= 0 ? player.runes[index] : null;
 
   if (!rune) {
     await interaction.update({
