@@ -1296,7 +1296,9 @@ if(monsterName === '종말의 화신 디아블로' && chance(15)) {
 if(monsterName === '종말의 화신 디아블로' && chance(35)) {
   drops.push(['디아블로의 불', 1]);
 }
-
+if(monsterName === '디아블로' && chance(30)) {
+  drops.push(['디아블로의 불', 1]);
+}
 const uberHellSet = [
   '우버 레오릭 왕',
   '우버 안다리엘',
@@ -1729,36 +1731,6 @@ function createCraftItem(recipe){
   }
 
   return item;
-}
-
-function createRingStats(recipeId){
-  const isLilith = recipeId === 'lilith_ring';
-
-  const pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
-  const count = isLilith ? rand(2, 3) : rand(1, 3);
-
-  const picked = [];
-  while (picked.length < count) {
-    const k = pick(pool); // 🔥 버그 수정
-    if (!picked.includes(k)) picked.push(k);
-  }
-
-  const out = {
-    critChanceBonus: 0,
-    critDamageBonus: 0,
-    dodgeBonus: 0,
-    atkBonus: 0
-  };
-
-  for (const k of picked) {
-    out[k] = isLilith ? rand(4, 8) : rand(2, 5);
-  }
-
-  if (isLilith) {
-    out.atkBonus = rand(10, 18);
-  }
-
-  return out;
 }
 
 function tryCraft(player, craftId){
