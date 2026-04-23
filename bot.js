@@ -701,6 +701,7 @@ const SHOP = {
   elixir: { label: '🧪 엘릭서', heal: 99999, price: 3000 },
 
   advanced_part: { label: '🧩 고급장비조각', price: 5000 },
+  rune_stone: { label: '🌠 룬소환석', price: 500000 }, // ⭐ 이모지 추가
 };
 
 const STAT_CAPS = { critChance: 45, critDamage: 1000, dodge: 30 };
@@ -3185,7 +3186,8 @@ if (id === 'shop') {
 🍖🍖 x10 특대물약 10000G
 🧪 엘릭서 3000G
 🧩 고급장비조각 5000G
-🧩 x10 고급장비조각 50000G`,
+🧩 x10 고급장비조각 50000G
+🌠 룬소환석 300000G`,
       components: buildShopButtons(),
       ephemeral: true
     });
@@ -3363,6 +3365,7 @@ const shopMap = {
   buy_elixir: { key: 'elixir', name: '엘릭서', price: 3000, type: 'potion' },
 
   buy_advanced_part: { key: '고급장비조각', name: '고급장비조각', price: 5000, type: 'material' },
+  buy_rune_stone: { key: '룬소환석', name: '룬소환석', price: 300000, type: 'material' },
 };
   const buy = shopMap[id];
 
