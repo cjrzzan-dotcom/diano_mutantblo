@@ -3446,6 +3446,34 @@ if (id === 'buy_advanced_part_10') {
   return;
 }
 
+if (id === 'buy_rune_stone') {
+  const cost = 500000;
+
+  if (player.gold < cost) {
+    await interaction.reply({
+      content: '❌ 골드가 부족합니다. (룬소환석 1개 300000G)',
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.gold -= cost;
+  if (!player.materials) player.materials = {};
+  player.materials['룬소환석'] = (player.materials['룬소환석'] || 0) + 1;
+
+  await safeSave(player);
+
+  await interaction.reply({
+    content:
+`✅ 룬소환석 1개 구매 완료!
+
+💰 남은 골드: ${player.gold}
+🌠 보유 재료:
+룬소환석 ${player.materials['룬소환석'] || 0}개`,
+    ephemeral: true
+  });
+  return;
+}
 
 
 if (
