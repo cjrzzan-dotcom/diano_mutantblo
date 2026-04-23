@@ -548,6 +548,143 @@ function getRuneBonus(player) {
   return bonus;
 }
 
+function getEquippedRuneKeys(player) {
+  if (!player.equippedRunes) {
+    player.equippedRunes = [null, null, null, null];
+  }
+
+  return player.equippedRunes.map(r => (r ? r.key : null));
+}
+
+function getRuneComboKey(player) {
+  const keys = getEquippedRuneKeys(player);
+  if (keys.some(k => !k)) return null; // 4칸 다 안 찼으면 조합 없음
+  return keys.join('-');
+}
+
+const LEGENDARY_RUNE_COMBOS = {
+  // D-C-A-E
+  'life-rage-destroy-balance': {
+    tier: 'legendary',
+    name: '흡혈 폭주',
+    atk: 20,
+    lifesteal: 10
+  },
+
+  // C-B-E-A
+  'rage-guard-balance-destroy': {
+    tier: 'legendary',
+    name: '광기의 연격',
+    extraHitChance: 30,
+    extraHitDamageRate: 0.5
+  },
+
+  // B-D-C-E
+  'guard-life-rage-balance': {
+    tier: 'legendary',
+    name: '철벽 수호',
+    def: 10,
+    damageReduce: 15
+  },
+
+  // D-E-B-A
+  'life-balance-guard-destroy': {
+    tier: 'legendary',
+    name: '불사의 심장',
+    hpPercent: 20,
+    lowHpAtkPercent: 20,
+    lowHpThreshold: 30
+  },
+
+  // A-C-E-D
+  'destroy-rage-balance-life': {
+    tier: 'legendary',
+    name: '치명 폭발',
+    critChance: 10,     // 45% cap 위로 추가되어 최종 55% 가능
+    critDamage: 30
+  }
+};
+
+function getRuneSetBonus(player) {
+  const comboKey = getRuneComboKey(player);
+  if (!comboKey) {
+    return {
+      tier: null,
+      name: null,
+      atk: 0,
+      def: 0,
+      critChance: 0,
+      critDamage: 0,
+      hpPercent: 0,
+      lifesteal: 0,
+      damageReduce: 0,
+      extraHitChance: 0,
+      extraHitDamageRate: 0,
+      lowHpAtkPercent: 0,
+      lowHpThreshold: 0
+    };
+  }
+
+  const found = LEGENDARY_RUNE_COMBOS[comboKey];
+  if (!found) {
+    return {
+      tier: null,
+      name: null,
+      atk: 0,
+      def: 0,
+      critChance: 0,
+      critDamage: 0,
+      hpPercent: 0,
+      lifesteal: 0,
+      damageReduce: 0,
+      extraHitChance: 0,
+      extraHitDamageRate: 0,
+      lowHpAtkPercent: 0,
+      lowHpThreshold: 0
+    };
+  }
+
+  return {
+    tier: found.tier || null,
+    name: found.name || null,
+    atk: found.atk || 0,
+    def: found.def || 0,
+    critChance: found.critChance || 0,
+    critDamage: found.critDamage || 0,
+    hpPercent: found.hpPercent || 0,
+    lifesteal: found.lifesteal || 0,
+    damageReduce: found.damageReduce || 0,
+    extraHitChance: found.extraHitChance || 0,
+    extraHitDamageRate: found.extraHitDamageRate || 0,
+    lowHpAtkPercent: found.lowHpAtkPercent || 0,
+    lowHpThreshold: found.lowHpThreshold || 0
+  };
+}
+
+function getRuneSetText(player) {
+  const setBonus = getRuneSetBonus(player);
+
+  if (!setBonus.name) {
+    return '발동 중인 조합 없음';
+  }
+
+  const lines = [`${setBonus.name} (${setBonus.tier === 'legendary' ? '전설' : setBonus.tier})`];
+
+  if (setBonus.atk) lines.push(`공격력 +${setBonus.atk}`);
+  if (setBonus.def) lines.push(`방어력 +${setBonus.def}`);
+  if (setBonus.critChance) lines.push(`크리확률 +${setBonus.critChance}%`);
+  if (setBonus.critDamage) lines.push(`크리데미지 +${setBonus.critDamage}%`);
+  if (setBonus.hpPercent) lines.push(`체력 +${setBonus.hpPercent}%`);
+  if (setBonus.lifesteal) lines.push(`흡혈 +${setBonus.lifesteal}%`);
+  if (setBonus.damageReduce) lines.push(`피해감소 +${setBonus.damageReduce}%`);
+  if (setBonus.extraHitChance) lines.push(`추가타 확률 +${setBonus.extraHitChance}%`);
+  if (setBonus.extraHitDamageRate) lines.push(`추가타 피해 +${Math.round(setBonus.extraHitDamageRate * 100)}%`);
+  if (setBonus.lowHpAtkPercent) lines.push(`체력 ${setBonus.lowHpThreshold}% 이하 시 공격력 +${setBonus.lowHpAtkPercent}%`);
+
+  return lines.join('\n');
+}
+
+
 function getItemStatTextWithBless(item){
   if (!item) return '';
 
@@ -1510,15 +1647,32 @@ function getEquippedBonuses(player){
 function getAttackPower(player){
   const eq = getEquippedBonuses(player);
   const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
 
   const wb = getBlessingBonuses(player.equipment.weapon);
   const ab = getBlessingBonuses(player.equipment.armor);
   const rb = getBlessingBonuses(player.equipment.ring);
 
   const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
 
   const baseAtk = player.baseAtk + player.stats.atk;
-  const atkBeforeBless = baseAtk + eq.atk + runeBonus.atk;
+  let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
+
+  // 불사의 심장 조건부 공격력
+  const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
+  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
+  const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+
+  if (
+    setBonus.lowHpAtkPercent > 0 &&
+    setBonus.lowHpThreshold > 0 &&
+    totalMaxHp > 0 &&
+    (player.hp / totalMaxHp) * 100 <= setBonus.lowHpThreshold
+  ) {
+    atkBeforeBless += Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
+  }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
 
@@ -1538,6 +1692,7 @@ function getMaxHpWithBless(player){
 function getDefensePower(player){
   const eq = getEquippedBonuses(player);
   const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
 
   const wb = getBlessingBonuses(player.equipment.weapon);
   const ab = getBlessingBonuses(player.equipment.armor);
@@ -1547,7 +1702,7 @@ function getDefensePower(player){
 
   const baseDef = player.baseDef + Math.floor(player.level / 3);
 
-  return baseDef + eq.def + totalBlessFlatDef + runeBonus.def;
+  return baseDef + eq.def + totalBlessFlatDef + runeBonus.def + setBonus.def;
 }
 function getCritChance(player){
   const eq = getEquippedBonuses(player);
@@ -1758,6 +1913,8 @@ function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
 
   const eq = getEquippedBonuses(player);
+  const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
 
   const wb = getBlessingBonuses(player.equipment.weapon);
   const ab = getBlessingBonuses(player.equipment.armor);
@@ -1768,7 +1925,7 @@ function enemyAttack(player, target, logs){
   const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
 
   const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const finalDef = baseDef + eq.def + totalBlessFlatDef;
+  const finalDef = baseDef + eq.def + totalBlessFlatDef + runeBonus.def + setBonus.def;
 
   const finalDodge = Math.min(
     STAT_CAPS.dodge,
@@ -1780,7 +1937,13 @@ function enemyAttack(player, target, logs){
     return;
   }
 
-  const dmg = Math.max(1, target.atk - finalDef);
+  let dmg = Math.max(1, target.atk - finalDef);
+
+  // 철벽 수호 피해감소 15%
+  if (setBonus.damageReduce > 0) {
+    dmg = Math.max(1, Math.floor(dmg * (1 - setBonus.damageReduce / 100)));
+  }
+
   player.hp -= dmg;
   logs.push(makeEnemyDamageLine(target.name, dmg));
 
@@ -1890,8 +2053,10 @@ function performAttack(player, dungeonKey){
 
   const target = player.run.target;
 
-  // ⭐ 축성 포함 공격/크리/크뎀/흡혈 계산
+  // 장비 / 룬 / 조합 / 축성
   const eq = getEquippedBonuses(player);
+  const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
 
   const wb = getBlessingBonuses(player.equipment.weapon);
   const ab = getBlessingBonuses(player.equipment.armor);
@@ -1902,19 +2067,39 @@ function performAttack(player, dungeonKey){
   const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
   const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
 
+  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+
   const baseAtk = player.baseAtk + player.stats.atk;
-  const atkBeforeBless = baseAtk + eq.atk;
+  let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
+
+  // 불사의 심장 조건부 공격력
+  const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
+  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
+  const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+
+  if (
+    setBonus.lowHpAtkPercent > 0 &&
+    setBonus.lowHpThreshold > 0 &&
+    totalMaxHp > 0 &&
+    (player.hp / totalMaxHp) * 100 <= setBonus.lowHpThreshold
+  ) {
+    atkBeforeBless += Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
+  }
+
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
   const finalAtk = atkBeforeBless + blessAtkBonus;
 
-  const finalCritChance = Math.min(
+  // 치명 폭발은 cap 위로 추가
+  const cappedCritChance = Math.min(
     STAT_CAPS.critChance,
     player.stats.critChance + eq.critChance + totalBlessCritChance
   );
+  const finalCritChance = cappedCritChance + setBonus.critChance;
 
   const finalCritDamage = Math.min(
     STAT_CAPS.critDamage,
-    player.stats.critDamage + eq.critDamage + totalBlessCritDamage
+    player.stats.critDamage + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage + setBonus.critDamage
   );
 
   let damage = finalAtk - target.def;
@@ -1930,12 +2115,20 @@ function performAttack(player, dungeonKey){
   target.currentHp -= damage;
   result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
-  // ⭐ 흡혈 적용
-  if (totalBlessLifesteal > 0 && damage > 0) {
-    const heal = Math.floor(damage * (totalBlessLifesteal / 100));
+  // 광기의 연격: 추가타 30%, 추가피해 50%
+  if (target.currentHp > 0 && setBonus.extraHitChance > 0 && chance(setBonus.extraHitChance)) {
+    let extraDamage = Math.max(1, Math.floor(damage * setBonus.extraHitDamageRate));
+    target.currentHp -= extraDamage;
+    result.logs.push(`⚔️ 추가타 발동! ${extraDamage}`);
+  }
+
+  // 흡혈 적용 (축성 + 조합)
+  const totalLifesteal = totalBlessLifesteal + setBonus.lifesteal;
+  if (totalLifesteal > 0 && damage > 0) {
+    const heal = Math.floor(damage * (totalLifesteal / 100));
     const beforeHp = player.hp;
 
-    player.hp = Math.min(getMaxHpWithBless(player), player.hp + heal);
+    player.hp = Math.min(totalMaxHp, player.hp + heal);
 
     const actualHeal = player.hp - beforeHp;
     if (actualHeal > 0) {
@@ -1956,17 +2149,14 @@ function performAttack(player, dungeonKey){
 
     const dungeon = DUNGEONS[dungeonKey];
 
-    // 현재 타겟 제거
     player.run.target = null;
 
-    // 랜덤 던전이면 전투 종료
     if(dungeon.type === 'random'){
       endBattle(player);
       result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
       return result;
     }
 
-    // 웨이브 던전이면 다음 웨이브 지정
     if(dungeon.type === 'wave'){
       player.run.waveIndex += 1;
       player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
@@ -2257,6 +2447,7 @@ function getEquippedText(player){
 function buildFullStatusText(player){
   const eq = getEquippedBonuses(player);
   const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
 
   const wb = getBlessingBonuses(player.equipment.weapon);
   const ab = getBlessingBonuses(player.equipment.armor);
@@ -2273,23 +2464,40 @@ function buildFullStatusText(player){
   const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
 
   const baseAtk = player.baseAtk + player.stats.atk;
-  const atkBeforeBless = baseAtk + eq.atk + runeBonus.atk;
+  let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
+
+  // 불사의 심장 조건부 공격력
+  const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
+  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
+  const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+
+  if (
+    setBonus.lowHpAtkPercent > 0 &&
+    setBonus.lowHpThreshold > 0 &&
+    totalMaxHp > 0 &&
+    (player.hp / totalMaxHp) * 100 <= setBonus.lowHpThreshold
+  ) {
+    atkBeforeBless += Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
+  }
+
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
   const totalAtk = atkBeforeBless + blessAtkBonus;
 
   const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const totalDef = baseDef + eq.def + totalBlessFlatDef + runeBonus.def;
+  const totalDef = baseDef + eq.def + totalBlessFlatDef + runeBonus.def + setBonus.def;
 
   const baseCrit = player.stats.critChance;
-  const totalCrit = Math.min(
+  const cappedCrit = Math.min(
     STAT_CAPS.critChance,
     baseCrit + eq.critChance + totalBlessCritChance
   );
+  const totalCrit = cappedCrit + setBonus.critChance; // 전설 조합은 cap 위로 추가
 
   const baseCritDmg = player.stats.critDamage;
   const totalCritDmg = Math.min(
     STAT_CAPS.critDamage,
-    baseCritDmg + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage
+    baseCritDmg + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage + setBonus.critDamage
   );
 
   const baseDodge = player.stats.dodge;
@@ -2298,28 +2506,29 @@ function buildFullStatusText(player){
     baseDodge + eq.dodge + totalBlessDodge
   );
 
-  const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
-  const runeHpBonus = Math.floor((player.maxHp + blessHpBonus) * (runeBonus.hpPercent / 100));
-  const totalMaxHp = player.maxHp + blessHpBonus + runeHpBonus;
+  const blessHpBonus = totalMaxHp - player.maxHp;
 
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
     '',
-    `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성 ${blessHpBonus} + 룬 ${runeHpBonus})`,
-    `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 룬 ${runeBonus.atk} + 축성 ${blessAtkBonus})`,
-    `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 룬 ${runeBonus.def} + 축성 ${totalBlessFlatDef})`,
-    `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}%)`,
-    `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 룬 ${runeBonus.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
+    `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성/룬/조합 ${blessHpBonus})`,
+    `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 룬 ${runeBonus.atk} + 조합 ${setBonus.atk} + 축성 ${blessAtkBonus})`,
+    `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 룬 ${runeBonus.def} + 조합 ${setBonus.def} + 축성 ${totalBlessFlatDef})`,
+    `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}% + 조합 ${setBonus.critChance}%)`,
+    `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 룬 ${runeBonus.critDamage}% + 조합 ${setBonus.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
     `💨 회피: ${totalDodge}% (기본 ${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
-    `🩸 흡혈: ${totalBlessLifesteal}%`,
+    `🩸 흡혈: ${totalBlessLifesteal + setBonus.lifesteal}%`,
     `🔁 데미지반사: ${totalBlessReflect}%`,
     '',
     `📦 장착 장비`,
     getEquippedText(player),
     '',
     `🔮 장착 룬`,
-    getEquippedRuneStatusText(player)
+    getEquippedRuneStatusText(player),
+    '',
+    `✨ 룬 조합 효과`,
+    getRuneSetText(player)
   ].join('\n');
 }
 
@@ -2359,15 +2568,27 @@ function buildCompactBattleText(player,target,channelId){
   }
 
   const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
 
-  const blessedHp = getMaxHpWithBless(player);
-  const maxHp = Math.floor(blessedHp * (1 + runeBonus.hpPercent / 100));
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+
+  const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
+  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
+  const maxHp = baseHpWithBless + runeHpBonus + setHpBonus;
 
   if (player.hp > maxHp) player.hp = maxHp;
 
   lines.push(`<#${channelId}>`);
   lines.push(`❤️ ${player.hp}/${maxHp}`);
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
+
+  if (setBonus.name) {
+    lines.push(`✨ ${setBonus.name}`);
+  }
 
   lines.push(
     `💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`
@@ -2550,7 +2771,7 @@ function buildStatusButtons(player){
 
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('rune_draw').setLabel('🎲 룬뽑기').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('🪄 룬장착').setStyle(ButtonStyle.Primary)
+      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('룬장착').setStyle(ButtonStyle.Primary)
     )
   ];
 }
