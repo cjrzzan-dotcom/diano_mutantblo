@@ -1059,7 +1059,7 @@ const SHOP = {
   elixir: { label: '🧪 엘릭서', heal: 99999, price: 3000 },
 
   advanced_part: { label: '🧩 고급장비조각', price: 5000 },
-  rune_stone: { label: '🌠 룬소환석', price: 500000 }, // ⭐ 이모지 추가
+  rune_stone: { label: '🌠 룬소환석', price: 300000 }, // ⭐ 이모지 추가
 };
 
 
@@ -3521,13 +3521,13 @@ if (command === '!아이템지급') {
   const kind = args[2];
 
   if (!kind) {
-    await message.reply('종류: 검 / 갑옷 / 링 / 세트 / 부활권');
+    await message.reply('종류: 검 / 갑옷 / 링 / 세트 / 부활권 / 룬소환석');
     return;
   }
 
   const player = getPlayer(target.id);
 
-  // 🔥 부활권 단독 지급 (제일 위!)
+  // 🔥 부활권 단독 지급
   if (kind === '부활권') {
     const amount = Number(args[3]) || 1;
 
@@ -3541,7 +3541,20 @@ if (command === '!아이템지급') {
     return;
   }
 
+  // 🔥 룬소환석 단독 지급
+  if (kind === '룬소환석') {
+    const amount = Number(args[3]) || 1;
 
+    if (!player.materials) player.materials = {};
+    player.materials['룬소환석'] = (player.materials['룬소환석'] || 0) + amount;
+
+    await safeSave(player);
+
+    await message.reply(
+      `🌠 ${target.username}에게 룬소환석 ${amount}개 지급 완료 (현재 ${player.materials['룬소환석']}개)`
+    );
+    return;
+  }
 
   // 🔥 세트 지급
   if (kind === '세트') {
@@ -3591,7 +3604,6 @@ if (command === '!아이템지급') {
 
     player.inventory.push(sword, armor, ring);
 
-    // 부활권도 같이
     player.reviveTickets = (player.reviveTickets || 0) + 10;
 
     await safeSave(player);
@@ -3650,7 +3662,7 @@ if (command === '!아이템지급') {
       temperCount: 5
     };
   } else {
-    await message.reply('종류: 검 / 갑옷 / 링 / 세트 / 부활권');
+    await message.reply('종류: 검 / 갑옷 / 링 / 세트 / 부활권 / 룬소환석');
     return;
   }
 
@@ -4541,7 +4553,7 @@ if (id === 'buy_advanced_part_10') {
 }
 
 if (id === 'buy_rune_stone') {
-  const cost = 500000;
+  const cost = 300000;
 
   if (player.gold < cost) {
     await interaction.reply({
