@@ -1593,6 +1593,39 @@ function getPlayer(userId) {
   return player;
 }
 
+function formatItemFullText(item) {
+  if (!item) return '없음';
+
+  const enhance = item.enhanceLevel ? `+${item.enhanceLevel} ` : '';
+
+  const lines = [];
+
+  // 이름
+  lines.push(`${enhance}${item.name}`);
+
+  // 담금질
+  if (item.temperCount !== undefined) {
+    lines.push(`⚒️ 담금질: ${item.temperCount}/5`);
+  }
+
+  // 축성
+  if (item.blessing) {
+    lines.push(`✨ 축성: ${item.blessing.label}`);
+  }
+
+  // 빈 줄
+  lines.push('');
+
+  // 스탯
+  if (item.atkBonus) lines.push(`⚔️ 공격력 +${item.atkBonus}`);
+  if (item.defBonus) lines.push(`🛡️ 방어력 +${item.defBonus}`);
+  if (item.critChanceBonus) lines.push(`💥 크확 +${item.critChanceBonus}%`);
+  if (item.critDamageBonus) lines.push(`🔥 크뎀 +${item.critDamageBonus}%`);
+  if (item.dodgeBonus) lines.push(`💨 회피 +${item.dodgeBonus}%`);
+
+  return lines.join('\n');
+}
+
 
 function getRandomMonster(dungeonKey) {
   const dungeon = DUNGEONS[dungeonKey];
@@ -2625,10 +2658,10 @@ function getEquippedText(player){
   const r = player.equipment?.ring;
 
   return [
-    `⚔️ 무기: ${w ? formatItemName(w) : '없음'}`,
-    `🛡️ 방어구: ${a ? formatItemName(a) : '없음'}`,
-    `💍 반지: ${r ? formatItemName(r) : '없음'}`
-  ].join('\n');
+    `⚔️ 무기\n${formatItemFullText(w)}`,
+    `🛡️ 방어구\n${formatItemFullText(a)}`,
+    `💍 반지\n${formatItemFullText(r)}`
+  ].join('\n\n');
 }
 
 function buildFullStatusText(player){
