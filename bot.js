@@ -2265,7 +2265,7 @@ return [
   `🔮 장착 룬`,
   getEquippedRuneStatusText(player)
 ].join('\n');
-
+}
 
 function buildBagText(player){
   const mats = Object.entries(player.materials || {})
