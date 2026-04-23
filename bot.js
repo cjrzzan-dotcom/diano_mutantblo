@@ -548,6 +548,15 @@ function getRuneBonus(player) {
   return bonus;
 }
 
+function isRuneAlreadyEquipped(player, runeKey) {
+  if (!player.equippedRunes) {
+    player.equippedRunes = [null, null, null, null];
+  }
+
+  return player.equippedRunes.some(rune => rune && rune.key === runeKey);
+}
+
+
 function getEquippedRuneKeys(player) {
   if (!player.equippedRunes) {
     player.equippedRunes = [null, null, null, null];
@@ -3775,10 +3784,27 @@ ${player.runes.length ? '장착할 룬을 선택하세요.' : '보유한 룬이 
 
 // 🎯 룬 선택
 if (id.startsWith('rune_pick_')) {
+  if (!player.runes) player.runes = [];
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+
   const index = Number(id.split('_')[2]);
   const rune = player.runes[index];
 
-  if (!rune) return;
+  if (!rune) {
+    await interaction.reply({
+      content: '❌ 해당 룬을 찾을 수 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (isRuneAlreadyEquipped(player, rune.key)) {
+    await interaction.reply({
+      content: `❌ ${rune.name}은(는) 이미 장착 중입니다.`,
+      ephemeral: true
+    });
+    return;
+  }
 
   const emptySlot = player.equippedRunes.findIndex(v => v === null);
 
@@ -3799,8 +3825,14 @@ if (id.startsWith('rune_pick_')) {
 정말 장착하시겠습니까?`,
     components: [
       new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`rune_confirm_${index}`).setLabel('✅ 장착').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId('rune_cancel').setLabel('❌ 취소').setStyle(ButtonStyle.Danger)
+        new ButtonBuilder()
+          .setCustomId(`rune_confirm_${index}`)
+          .setLabel('✅ 장착')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId('rune_cancel')
+          .setLabel('❌ 취소')
+          .setStyle(ButtonStyle.Danger)
       )
     ],
     ephemeral: true
@@ -3812,13 +3844,37 @@ if (id.startsWith('rune_pick_')) {
 
 // ✅ 장착 확정
 if (id.startsWith('rune_confirm_')) {
+  if (!player.runes) player.runes = [];
+  if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
+
   const index = Number(id.split('_')[2]);
   const rune = player.runes[index];
 
-  if (!rune) return;
+  if (!rune) {
+    await interaction.update({
+      content: '❌ 장착할 룬을 찾을 수 없습니다.',
+      components: []
+    });
+    return;
+  }
+
+  if (isRuneAlreadyEquipped(player, rune.key)) {
+    await interaction.update({
+      content: `❌ ${rune.name}은(는) 이미 장착 중입니다.`,
+      components: []
+    });
+    return;
+  }
 
   const slot = player.equippedRunes.findIndex(v => v === null);
-  if (slot === -1) return;
+
+  if (slot === -1) {
+    await interaction.update({
+      content: '❌ 룬 슬롯이 가득 찼습니다.',
+      components: []
+    });
+    return;
+  }
 
   player.equippedRunes[slot] = rune;
   player.runes.splice(index, 1);
