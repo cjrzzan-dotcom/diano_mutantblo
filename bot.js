@@ -524,6 +524,30 @@ function getBlessingBonuses(item){
   return out;
 }
 
+function getRuneBonus(player) {
+  const bonus = {
+    atk: 0,
+    def: 0,
+    critDamage: 0,
+    hpPercent: 0
+  };
+
+  if (!player.equippedRunes) return bonus;
+
+  for (const rune of player.equippedRunes) {
+    if (!rune) continue;
+
+    const s = rune.stats;
+
+    if (s.atk) bonus.atk += s.atk;
+    if (s.def) bonus.def += s.def;
+    if (s.critDamage) bonus.critDamage += s.critDamage;
+    if (s.hpPercent) bonus.hpPercent += s.hpPercent;
+  }
+
+  return bonus;
+}
+
 function getItemStatTextWithBless(item){
   if (!item) return '';
 
@@ -1485,7 +1509,20 @@ function getEquippedBonuses(player){
 }
 function getAttackPower(player){
   const eq = getEquippedBonuses(player);
-  return player.baseAtk + player.stats.atk * 1 + eq.atk;
+  const runeBonus = getRuneBonus(player);
+
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
+
+  const baseAtk = player.baseAtk + player.stats.atk;
+  const atkBeforeBless = baseAtk + eq.atk + runeBonus.atk;
+
+  const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+
+  return atkBeforeBless + blessAtkBonus;
 }
 function getMaxHpWithBless(player){
   const wb = getBlessingBonuses(player.equipment.weapon);
@@ -1500,7 +1537,17 @@ function getMaxHpWithBless(player){
 
 function getDefensePower(player){
   const eq = getEquippedBonuses(player);
-  return player.baseDef + Math.floor(player.level / 3) + eq.def;
+  const runeBonus = getRuneBonus(player);
+
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+
+  const baseDef = player.baseDef + Math.floor(player.level / 3);
+
+  return baseDef + eq.def + totalBlessFlatDef + runeBonus.def;
 }
 function getCritChance(player){
   const eq = getEquippedBonuses(player);
@@ -2211,6 +2258,7 @@ function getEquippedText(player){
 
 function buildFullStatusText(player){
   const eq = getEquippedBonuses(player);
+  const runeBonus = getRuneBonus(player);
 
   const wb = getBlessingBonuses(player.equipment.weapon);
   const ab = getBlessingBonuses(player.equipment.armor);
@@ -2227,44 +2275,54 @@ function buildFullStatusText(player){
   const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
 
   const baseAtk = player.baseAtk + player.stats.atk;
-  const atkBeforeBless = baseAtk + eq.atk;
+  const atkBeforeBless = baseAtk + eq.atk + runeBonus.atk;
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
   const totalAtk = atkBeforeBless + blessAtkBonus;
 
   const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const totalDef = baseDef + eq.def + totalBlessFlatDef;
+  const totalDef = baseDef + eq.def + totalBlessFlatDef + runeBonus.def;
 
   const baseCrit = player.stats.critChance;
-  const totalCrit = Math.min(STAT_CAPS.critChance, baseCrit + eq.critChance + totalBlessCritChance);
+  const totalCrit = Math.min(
+    STAT_CAPS.critChance,
+    baseCrit + eq.critChance + totalBlessCritChance
+  );
 
   const baseCritDmg = player.stats.critDamage;
-  const totalCritDmg = Math.min(STAT_CAPS.critDamage, baseCritDmg + eq.critDamage + totalBlessCritDamage);
+  const totalCritDmg = Math.min(
+    STAT_CAPS.critDamage,
+    baseCritDmg + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage
+  );
 
   const baseDodge = player.stats.dodge;
-  const totalDodge = Math.min(STAT_CAPS.dodge, baseDodge + eq.dodge + totalBlessDodge);
+  const totalDodge = Math.min(
+    STAT_CAPS.dodge,
+    baseDodge + eq.dodge + totalBlessDodge
+  );
 
-  const totalMaxHp = getMaxHpWithBless(player);
-  const blessHpBonus = totalMaxHp - player.maxHp;
+  const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+  const runeHpBonus = Math.floor((player.maxHp + blessHpBonus) * (runeBonus.hpPercent / 100));
+  const totalMaxHp = player.maxHp + blessHpBonus + runeHpBonus;
 
-return [
-  `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
-  `🎯 스탯포인트: ${player.statPoints}`,
-  '',
-  `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성 ${blessHpBonus})`,
-  `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 축성 ${blessAtkBonus})`,
-  `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 축성 ${totalBlessFlatDef})`,
-  `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}%)`,
-  `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
-  `💨 회피: ${totalDodge}% (기본 ${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
-  `🩸 흡혈: ${totalBlessLifesteal}%`,
-  `🔁 데미지반사: ${totalBlessReflect}%`,
-  '',
-  `📦 장착 장비`,
-  getEquippedText(player),
-  '',
-  `🔮 장착 룬`,
-  getEquippedRuneStatusText(player)
-].join('\n');
+  return [
+    `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
+    `🎯 스탯포인트: ${player.statPoints}`,
+    '',
+    `❤️ HP: ${player.hp}/${totalMaxHp} (기본 ${player.maxHp} + 축성 ${blessHpBonus} + 룬 ${runeHpBonus})`,
+    `⚔️ 공격력: ${totalAtk} (기본 ${baseAtk} + 장비 ${eq.atk} + 룬 ${runeBonus.atk} + 축성 ${blessAtkBonus})`,
+    `🛡️ 방어력: ${totalDef} (기본 ${baseDef} + 장비 ${eq.def} + 룬 ${runeBonus.def} + 축성 ${totalBlessFlatDef})`,
+    `💥 크리확률: ${totalCrit}% (기본 ${baseCrit}% + 장비 ${eq.critChance}% + 축성 ${totalBlessCritChance}%)`,
+    `🔥 크리데미지: +${totalCritDmg}% (기본 ${baseCritDmg}% + 장비 ${eq.critDamage}% + 룬 ${runeBonus.critDamage}% + 축성 ${totalBlessCritDamage}%)`,
+    `💨 회피: ${totalDodge}% (기본 ${baseDodge}% + 장비 ${eq.dodge}% + 축성 ${totalBlessDodge}%)`,
+    `🩸 흡혈: ${totalBlessLifesteal}%`,
+    `🔁 데미지반사: ${totalBlessReflect}%`,
+    '',
+    `📦 장착 장비`,
+    getEquippedText(player),
+    '',
+    `🔮 장착 룬`,
+    getEquippedRuneStatusText(player)
+  ].join('\n');
 }
 
 function buildBagText(player){
@@ -2302,15 +2360,17 @@ function buildCompactBattleText(player,target,channelId){
     lines.push('━━━━━━━━━━');
   }
 
-  const maxHp = getMaxHpWithBless(player); // 🔥 핵심
+  const runeBonus = getRuneBonus(player);
+
+  const blessedHp = getMaxHpWithBless(player);
+  const maxHp = Math.floor(blessedHp * (1 + runeBonus.hpPercent / 100));
+
   if (player.hp > maxHp) player.hp = maxHp;
 
-
   lines.push(`<#${channelId}>`);
-  lines.push(`❤️ ${player.hp}/${maxHp}`); // 🔥 여기 바뀜
+  lines.push(`❤️ ${player.hp}/${maxHp}`);
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
 
-  // 🔥 물약 표시 확장
   lines.push(
     `💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`
   );
@@ -2473,7 +2533,9 @@ function getEquippedRuneStatusText(player) {
   }
 
   return player.equippedRunes.map((rune, index) => {
-    return `${index + 1}번 슬롯: ${rune ? rune.name : '비어 있음'}`;
+    if (!rune) return `${index + 1}번 슬롯: 비어 있음`;
+
+    return `${index + 1}번 슬롯: ${rune.name} (${formatRuneStats(rune.stats)})`;
   }).join('\n');
 }
 
@@ -3513,6 +3575,8 @@ if (id.startsWith('rune_pick_')) {
   return;
 }
 
+
+
 if (id.startsWith('rune_confirm_')) {
   const index = Number(id.split('_')[2]);
   const rune = player.runes[index];
@@ -3535,11 +3599,60 @@ if (id.startsWith('rune_confirm_')) {
   return;
 }
 
+
+
 if (id === 'rune_cancel') {
   await interaction.update({
     content: '❌ 취소되었습니다.',
     components: []
   });
+  return;
+}
+if (id.startsWith('rune_remove_')) {
+  const slot = Number(id.split('_')[2]) - 1;
+
+  const rune = player.equippedRunes[slot];
+
+  if (!rune) {
+    await interaction.reply({
+      content: '❌ 비어 있는 슬롯입니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  await interaction.reply({
+    content:
+`${slot + 1}번 슬롯 ${rune.name} 해제
+
+⚠️ 해제하면 룬은 사라집니다.
+진짜 삭제할거냐?`,
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`rune_remove_confirm_${slot}`).setLabel('✅ 삭제').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId('rune_cancel').setLabel('❌ 취소').setStyle(ButtonStyle.Secondary)
+      )
+    ],
+    ephemeral: true
+  });
+
+  return;
+}
+
+if (id.startsWith('rune_remove_confirm_')) {
+  const slot = Number(id.split('_')[3]);
+
+  const rune = player.equippedRunes[slot];
+
+  player.equippedRunes[slot] = null;
+
+  await safeSave(player);
+
+  await interaction.update({
+    content: `🗑 ${rune.name} 삭제됨`,
+    components: []
+  });
+
   return;
 }
 
