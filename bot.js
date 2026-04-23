@@ -643,7 +643,7 @@ const MATERIAL_PRICES = {
   '디아블로의 뿔': 700,
 
   '천상의 조각': 1000,
-  '디아블로의 불': 100,
+  '디아블로의 불': 1000,
   '세계석조각': 2,
   '부활권':500000,
 
@@ -718,7 +718,7 @@ const MATERIALS = [
   '드래곤 비늘', '드래곤 발톱', '번개조각', '얼음조각', '붉은화염조각', '푸른화염조각', '어둠조각',
   '좀비드래곤의 피', '메탈조각', '좀비드래곤의 가죽', '빛의 조각', '암흑의 조각',
   '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', 
-  '릴리트의 뿔', '디아블로의 뿔', '고급장비조각',
+  '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','디아블로의 불'
   '천상의 조각','천상석','세계석조각','오염된세계석조각',
 ];
 
@@ -750,6 +750,7 @@ const CRAFTS = [
 { id:'demon_cloak', label:'악마의망토', type:'armor', materials:{ '고급장비조각':20, '악마의 살점':20 }, base:{atk:0,def:68} },
 { id:'demon_sword', label:'악마의검', type:'weapon', gold:20000,  materials:{ '고급장비조각':20, '악마의 정수':20 }, base:{atk:70,def:0} },
 { id:'lilith_ring', label:'릴리트의 반지', type:'ring', gold:30000,  materials:{ '릴리트의 뿔':20 }, ringRandom:true, base:{atk:0,def:0} },
+{ id:'diablo_ring', label:'디아불반지', type:'ring', gold:35000,  materials:{ '디아블로의 불':20 }, ringRandom:true, base:{atk:0,def:0} },
 { id:'end_sword', label:'종말의검', type:'weapon', gold:40000,  materials:{ '디아블로의 뿔':20 }, base:{atk:88,def:0} },
 
 { id:'corrupted_judgement', label:'오염된 천상의 심판', type:'weapon', gold:50000, materials:{ '오염된세계석조각':5, '고급장비조각':80 }, base:{atk:95,def:15} },
@@ -1119,11 +1120,47 @@ function rollRarity(){
   }
   return RARITIES[0];
 }
-function createRingStats(recipeId){
-  const isLilith = recipeId === 'lilith_ring';
 
-  const pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
-  const count = isLilith ? rand(2, 3) : rand(1, 3);
+function createRingStats(recipeId) {
+  const isLilith = recipeId === 'lilith_ring';
+  const isDiablo = recipeId === 'diablo_ring';
+
+  let pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
+  let countMin = 1;
+  let countMax = 3;
+  let valueMin = 2;
+  let valueMax = 5;
+
+  const out = {
+    critChanceBonus: 0,
+    critDamageBonus: 0,
+    dodgeBonus: 0,
+    atkBonus: 0,
+    defBonus: 0
+  };
+
+  // 릴리트 반지: 크리/회피 쪽 특화, 공격은 조금
+  if (isLilith) {
+    countMin = 2;
+    countMax = 3;
+    valueMin = 3;
+    valueMax = 6;
+  }
+
+  // 디아불 반지: 공격/방어 중심 + 보조 옵션 약간
+  if (isDiablo) {
+    pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
+    countMin = 2;
+    countMax = 3;
+    valueMin = 5;
+    valueMax = 8;
+
+    // 디아불 기본 추가 스탯
+    out.atkBonus += rand(15, 20);
+    out.defBonus += rand(15, 20);
+  }
+
+  const count = rand(countMin, countMax);
 
   const picked = [];
   while (picked.length < count) {
@@ -1131,24 +1168,16 @@ function createRingStats(recipeId){
     if (!picked.includes(k)) picked.push(k);
   }
 
-  const out = {
-    critChanceBonus: 0,
-    critDamageBonus: 0,
-    dodgeBonus: 0,
-    atkBonus: 0
-  };
-
   for (const k of picked) {
-    out[k] = isLilith ? rand(4, 8) : rand(2, 5);
+    out[k] += rand(valueMin, valueMax);
   }
 
   if (isLilith) {
-    out.atkBonus = rand(10, 18);
+    out.atkBonus += rand(6, 12);
   }
 
   return out;
 }
-
 function getEquippedBonuses(player){
   const bonus = { atk:0, def:0, critChance:0, critDamage:0, dodge:0 };
   for(const item of Object.values(player.equipment)){
@@ -1261,8 +1290,11 @@ if(['메피스토','디아블로'].includes(monsterName) && chance(35)) {
   drops.push(['세계석조각', 1]);
 }
 
-if(monsterName === '종말의 화신 디아블로' && chance(40)) {
+if(monsterName === '종말의 화신 디아블로' && chance(15)) {
   drops.push(['세계석조각', 1]);
+}
+if(monsterName === '종말의 화신 디아블로' && chance(35)) {
+  drops.push(['디아블로의 불', 1]);
 }
 
 const uberHellSet = [
