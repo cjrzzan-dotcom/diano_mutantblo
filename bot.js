@@ -2304,6 +2304,7 @@ function buildShopButtons(){
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('buy_advanced_part').setLabel('🧩 5000G').setStyle(ButtonStyle.Secondary),
       new ButtonBuilder().setCustomId('buy_advanced_part_10').setLabel('🧩×10 (50000G)').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('buy_rune_stone_10').setLabel('🌠 (300000G)').setStyle(ButtonStyle.Secondary),
     )
   ];
 }
