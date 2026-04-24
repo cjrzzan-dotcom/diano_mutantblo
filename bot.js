@@ -1949,7 +1949,7 @@ else if (dungeonKey === '깊은심연의숲') {
     currentHp: base.hp,
    
   };
-}
+
 
 function getFileCandidate(name){
   const candidates = ['.png','.jpg','.jpeg','.webp'].map(ext => path.join(IMAGE_PATH, `${name}${ext}`));
