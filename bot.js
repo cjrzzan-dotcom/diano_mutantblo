@@ -640,7 +640,7 @@ function rebalanceXpOnce(player){
   if (player.xpRebalanceV1) return;
 
   // 새 공식으로 현재 레벨의 nextXp 재설정
-  player.nextXp = Math.floor(200 + player.level * 50);
+  player.nextXp = Math.floor 800 + player.level * 350);
 
   // ⭐ 핵심: 이미 쌓인 xp로 가능한 만큼 레벨업 처리 삭제
   const logs = giveXp(player, 0);
@@ -1766,7 +1766,7 @@ function getPlayer(userId) {
 
   // ⭐ 여기 추가 (핵심)
   if (!player.xpRebalanceV1) {
-    player.nextXp = Math.floor(800 + player.level * 350);
+    player.nextXp = Math.floor(10000 + player.level * 500);
 
     const logs = giveXp(player, 0); // 기존 XP로 레벨업 처리
 
