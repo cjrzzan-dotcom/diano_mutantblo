@@ -876,24 +876,36 @@ function buildBlessButtons(player){
 function getRandomMonster(key){
   const pool = DUNGEONS[key].monsters;
 
-  // ⭐ 심연의틈만 특수 확률
   if (key === '심연의틈') {
+    const special = pool.filter(m => m.rate);
+    const normals = pool.filter(m => !m.rate);
 
-    // 🎁 희귀몹 먼저 체크
-    for (const m of pool) {
-      if (m.rate && chance(m.rate)) {
-        console.log('🔥 희귀몹 등장:', m.name);
-        return m;
+    const roll = Math.random() * 100;
+    let acc = 0;
+
+    for (const m of special) {
+      acc += m.rate;
+
+      if (roll < acc) {
+        return {
+          ...m,
+          currentHp: m.hp
+        };
       }
     }
 
-    // 🎯 나머지 일반몹 랜덤
-    const normals = pool.filter(m => !m.rate);
-    return pick(normals);
+    const picked = pick(normals);
+    return {
+      ...picked,
+      currentHp: picked.hp
+    };
   }
 
-  // ⭐ 다른 던전은 그냥 랜덤
-  return pick(pool);
+  const picked = pick(pool);
+  return {
+    ...picked,
+    currentHp: picked.hp
+  };
 }
 
 
@@ -1819,11 +1831,6 @@ function formatItemSimpleText(item) {
 }
 
 
-function getRandomMonster(dungeonKey) {
-  const dungeon = DUNGEONS[dungeonKey];
-  if (!dungeon || !Array.isArray(dungeon.monsters) || dungeon.monsters.length === 0) {
-    return null;
-  }
 
   let base = null;
   const monsters = dungeon.monsters;
@@ -2248,7 +2255,7 @@ function giveXp(player, amount){
   while(player.xp >= player.nextXp){
     player.xp -= player.nextXp;
     player.level += 1;
-    player.nextXp = Math.floor(200 + player.level * 50);
+    player.nextXp = Math.floor(10000 + player.level * 500);
     player.maxHp += 12;
     player.hp = player.maxHp;
     player.statPoints += 3;
