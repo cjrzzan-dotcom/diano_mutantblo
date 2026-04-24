@@ -2198,81 +2198,63 @@ function getMaterialDrops(monsterName){
       break;
   }
 
-  const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','티리엘'];
+const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','티리엘'];
 
   if(heavenSet.includes(monsterName)){
     if(chance(20)) drops.push(['천상석',1]);
     if(chance(20)) drops.push(['천상의 조각',1]);
   }
 
-  return drops;
-}
-
- const hellGate = ['도살자','레오릭 왕','두리엘','안다리엘','벨리알','아즈모단','릴리트','바알','메피스토','디아블로','종말의 화신 디아블로'];
+  const hellGate = ['도살자','레오릭 왕','두리엘','안다리엘','벨리알','아즈모단','릴리트','바알','메피스토','디아블로','종말의 화신 디아블로'];
   if(hellGate.includes(monsterName) && chance(40)) drops.push(['고급장비조각',1]);
 
   if(monsterName === '도살자' && chance(40)) drops.push(['도살자의 도끼조각',1]);
   if(monsterName === '레오릭 왕' && chance(40)) drops.push(['레오릭왕의 뼈조각',1]);
   if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 살점',1]);
   if(monsterName === '릴리트' && chance(35)) drops.push(['릴리트의 뿔',1]);
-if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) {
-  drops.push(['악마의 정수', 1]);
-}
 
-if(monsterName === '종말의 화신 디아블로' && chance(40)) {
-  drops.push(['디아블로의 뿔', 1]);
-}
+  if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) {
+    drops.push(['악마의 정수', 1]);
+  }
 
-// 🔥 세계석조각 드랍 추가
-if(['메피스토','디아블로'].includes(monsterName) && chance(35)) {
-  drops.push(['세계석조각', 1]);
-}
+  if(monsterName === '종말의 화신 디아블로' && chance(40)) {
+    drops.push(['디아블로의 뿔', 1]);
+  }
 
-if(monsterName === '종말의 화신 디아블로' && chance(15)) {
-  drops.push(['세계석조각', 1]);
-}
-if(monsterName === '종말의 화신 디아블로' && chance(35)) {
-  drops.push(['디아블로의 불', 1]);
-}
-if(monsterName === '디아블로' && chance(30)) {
-  drops.push(['디아블로의 불', 1]);
-}
-const uberHellSet = [
-  '우버 레오릭 왕',
-  '우버 안다리엘',
-  '우버 두리엘',
-  '우버 바알',
-  '우버 디아블로',
-  '우버 메피스토',
-  '우버 릴리트',
-  '우버 종말의 화신 디아블로'
-];
+  if(['메피스토','디아블로'].includes(monsterName) && chance(35)) {
+    drops.push(['세계석조각', 1]);
+  }
 
-if (uberHellSet.includes(monsterName)) {
-  if (chance(35)) drops.push(['오염된세계석조각', 1]);
-  if (chance(50)) drops.push(['고급장비조각', 1]);
-}
+  if(monsterName === '종말의 화신 디아블로' && chance(15)) {
+    drops.push(['세계석조각', 1]);
+  }
 
+  if(monsterName === '종말의 화신 디아블로' && chance(35)) {
+    drops.push(['디아블로의 불', 1]);
+  }
 
+  if(monsterName === '디아블로' && chance(30)) {
+    drops.push(['디아블로의 불', 1]);
+  }
+
+  const uberHellSet = [
+    '우버 레오릭 왕',
+    '우버 안다리엘',
+    '우버 두리엘',
+    '우버 바알',
+    '우버 디아블로',
+    '우버 메피스토',
+    '우버 릴리트',
+    '우버 종말의 화신 디아블로'
+  ];
+
+  if (uberHellSet.includes(monsterName)) {
+    if (chance(35)) drops.push(['오염된세계석조각', 1]);
+    if (chance(50)) drops.push(['고급장비조각', 1]);
+  }
 
   return drops;
 }
-
-function getEnhanceTargetItem(player){
-  const target = player.selectedEnhanceTarget;
-  if(!target) return null;
-
-  if(target.type === 'inventory'){
-    return player.inventory[target.index] || null;
-  }
-
-  if(target.type === 'equipped'){
-    return player.equipment[target.slot] || null;
-  }
-
-  return null;
-}
-
 function giveXp(player, amount){
   player.xp += amount;
   const msgs = [];
