@@ -633,6 +633,29 @@ const AUTO_COMBO_STATS = {
   }
 };
 
+
+
+
+function rebalanceXpOnce(player){
+  if (player.xpRebalanceV1) return;
+
+  // 새 공식으로 현재 레벨의 nextXp 재설정
+  player.nextXp = Math.floor(200 + player.level * 50);
+
+  // ⭐ 핵심: 이미 쌓인 xp로 가능한 만큼 레벨업 처리 삭제
+  const logs = giveXp(player, 0);
+
+  // 1회만 실행되도록 플래그
+  player.xpRebalanceV1 = true;
+
+  return logs; // 필요하면 메시지에 써먹어도 됨
+}
+
+
+
+
+
+
 function simpleHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -1371,23 +1394,23 @@ const DUNGEONS = {
   ]},
   '지옥의심장부': { type: 'wave', autoAllowed: false, waves: [
     { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [1800,2000], xp: 120 },
-    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [2000,2200], xp: 135 },
-    { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [2200,2400], xp: 145 },
-    { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [2400,2600], xp: 165 },
-    { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [2600,2800], xp: 175 },
-    { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [2800,3000], xp: 182 },
-    { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [3000,3200], xp: 190 },
-    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [3500,4000], xp: 260 },
+    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [2000,2200], xp: 125 },
+    { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [2200,2400], xp: 130 },
+    { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [2400,2600], xp: 135 },
+    { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [2600,2800], xp: 140 },
+    { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [2800,3000], xp: 145 },
+    { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [3000,3200], xp: 150 },
+    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [3500,4000], xp: 170 },
   ]},
 '드높은천상': { type: 'random', autoAllowed: false, monsters: [
-  { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [3200,3600], xp: 210 },
-  { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [3400,3800], xp: 220 },
-  { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [4200,4800], xp: 260 },
-  { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [5200,6000], xp: 320 },
-  { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [8000,10000], xp: 500 },
+  { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [3200,3600], xp: 175 },
+  { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [3400,3800], xp: 180 },
+  { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [4200,4800], xp: 185 },
+  { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [5200,6000], xp: 190 },
+  { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [8000,10000], xp: 300 },
 ]},
   '지옥의왕좌': { type: 'wave', autoAllowed: false, waves: [
-    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 120, gold: [10000,10000], xp: 300 },
+    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 120, gold: [10000,10000], xp: 350 },
     { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 120, gold: [10000,12000], xp: 500 },
     { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 120, gold: [13000,15000], xp: 800 },
   ]},
@@ -1700,6 +1723,17 @@ function getPlayer(userId) {
   if (!player.runes) player.runes = [];
   if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
   if (!player.pendingRuneAction) player.pendingRuneAction = null;
+
+  // ⭐ 여기 추가 (핵심)
+  if (!player.xpRebalanceV1) {
+    player.nextXp = Math.floor(200 + player.level * 50);
+
+    const logs = giveXp(player, 0); // 기존 XP로 레벨업 처리
+
+    player.xpRebalanceV1 = true;
+
+    console.log(`XP 보정 적용: ${userId}`, logs);
+  }
 
   return player;
 }
@@ -2187,7 +2221,7 @@ function giveXp(player, amount){
   while(player.xp >= player.nextXp){
     player.xp -= player.nextXp;
     player.level += 1;
-    player.nextXp = Math.floor(player.nextXp * 1.25);
+    player.nextXp = Math.floor(200 + player.level * 50);
     player.maxHp += 12;
     player.hp = player.maxHp;
     player.statPoints += 3;
