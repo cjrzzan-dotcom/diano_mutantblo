@@ -636,26 +636,6 @@ const AUTO_COMBO_STATS = {
 
 
 
-function rebalanceXpOnce(player){
-  if (player.xpRebalanceV1) return;
-
-  // 새 공식으로 현재 레벨의 nextXp 재설정
-  player.nextXp = Math.floor 800 + player.level * 350);
-
-  // ⭐ 핵심: 이미 쌓인 xp로 가능한 만큼 레벨업 처리 삭제
-  const logs = giveXp(player, 0);
-
-  // 1회만 실행되도록 플래그
-  player.xpRebalanceV1 = true;
-
-  return logs; // 필요하면 메시지에 써먹어도 됨
-}
-
-
-
-
-
-
 function simpleHash(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
