@@ -825,7 +825,32 @@ function getRandomMonster(key){
   }
 
   const pool = dungeon.monsters;
+  if (!Array.isArray(pool) || pool.length === 0) {
+    console.log('❌ 몬스터 목록 없음:', key);
+    return null;
+  }
 
+  if (key === '심연의틈') {
+    const special = pool.filter(m => m.rate);
+    const normals = pool.filter(m => !m.rate);
+
+    const roll = Math.random() * 100;
+    let acc = 0;
+
+    for (const m of special) {
+      acc += m.rate;
+      if (roll < acc) {
+        return { ...m, currentHp: m.hp };
+      }
+    }
+
+    const picked = pick(normals);
+    return { ...picked, currentHp: picked.hp };
+  }
+
+  const picked = pick(pool);
+  return { ...picked, currentHp: picked.hp };
+}
 function getRuneSetText(player) {
   const setBonus = getRuneSetBonus(player);
 
