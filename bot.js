@@ -1184,13 +1184,37 @@ const CRAFTS = [
 
 {
   id: 'make_high_frag',
-  label: '고급장비조각',
+  label: '고급장비조각 x1',
   type: 'material',
   materials: {
     '낡은장비조각': 5
   },
   result: {
     '고급장비조각': 1
+  }
+},
+
+{
+  id: 'make_high_frag_5',
+  label: '고급장비조각 x5',
+  type: 'material',
+  materials: {
+    '낡은장비조각': 25
+  },
+  result: {
+    '고급장비조각': 5
+  }
+},
+
+{
+  id: 'make_high_frag_10',
+  label: '고급장비조각 x10',
+  type: 'material',
+  materials: {
+    '낡은장비조각': 50
+  },
+  result: {
+    '고급장비조각': 10
   }
 },
 
