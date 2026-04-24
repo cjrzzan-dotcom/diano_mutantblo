@@ -215,7 +215,7 @@ const client = new Client({
 
 
 
-const AUTO_HUNT_CHARGE_MS = 1 * 60 * 1000; // 1분
+const AUTO_HUNT_CHARGE_MS = 3 * 60 * 1000; // 1분
 const AUTO_HUNT_MAX_CHARGES = 50;
 const AUTO_HUNT_TURNS = 500;
 
@@ -1411,7 +1411,7 @@ const DUNGEONS = {
     { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
   ]},
 
-'심연의틈': { type: 'random', autoAllowed: false, monsters: [
+'심연의틈': { type: 'random', autoAllowed: true, monsters: [
   { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 60 },
   { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 70 },
   { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 84 },
