@@ -893,6 +893,27 @@ function buildBlessButtons(player){
   ];
 }
 
+function getRandomMonster(key){
+  const pool = DUNGEONS[key].monsters;
+
+  // ⭐ 심연의 틈만 특수 확률
+  if (key === '심연의틈') {
+    const roll = Math.random() * 100;
+
+    if (roll < 0.6) {
+      return pick(pool.slice(-3)); // 잭팟
+    }
+    if (roll < 1.2) {
+      return pick(pool.slice(-6, -3)); // 드래곤
+    }
+
+    return pick(pool.slice(0, -6)); // 일반
+  }
+
+  // ⭐ 나머지 던전은 그냥 랜덤
+  return pick(pool);
+}
+
 function createRandomOptionsByRarity(rarityKey){
   const optionPool = [
     'atkBonus',
@@ -1106,13 +1127,13 @@ const MATERIAL_PRICES = {
 
   '릴리트의 뿔': 500,
   '고급장비조각': 500,
-  '천상석': 500,
+  '천상석': 5000,
 
   '디아블로의 뿔': 700,
 
-  '천상의 조각': 1000,
+  '천상의 조각': 5000,
   '디아블로의 불': 1000,
-  '세계석조각': 2,
+  '세계석조각': 1000,
   '부활권':500000,
 
 };
@@ -1121,6 +1142,7 @@ const DUNGEON_CHANNELS_PROD = {
   '1487952892852965426': '초심자의숲',
   '1487952924092010667': '오색룡의둥지',
   '1487953115024982076': '지옥의관문',
+  '1497130371752394753': '심연의틈',
   '1487953176677060780': '지옥의심장부',
   '1487953322160816148': '지옥의왕좌',
 '1490976926762926100': '드높은천상',
@@ -1156,6 +1178,7 @@ const DISPLAY_NAMES = {
   '깊은심연의숲': '깊은심연의숲',
   '오색룡의둥지': '오색룡의 둥지',
   '지옥의관문': '지옥의 관문',
+  '심연의틈: '심연의 틈',
   '지옥의심장부': '지옥의 심장부',
   '지옥의왕좌': '지옥의 왕좌',
 };
@@ -1274,8 +1297,6 @@ const CRAFTS = [
   { id:'metal_sword', label:'장군넴소드', type:'weapon', materials:{ '낡은장비조각':8, '메탈조각':5 }, base:{atk:38,def:0} },
   { id:'metal_armor', label:'장군넴아머', type:'armor', materials:{ '낡은장비조각':8, '메탈조각':10 }, base:{atk:0,def:38} },
   { id:'bald_armor', label:'대머리갑옷', type:'armor', materials:{ '낡은장비조각':9, '좀비드래곤의 가죽':5 }, base:{atk:0,def:43} },
-  { id:'light_sword', label:'빛의검', type:'weapon', materials:{ '낡은장비조각':10, '빛의 조각':5 }, base:{atk:45,def:0} },
-  { id:'light_armor', label:'암흑갑옷', type:'armor', materials:{ '낡은장비조각':10, '암흑의 조각':5 }, base:{atk:0,def:50} },
 
 { id:'butcher_axe', label:'도살자의도끼', type:'weapon', materials:{ '고급장비조각':10, '도살자의 도끼조각':15 }, base:{atk:52,def:0} },
 { id:'leoric_armor', label:'레오릭왕의갑옷', type:'armor', materials:{ '고급장비조각':15, '레오릭왕의 뼈조각':15 }, base:{atk:0,def:55} },
@@ -1288,8 +1309,8 @@ const CRAFTS = [
 { id:'corrupted_judgement', label:'오염된 천상의 심판', type:'weapon', gold:50000, materials:{ '오염된세계석조각':5, '고급장비조각':80 }, base:{atk:95,def:15} },
 { id:'corrupted_heaven_armor', label:'오염된 천상의 갑주', type:'armor', gold:50000, materials:{ '오염된세계석조각':5, '고급장비조각':80 }, base:{atk:15,def:80} },
 
-{ id:'lightning_sword', label:'천상의 심판', type:'weapon', gold:100000,  materials:{ '천상의 조각':5, '천상석' :30 },  base:{atk:105,def:30} },
-{ id:'lightning_armor', label:'천상의 갑주', type:'armor',  gold:100000, materials:{ '천상의 조각':5, '천상석' :30 }, base:{atk:30,def:105} },
+{ id:'lightning_sword', label:'천상의 심판', type:'weapon', gold:100000,  materials:{ '천상의 조각':30, '천상석' :30 },  base:{atk:105,def:30} },
+{ id:'lightning_armor', label:'천상의 갑주', type:'armor',  gold:100000, materials:{ '천상의 조각':30, '천상석' :30 }, base:{atk:30,def:105} },
 
 
 {
@@ -1370,9 +1391,6 @@ const DUNGEONS = {
     { name: '좀비드래곤', hp: 800, atk: 50, def: 15, gold: [100,120], xp: 52 },
     { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [120,140], xp: 65 },
     { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [140,150], xp: 70 },
-    { name: '빛의 군주 드래곤', hp: 1200, atk: 70, def: 25, gold: [150,200], xp: 80 },
-    { name: '암흑의 군주 드래곤', hp: 1300, atk: 75, def: 30, gold: [200,300], xp: 100 },
-    { name: '창조 드래곤', hp: 1500, atk: 80, def: 35, gold: [100,150], xp: 120 },
     { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
     { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
     { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500 },
@@ -1392,6 +1410,28 @@ const DUNGEONS = {
     { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 150 },
     { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
   ]},
+
+'심연의틈': { type: 'random', autoAllowed: false, monsters: [
+  { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 60 },
+  { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 70 },
+  { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 84 },
+  { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [200,250], xp: 88 },
+  { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [250,300], xp: 96 },
+  { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [300,350], xp: 105 },
+  { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [600,700], xp: 120 },
+  { name: '바알', hp: 1500, atk: 130, def: 65, gold: [700,800], xp: 130 },
+  { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 140 },
+  { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 150 },
+  { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
+  { name: '빛의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230 },
+  { name: '암흑의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230 },
+  { name: '창조 드래곤', hp: 6000, atk: 80, def: 35, gold: [2000,2500], xp: 240 },
+  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
+  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
+  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500 },
+]},
+
+
   '지옥의심장부': { type: 'wave', autoAllowed: false, waves: [
     { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [1800,2000], xp: 120 },
     { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [2000,2200], xp: 125 },
@@ -2137,18 +2177,36 @@ function getMaterialDrops(monsterName){
     case '좀비드래곤': if(chance(40)) drops.push(['좀비드래곤의 피',1]); break;
     case '메탈드래곤': if(chance(30)) drops.push(['메탈조각',1]); break;
     case '대독드래곤': if(chance(30)) drops.push(['좀비드래곤의 가죽',1]); break;
-    case '빛의 군주 드래곤': if(chance(30)) drops.push(['빛의 조각',1]); break;
-    case '암흑의 군주 드래곤': if(chance(40)) drops.push(['암흑의 조각',1]); break;
-    case '창조 드래곤': if(chance(50)) drops.push(['빛의 조각',3]); break;
-    case '에인절라스드래곤': drops.push(['부활권',5]); break;
-    case '티리엘': drops.push(['천상의 조각',1]); break;
-}
-const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','티리엘'];
 
-if(heavenSet.includes(monsterName)){
-  if(chance(40)) drops.push(['천상석',1]);
+    case '빛의 군주 드래곤':
+    case '암흑의 군주 드래곤':
+      if(chance(5)) drops.push(['천상의 조각',1]);
+      if(chance(5)) drops.push(['천상석',1]);
+      break;
 
+    case '창조 드래곤':
+      if(chance(10)) drops.push(['천상의 조각',1]);
+      if(chance(10)) drops.push(['천상석',1]);
+      break;
+
+    case '에인절라스드래곤':
+      drops.push(['부활권',5]);
+      break;
+
+    case '티리엘':
+      drops.push(['천상의 조각',1]);
+      break;
   }
+
+  const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','티리엘'];
+
+  if(heavenSet.includes(monsterName)){
+    if(chance(20)) drops.push(['천상석',1]);
+    if(chance(20)) drops.push(['천상의 조각',1]);
+  }
+
+  return drops;
+}
 
  const hellGate = ['도살자','레오릭 왕','두리엘','안다리엘','벨리알','아즈모단','릴리트','바알','메피스토','디아블로','종말의 화신 디아블로'];
   if(hellGate.includes(monsterName) && chance(40)) drops.push(['고급장비조각',1]);
