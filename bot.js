@@ -816,6 +816,16 @@ function getRuneSetBonus(player) {
   };
 }
 
+function getRandomMonster(key){
+  const dungeon = DUNGEONS[key];
+
+  if (!dungeon) {
+    console.log('❌ 잘못된 던전키:', key);
+    return null;
+  }
+
+  const pool = dungeon.monsters;
+
 function getRuneSetText(player) {
   const setBonus = getRuneSetBonus(player);
 
@@ -1949,7 +1959,6 @@ else if (dungeonKey === '깊은심연의숲') {
     currentHp: base.hp,
    
   };
-
 
 function getFileCandidate(name){
   const candidates = ['.png','.jpg','.jpeg','.webp'].map(ext => path.join(IMAGE_PATH, `${name}${ext}`));
