@@ -2292,9 +2292,6 @@ function performAttack(player, dungeonKey){
   }
 
   const target = player.run.target;
-  const setBonus = getRuneSetBonus(player);
-
-
   // 장비 / 룬 / 조합 / 축성
   const eq = getEquippedBonuses(player);
   const runeBonus = getRuneBonus(player);
@@ -2367,6 +2364,29 @@ const finalCritChance =
 
   target.currentHp -= damage;
   result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+
+if (
+  setBonus.extraHitChance &&
+  chance(setBonus.extraHitChance) &&
+  target.currentHp > 0
+) {
+  let extraDamage = Math.max(1, Math.floor(damage * (setBonus.extraHitDamageRate || 0.5)));
+  let extraCrit = false;
+
+  // 추가타도 크리 판정
+  if (chance(finalCritChance)) {
+    extraDamage = Math.floor(extraDamage * (1.5 + finalCritDamage / 100));
+    extraCrit = true;
+  }
+
+  target.currentHp -= extraDamage;
+
+  result.logs.push(
+    extraCrit
+      ? `⚡ 추가타 치명타! ${extraDamage}`
+      : `⚡ 추가타 ${extraDamage}`
+  );
+}
 
 if (
   setBonus.extraHitChance &&
