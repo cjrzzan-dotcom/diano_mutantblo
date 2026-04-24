@@ -2269,9 +2269,7 @@ function performAttack(player, dungeonKey){
   const result = { logs:[], killedTarget:null, levelUps:[], clearedDungeon:false };
 
   const revived = reviveIfRespawnReady(player);
-  if(revived){
-    result.logs.push('✨ 부활 시간이 지나 자동으로 부활했습니다.');
-  }
+  if(revived) result.logs.push('✨ 부활 시간이 지나 자동으로 부활했습니다.');
 
   createRunIfNeeded(player, dungeonKey);
 
@@ -2292,7 +2290,7 @@ function performAttack(player, dungeonKey){
   }
 
   const target = player.run.target;
-  // 장비 / 룬 / 조합 / 축성
+
   const eq = getEquippedBonuses(player);
   const runeBonus = getRuneBonus(player);
   const setBonus = getRuneSetBonus(player);
@@ -2305,53 +2303,40 @@ function performAttack(player, dungeonKey){
   const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
   const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
   const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
-
   const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
 
   const baseAtk = player.baseAtk + player.stats.atk;
   let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
 
-  // 불사의 심장 조건부 공격력
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
   const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
   const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
   const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
 
+  // 불사의 심장: 체력 30% 이하 공격력 +20%
   if (
     setBonus.lowHpAtkPercent > 0 &&
     setBonus.lowHpThreshold > 0 &&
     totalMaxHp > 0 &&
     (player.hp / totalMaxHp) * 100 <= setBonus.lowHpThreshold
   ) {
-    atkBeforeBless += Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
+    const lowHpBonus = Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
+    atkBeforeBless += lowHpBonus;
+    result.logs.push(`🔥 저체력 버프 +${lowHpBonus}`);
   }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-  let finalAtk = atkBeforeBless + blessAtkBonus;
+  const finalAtk = atkBeforeBless + blessAtkBonus;
 
-    if (
-  setBonus.lowHpAtkPercent &&
-  (player.hp / getMaxHpWithBless(player)) * 100 <= setBonus.lowHpThreshold
-) {
-  const bonus = Math.floor(finalAtk * (setBonus.lowHpAtkPercent / 100));
-  finalAtk += bonus;
-  result.logs.push(`🔥 저체력 버프 +${bonus}`);
-}  
+  // 치명 폭발: 기본/장비/축성은 45% 캡, 조합은 캡 위로 추가
+  const baseCritChance = player.stats.critChance + eq.critChance + totalBlessCritChance;
+  const finalCritChance = Math.min(STAT_CAPS.critChance, baseCritChance) + (setBonus.critChance || 0);
 
-
-  // 치명 폭발은 cap 위로 추가
-  const cappedCritChance = Math.min(
-    STAT_CAPS.critChance,
-    player.stats.critChance + eq.critChance + totalBlessCritChance
+  const finalCritDamage = Math.min(
+    STAT_CAPS.critDamage,
+    player.stats.critDamage + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage + setBonus.critDamage
   );
-  const finalCritChance = cappedCritChance + setBonus.critChance;
 
-const baseCritChance =
-  player.stats.critChance + eq.critChance + totalBlessCritChance;
-
-const finalCritChance =
-  Math.min(STAT_CAPS.critChance, baseCritChance) +
-  (setBonus.critChance || 0);
   let damage = finalAtk - target.def;
   let isCrit = false;
 
@@ -2365,49 +2350,25 @@ const finalCritChance =
   target.currentHp -= damage;
   result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
-if (
-  setBonus.extraHitChance &&
-  chance(setBonus.extraHitChance) &&
-  target.currentHp > 0
-) {
-  let extraDamage = Math.max(1, Math.floor(damage * (setBonus.extraHitDamageRate || 0.5)));
-  let extraCrit = false;
+  // 광기의 연격: 추가타 30%, 추가타도 크리 가능
+  if (
+    target.currentHp > 0 &&
+    setBonus.extraHitChance > 0 &&
+    chance(setBonus.extraHitChance)
+  ) {
+    let extraDamage = Math.max(1, Math.floor(damage * (setBonus.extraHitDamageRate || 0.5)));
+    let extraCrit = false;
 
-  // 추가타도 크리 판정
-  if (chance(finalCritChance)) {
-    extraDamage = Math.floor(extraDamage * (1.5 + finalCritDamage / 100));
-    extraCrit = true;
-  }
+    if (chance(finalCritChance)) {
+      extraDamage = Math.floor(extraDamage * (1.5 + finalCritDamage / 100));
+      extraCrit = true;
+    }
 
-  target.currentHp -= extraDamage;
-
-  result.logs.push(
-    extraCrit
-      ? `⚡ 추가타 치명타! ${extraDamage}`
-      : `⚡ 추가타 ${extraDamage}`
-  );
-}
-
-if (
-  setBonus.extraHitChance &&
-  chance(setBonus.extraHitChance) &&
-  target.currentHp > 0
-) {
-  const extraDamage = Math.floor(damage * (setBonus.extraHitDamageRate || 0.5));
-
-  target.currentHp -= extraDamage;
-
-  result.logs.push(`⚡ 추가타 ${extraDamage}`);
-}
-
-  // 광기의 연격: 추가타 30%, 추가피해 50%
-  if (target.currentHp > 0 && setBonus.extraHitChance > 0 && chance(setBonus.extraHitChance)) {
-    let extraDamage = Math.max(1, Math.floor(damage * setBonus.extraHitDamageRate));
     target.currentHp -= extraDamage;
-    result.logs.push(`⚔️ 추가타 발동! ${extraDamage}`);
+    result.logs.push(extraCrit ? `⚡ 추가타 치명타! ${extraDamage}` : `⚡ 추가타 ${extraDamage}`);
   }
 
-  // 흡혈 적용 (축성 + 조합)
+  // 흡혈 적용
   const totalLifesteal = totalBlessLifesteal + setBonus.lifesteal;
   if (totalLifesteal > 0 && damage > 0) {
     const heal = Math.floor(damage * (totalLifesteal / 100));
@@ -2416,9 +2377,7 @@ if (
     player.hp = Math.min(totalMaxHp, player.hp + heal);
 
     const actualHeal = player.hp - beforeHp;
-    if (actualHeal > 0) {
-      result.logs.push(`🩸 흡혈 +${actualHeal}`);
-    }
+    if (actualHeal > 0) result.logs.push(`🩸 흡혈 +${actualHeal}`);
   }
 
   if(target.currentHp <= 0){
@@ -2433,7 +2392,6 @@ if (
     player.run.kills += 1;
 
     const dungeon = DUNGEONS[dungeonKey];
-
     player.run.target = null;
 
     if(dungeon.type === 'random'){
@@ -2477,6 +2435,10 @@ if (
   enemyAttack(player, target, result.logs);
   return result;
 }
+
+
+
+
 
 function tryUpgradeStat(player, key){
   if(player.statPoints <= 0) return '스탯포인트가 없습니다.';
