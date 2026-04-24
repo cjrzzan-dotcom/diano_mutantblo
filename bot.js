@@ -3988,16 +3988,23 @@ if (id === 'craft_cat_material') {
       return;
     }
 
-    player.inventory.splice(index, 1);
-    player.gold += getItemSellPrice(item);
+const price = getItemSellPrice(item);
 
-    await safeSave(player);
+player.inventory.splice(index, 1);
+player.gold += price;
 
-    await interaction.reply({
-      content: `💰 판매 완료`,
-      ephemeral: true
-    });
-    return;
+await safeSave(player);
+
+await interaction.reply({
+  content:
+`💰 판매 완료!
+
+📦 ${item.name}
+💰 획득: ${price}G
+💰 보유 골드: ${player.gold}G`,
+  ephemeral: true
+});
+return;
   }
 
 if (id === 'bless_select') {
