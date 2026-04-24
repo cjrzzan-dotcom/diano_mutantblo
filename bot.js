@@ -2292,6 +2292,8 @@ function performAttack(player, dungeonKey){
   }
 
   const target = player.run.target;
+  const setBonus = getRuneSetBonus(player);
+
 
   // 장비 / 룬 / 조합 / 축성
   const eq = getEquippedBonuses(player);
@@ -2328,7 +2330,17 @@ function performAttack(player, dungeonKey){
   }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-  const finalAtk = atkBeforeBless + blessAtkBonus;
+  let finalAtk = atkBeforeBless + blessAtkBonus;
+
+    if (
+  setBonus.lowHpAtkPercent &&
+  (player.hp / getMaxHpWithBless(player)) * 100 <= setBonus.lowHpThreshold
+) {
+  const bonus = Math.floor(finalAtk * (setBonus.lowHpAtkPercent / 100));
+  finalAtk += bonus;
+  result.logs.push(`🔥 저체력 버프 +${bonus}`);
+}  
+
 
   // 치명 폭발은 cap 위로 추가
   const cappedCritChance = Math.min(
@@ -2337,11 +2349,12 @@ function performAttack(player, dungeonKey){
   );
   const finalCritChance = cappedCritChance + setBonus.critChance;
 
-  const finalCritDamage = Math.min(
-    STAT_CAPS.critDamage,
-    player.stats.critDamage + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage + setBonus.critDamage
-  );
+const baseCritChance =
+  player.stats.critChance + eq.critChance + totalBlessCritChance;
 
+const finalCritChance =
+  Math.min(STAT_CAPS.critChance, baseCritChance) +
+  (setBonus.critChance || 0);
   let damage = finalAtk - target.def;
   let isCrit = false;
 
@@ -2354,6 +2367,18 @@ function performAttack(player, dungeonKey){
 
   target.currentHp -= damage;
   result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+
+if (
+  setBonus.extraHitChance &&
+  chance(setBonus.extraHitChance) &&
+  target.currentHp > 0
+) {
+  const extraDamage = Math.floor(damage * (setBonus.extraHitDamageRate || 0.5));
+
+  target.currentHp -= extraDamage;
+
+  result.logs.push(`⚡ 추가타 ${extraDamage}`);
+}
 
   // 광기의 연격: 추가타 30%, 추가피해 50%
   if (target.currentHp > 0 && setBonus.extraHitChance > 0 && chance(setBonus.extraHitChance)) {
