@@ -878,21 +878,24 @@ function getRandomMonster(key){
 
   // ⭐ 심연의틈만 특수 확률
   if (key === '심연의틈') {
-    const roll = Math.random() * 100;
 
-    if (roll < 0.6) {
-      return pick(pool.slice(-3)); // 잭팟
-    }
-    if (roll < 1.2) {
-      return pick(pool.slice(-6, -3)); // 드래곤
+    // 🎁 희귀몹 먼저 체크
+    for (const m of pool) {
+      if (m.rate && chance(m.rate)) {
+        console.log('🔥 희귀몹 등장:', m.name);
+        return m;
+      }
     }
 
-    return pick(pool.slice(0, -6)); // 일반
+    // 🎯 나머지 일반몹 랜덤
+    const normals = pool.filter(m => !m.rate);
+    return pick(normals);
   }
 
-  // ⭐ 나머지 던전은 그냥 랜덤
+  // ⭐ 다른 던전은 그냥 랜덤
   return pick(pool);
 }
+
 
 function createRandomOptionsByRarity(rarityKey){
   const optionPool = [
@@ -1403,12 +1406,16 @@ const DUNGEONS = {
   { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 140 },
   { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 150 },
   { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
-  { name: '빛의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230 },
-  { name: '암흑의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230 },
-  { name: '창조 드래곤', hp: 6000, atk: 80, def: 35, gold: [2000,2500], xp: 240 },
-  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
-  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
-  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500 },
+
+  // 🐉 드래곤 (0.2%)
+  { name: '빛의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230, rate: 0.2 },
+  { name: '암흑의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230, rate: 0.2 },
+  { name: '창조 드래곤', hp: 6000, atk: 80, def: 35, gold: [2000,2500], xp: 240, rate: 0.2 },
+
+  // 🎁 잭팟 (0.2%)
+  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200, rate: 0.2 },
+  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300, rate: 0.2 },
+  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500, rate: 0.2 },
 ]},
 
 
