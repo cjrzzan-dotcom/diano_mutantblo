@@ -896,7 +896,7 @@ function buildBlessButtons(player){
 function getRandomMonster(key){
   const pool = DUNGEONS[key].monsters;
 
-  // ⭐ 심연의 틈만 특수 확률
+  // ⭐ 심연의틈만 특수 확률
   if (key === '심연의틈') {
     const roll = Math.random() * 100;
 
