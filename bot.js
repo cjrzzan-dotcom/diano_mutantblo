@@ -3020,26 +3020,25 @@ function buildBattleButtons(player, dungeonKey){
   const down = !!player.run?.isDown;
 
   return [
-    // 1줄
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('attack').setLabel('⚔️ 공격').setStyle(ButtonStyle.Danger).setDisabled(down),
-      new ButtonBuilder().setCustomId('use_small').setLabel('💊').setStyle(ButtonStyle.Secondary).setDisabled(down),
-      new ButtonBuilder().setCustomId('use_mid').setLabel('🍗').setStyle(ButtonStyle.Secondary).setDisabled(down),
+      new ButtonBuilder().setCustomId('attack_1').setLabel('⚔️ 1타').setStyle(ButtonStyle.Danger).setDisabled(down),
+      new ButtonBuilder().setCustomId('attack_3').setLabel('⚔️ 3타').setStyle(ButtonStyle.Danger).setDisabled(down),
+      new ButtonBuilder().setCustomId('attack_5').setLabel('⚔️ 5타').setStyle(ButtonStyle.Danger).setDisabled(down),
       new ButtonBuilder().setCustomId('status').setLabel('📋 상태창').setStyle(ButtonStyle.Primary),
     ),
 
-    // 2줄
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),     
+      new ButtonBuilder().setCustomId('use_small').setLabel('💊').setStyle(ButtonStyle.Secondary).setDisabled(down),
+      new ButtonBuilder().setCustomId('use_mid').setLabel('🍗').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_big').setLabel('🍖').setStyle(ButtonStyle.Secondary).setDisabled(down),
-      new ButtonBuilder().setCustomId('use_elixir').setLabel('🧪').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('auto').setLabel(canAuto ? '🤖 자동' : '자동불가').setStyle(canAuto ? ButtonStyle.Success : ButtonStyle.Secondary).setDisabled(!canAuto || down),
     ),
 
-    // 🔥 3줄 (신규 물약)
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('use_large').setLabel('🥩').setStyle(ButtonStyle.Secondary).setDisabled(down),
       new ButtonBuilder().setCustomId('use_huge').setLabel('🍖🍖').setStyle(ButtonStyle.Secondary).setDisabled(down),
+      new ButtonBuilder().setCustomId('use_elixir').setLabel('🧪').setStyle(ButtonStyle.Secondary).setDisabled(down),
+      new ButtonBuilder().setCustomId('revive').setLabel('💖 부활권').setStyle(ButtonStyle.Success).setDisabled(!down || player.reviveTickets <= 0),
     ),
   ];
 }
@@ -5018,51 +5017,63 @@ await interaction.editReply(
   return;
 }
 
-if (id === 'attack') {
+if (id === 'attack_1' || id === 'attack_3' || id === 'attack_5') {
   await interaction.deferUpdate();
-      if (!player.run) createRunIfNeeded(player, dungeonKey);
 
-      if (!player.run.target && player.run.nextTarget) {
-        player.run.lastDrops = [];
-        player.run.target = player.run.nextTarget;
-        player.run.nextTarget = null;
-        await safeSave(player);
+  const attackCount =
+    id === 'attack_5' ? 5 :
+    id === 'attack_3' ? 3 :
+    1;
 
-await interaction.editReply(
-  buildIntroPayload(dungeonKey, player.run.target)
-);
+  if (!player.run) createRunIfNeeded(player, dungeonKey);
 
-        await sleep(INTRO_DELAY_MS);
+  if (!player.run.target && player.run.nextTarget) {
+    player.run.lastDrops = [];
+    player.run.target = player.run.nextTarget;
+    player.run.nextTarget = null;
+    await safeSave(player);
 
-        await interaction.editReply(
-          buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
-        );
-        return;
-      }
+    await interaction.editReply(
+      buildIntroPayload(dungeonKey, player.run.target)
+    );
 
-      const logs = [];
+    await sleep(INTRO_DELAY_MS);
 
-      for (let i = 0; i < 3; i++) {
-        if (!player.run) break;
-        if (player.run.isDown) break;
+    await interaction.editReply(
+      buildBattlePayload(player, interaction.channelId, dungeonKey, '전투 시작!')
+    );
+    return;
+  }
 
-        logs.push(`\n⚔️ [${i + 1}턴]`);
+  const logs = [];
 
-        const result = performAttack(player, dungeonKey);
-        logs.push(...result.logs);
+  for (let i = 0; i < attackCount; i++) {
+    if (!player.run) break;
+    if (player.run.isDown) break;
+    if (!player.run.target) break;
 
-        if (Date.now() < player.respawnAt) break;
-        if (!player.run?.target && player.run?.nextTarget) break;
-      }
+    logs.push(`\n⚔️ [${i + 1}타]`);
 
-      await safeSave(player);
+    const result = performAttack(player, dungeonKey);
+    logs.push(...result.logs);
 
-await interaction.editReply(
-  buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
-);
-      return;
-    }
-});
+    // 죽었으면 중단
+    if (Date.now() < player.respawnAt) break;
+
+    // 몬스터 죽어서 다음 몬스터 대기 상태면 중단
+    if (!player.run?.target && player.run?.nextTarget) break;
+
+    // 전투 종료됐으면 중단
+    if (!player.run) break;
+  }
+
+  await safeSave(player);
+
+  await interaction.editReply(
+    buildBattlePayload(player, interaction.channelId, dungeonKey, logs.join('\n'))
+  );
+  return;
+}
 
 
 require('dotenv').config();
