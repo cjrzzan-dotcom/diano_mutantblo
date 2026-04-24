@@ -5075,6 +5075,8 @@ if (id === 'attack_1' || id === 'attack_3' || id === 'attack_5') {
   return;
 }
 
+});
+
 
 require('dotenv').config();
 
