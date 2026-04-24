@@ -4560,13 +4560,21 @@ if (id === 'status') {
   return;
 }
 
-  if (id === 'bag_view') {
-    await interaction.reply({
-      content: buildBagText(player),
-      ephemeral: true
-    });
-    return;
-  }
+if (id === 'bag_view') {
+  await interaction.reply({
+    content: buildBagText(player),
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('mat_sell_page_1')
+          .setLabel('📦 재료판매')
+          .setStyle(ButtonStyle.Danger)
+      )
+    ],
+    ephemeral: true
+  });
+  return;
+}
 
 
 
