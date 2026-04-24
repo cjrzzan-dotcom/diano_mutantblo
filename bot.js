@@ -3546,17 +3546,23 @@ client.on('messageCreate', async (message) => {
 
 
 if(command === '!가방'){
-    console.log("📦 !가방 분기 들어옴");
+  console.log("📦 !가방 분기 들어옴");
 
-new ButtonBuilder()
-  .setCustomId('mat_sell_page_1')
-  .setLabel('📦 재료판매')
-  .setStyle(ButtonStyle.Danger)
+  await safeSave(player);
 
+  await message.reply({
+    content: buildBagText(player),
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('mat_sell_page_1')
+          .setLabel('📦 재료판매')
+          .setStyle(ButtonStyle.Danger)
+      )
+    ]
+  });
 
-    await safeSave(player);
-    await message.reply({ content: buildBagText(player) });
-    return;
+  return;
 }
 
   if(command === '!도움말'){
