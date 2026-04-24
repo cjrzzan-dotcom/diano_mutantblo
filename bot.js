@@ -1766,7 +1766,7 @@ function getPlayer(userId) {
 
   // ⭐ 여기 추가 (핵심)
   if (!player.xpRebalanceV1) {
-    player.nextXp = Math.floor(200 + player.level * 50);
+    player.nextXp = Math.floor(800 + player.level * 350);
 
     const logs = giveXp(player, 0); // 기존 XP로 레벨업 처리
 
