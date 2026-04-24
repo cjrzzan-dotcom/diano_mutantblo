@@ -365,6 +365,93 @@ const GRADE_SELL_PRICE = {
   legendary: 2000
 };
 
+const MATERIALS_PER_PAGE = 5;
+
+function getSellableMaterials(player) {
+  if (!player.materials) player.materials = {};
+
+  return Object.entries(player.materials)
+    .filter(([name, amount]) => amount > 0 && MATERIAL_PRICES[name])
+    .map(([name, amount]) => ({
+      name,
+      amount,
+      price: MATERIAL_PRICES[name]
+    }));
+}
+
+function buildMaterialSellText(player, page = 1) {
+  const materials = getSellableMaterials(player);
+  const totalPages = Math.max(1, Math.ceil(materials.length / MATERIALS_PER_PAGE));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+
+  const allMatsText = Object.entries(player.materials || {})
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `${k} ${v}`)
+    .join(' / ') || '없음';
+
+  return [
+    `📦 재료 목록`,
+    allMatsText,
+    '',
+    `💰 판매 가능 재료 (${safePage}/${totalPages})`,
+    materials.length
+      ? materials
+          .slice((safePage - 1) * MATERIALS_PER_PAGE, safePage * MATERIALS_PER_PAGE)
+          .map(m => `${m.name} x${m.amount} → ${m.price * m.amount}G`)
+          .join('\n')
+      : '판매 가능한 재료가 없습니다.'
+  ].join('\n');
+}
+
+function buildMaterialSellButtons(player, page = 1) {
+  const materials = getSellableMaterials(player);
+  const totalPages = Math.max(1, Math.ceil(materials.length / MATERIALS_PER_PAGE));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+
+  const start = (safePage - 1) * MATERIALS_PER_PAGE;
+  const pageItems = materials.slice(start, start + MATERIALS_PER_PAGE);
+
+  const rows = [];
+
+  if (pageItems.length > 0) {
+    const row = new ActionRowBuilder();
+
+    pageItems.forEach((mat, i) => {
+      row.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`sell_mat_${start + i}_${safePage}`)
+          .setLabel(`${mat.name} 판매`)
+          .setStyle(ButtonStyle.Danger)
+      );
+    });
+
+    rows.push(row);
+  }
+
+  rows.push(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`mat_sell_page_${safePage - 1}`)
+        .setLabel('◀ 이전')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(safePage <= 1),
+
+      new ButtonBuilder()
+        .setCustomId(`mat_sell_page_${safePage + 1}`)
+        .setLabel('다음 ▶')
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(safePage >= totalPages),
+
+      new ButtonBuilder()
+        .setCustomId('bag_view')
+        .setLabel('🎒 가방')
+        .setStyle(ButtonStyle.Primary)
+    )
+  );
+
+  return rows;
+}
+
 
 function getWaveMonster(dungeonKey, idx){
   const dungeon = DUNGEONS[dungeonKey];
@@ -3460,6 +3547,13 @@ client.on('messageCreate', async (message) => {
 
 if(command === '!가방'){
     console.log("📦 !가방 분기 들어옴");
+
+new ButtonBuilder()
+  .setCustomId('mat_sell_page_1')
+  .setLabel('📦 재료판매')
+  .setStyle(ButtonStyle.Danger)
+
+
     await safeSave(player);
     await message.reply({ content: buildBagText(player) });
     return;
@@ -3941,6 +4035,63 @@ client.on('interactionCreate', async (interaction) => {
     });
     return;
   }
+
+if (id.startsWith('mat_sell_page_')) {
+  const page = Number(id.split('_')[3]) || 1;
+
+  await interaction.reply({
+    content: buildMaterialSellText(player, page),
+    components: buildMaterialSellButtons(player, page),
+    ephemeral: true
+  });
+  return;
+}
+
+if (id.startsWith('sell_mat_')) {
+  const parts = id.split('_');
+  const index = Number(parts[2]);
+  const page = Number(parts[3]) || 1;
+
+  const materials = getSellableMaterials(player);
+  const mat = materials[index];
+
+  if (!mat) {
+    await interaction.reply({
+      content: '❌ 판매할 재료를 찾을 수 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const have = player.materials[mat.name] || 0;
+  if (have <= 0) {
+    await interaction.reply({
+      content: '❌ 보유 수량이 없습니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  const totalGold = have * mat.price;
+
+  player.materials[mat.name] = 0;
+  player.gold += totalGold;
+
+  await safeSave(player);
+
+  await interaction.update({
+    content:
+`💰 재료 판매 완료!
+
+📦 ${mat.name} x${have}
+💰 획득: ${totalGold}G
+💰 보유 골드: ${player.gold}G
+
+${buildMaterialSellText(player, page)}`,
+    components: buildMaterialSellButtons(player, page)
+  });
+  return;
+}
 
 if (id === 'craft_cat_material') {
   await interaction.reply({
