@@ -1410,7 +1410,7 @@ const DUNGEONS = {
   // 🐉 드래곤 (0.2%)
   { name: '빛의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230, rate: 0.2 },
   { name: '암흑의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230, rate: 0.2 },
-  { name: '창조 드래곤', hp: 6000, atk: 80, def: 35, gold: [2000,2500], xp: 240, rate: 0.2 },
+  { name: '창조 드래곤', hp: 6000, atk: 300, def: 115, gold: [2000,2500], xp: 240, rate: 0.2 },
 
   // 🎁 잭팟 (0.2%)
   { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200, rate: 0.2 },
@@ -2167,13 +2167,13 @@ function getMaterialDrops(monsterName){
 
     case '빛의 군주 드래곤':
     case '암흑의 군주 드래곤':
-      if(chance(5)) drops.push(['천상의 조각',1]);
-      if(chance(5)) drops.push(['천상석',1]);
+      if(chance(10)) drops.push(['천상의 조각',1]);
+      if(chance(10)) drops.push(['천상석',1]);
       break;
 
     case '창조 드래곤':
-      if(chance(10)) drops.push(['천상의 조각',1]);
-      if(chance(10)) drops.push(['천상석',1]);
+      if(chance(15)) drops.push(['천상의 조각',1]);
+      if(chance(15)) drops.push(['천상석',1]);
       break;
 
     case '에인절라스드래곤':
