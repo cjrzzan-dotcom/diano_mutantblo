@@ -618,7 +618,7 @@ const CONSTELLATION_COLOR = {
 
 const CONSTELLATION_BOSS_NAMES = new Set([
   '종말의 화신 디아블로',
-  '악흑의 군주 드래곤',
+  '암흑의 군주 드래곤',
   '빛의 군주 드래곤',
   '창조 드래곤',
   '우버 종말의 화신 디아블로',
@@ -626,6 +626,7 @@ const CONSTELLATION_BOSS_NAMES = new Set([
   '파괴의 군주 디아블로',
   '증오의 군주 디아블로',
   '만악의 군주 디아블로',
+  '타타멧',
   '아누',
 ]);
 
@@ -1675,7 +1676,7 @@ const MATERIALS = [
   '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', 
   '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','디아블로의 불',
   '천상의 조각','천상석','세계석조각','오염된세계석조각',
-  '태초의조각',
+  '태초의조각','별의 파편','별의 정수',
 ];
 
 const CRAFTS = [
@@ -4397,6 +4398,21 @@ if (command === '!아이템지급') {
     );
     return;
   }
+
+// ⭐ 별의 파편 단독 지급
+if (kind === '별의파편') {
+  const amount = Number(args[3]) || 1;
+
+  if (!player.materials) player.materials = {};
+  player.materials['별의 파편'] = (player.materials['별의 파편'] || 0) + amount;
+
+  await safeSave(player);
+
+  await message.reply(
+    `✨ ${target.username}에게 별의 파편 ${amount}개 지급 완료 (현재 ${player.materials['별의 파편']}개)`
+  );
+  return;
+}
 
   // 🔥 세트 지급
   if (kind === '세트') {
