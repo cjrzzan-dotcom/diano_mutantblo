@@ -2536,17 +2536,45 @@ function performAttack(player, dungeonKey){
   }
 
   // 흡혈 적용
-  const totalLifesteal = totalBlessLifesteal + setBonus.lifesteal;
-  if (totalLifesteal > 0 && damage > 0) {
-    const heal = Math.floor(damage * (totalLifesteal / 100));
-    const beforeHp = player.hp;
+const totalLifesteal = totalBlessLifesteal + setBonus.lifesteal;
 
-    player.hp = Math.min(totalMaxHp, player.hp + heal);
+target.currentHp -= damage;
+result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
 
-    const actualHeal = player.hp - beforeHp;
-    if (actualHeal > 0) result.logs.push(`🩸 흡혈 +${actualHeal}`);
+// 기본타 흡혈
+if (totalLifesteal > 0 && damage > 0) {
+  const heal = Math.floor(damage * (totalLifesteal / 100));
+  const beforeHp = player.hp;
+  player.hp = Math.min(totalMaxHp, player.hp + heal);
+  const actualHeal = player.hp - beforeHp;
+  if (actualHeal > 0) result.logs.push(`🩸 흡혈 +${actualHeal}`);
+}
+
+// 추가타 + 추가타 흡혈
+if (
+  target.currentHp > 0 &&
+  setBonus.extraHitChance > 0 &&
+  chance(setBonus.extraHitChance)
+) {
+  let extraDamage = Math.max(1, Math.floor(damage * (setBonus.extraHitDamageRate || 0.5)));
+  let extraCrit = false;
+
+  if (chance(finalCritChance)) {
+    extraDamage = Math.floor(extraDamage * (1.5 + finalCritDamage / 100));
+    extraCrit = true;
   }
 
+  target.currentHp -= extraDamage;
+  result.logs.push(extraCrit ? `⚡ 추가타 치명타! ${extraDamage}` : `⚡ 추가타 ${extraDamage}`);
+
+  if (totalLifesteal > 0 && extraDamage > 0) {
+    const heal = Math.floor(extraDamage * (totalLifesteal / 100));
+    const beforeHp = player.hp;
+    player.hp = Math.min(totalMaxHp, player.hp + heal);
+    const actualHeal = player.hp - beforeHp;
+    if (actualHeal > 0) result.logs.push(`🩸 추가타 흡혈 +${actualHeal}`);
+  }
+}
   if(target.currentHp <= 0){
     target.currentHp = 0;
     result.killedTarget = { ...target };
