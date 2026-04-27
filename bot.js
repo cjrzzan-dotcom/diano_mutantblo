@@ -3628,12 +3628,11 @@ if(command === '!가방'){
           .setStyle(ButtonStyle.Danger)
       )
     ]
-  });
-
+   });
   return;
-   }
- });
-  if(command === '!도움말'){
+ }
+  
+if(command === '!도움말'){
     await message.reply(formatHelp());
     return;
   }
