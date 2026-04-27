@@ -4126,6 +4126,25 @@ client.on('messageCreate', async (message) => {
 
   console.log('[실행]', command, 'by', message.author.tag);
 
+if (command === '!초기화') {
+  if (!isAdmin(message)) {
+    await message.reply('❌ 관리자만 사용 가능합니다.');
+    return;
+  }
+
+  const target = message.mentions.users.first();
+
+  if (!target) {
+    await message.reply('❌ 유저를 멘션하세요.');
+    return;
+  }
+
+  // 유저 데이터 초기화
+  gameData[target.id] = getDefaultPlayer(target.id);
+
+  await message.reply(`🧹 ${target.username} 데이터가 초기화되었습니다.`);
+}
+
   if (command === '!판매') {
     if (!player.materials) player.materials = {};
 
