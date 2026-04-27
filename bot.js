@@ -3609,40 +3609,36 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
-});
+  if (command === '!가방') {
+    console.log("📦 !가방 분기 들어옴");
 
+    await safeSave(player);
 
+    await message.reply({
+      content: buildBagText(player),
+      components: [
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('mat_sell_page_1')
+            .setLabel('📦 재료판매')
+            .setStyle(ButtonStyle.Danger)
+        )
+      ]
+    });
 
-if(command === '!가방'){
-  console.log("📦 !가방 분기 들어옴");
+    return;
+  }
 
-  await safeSave(player);
-
-  await message.reply({
-    content: buildBagText(player),
-    components: [
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('mat_sell_page_1')
-          .setLabel('📦 재료판매')
-          .setStyle(ButtonStyle.Danger)
-      )
-    ]
-   });
-  return;
- }
-  
-if(command === '!도움말'){
+  if (command === '!도움말') {
     await message.reply(formatHelp());
     return;
   }
 
-
-if (command === '!스탯초기화') {
-  if (!isAdmin(message)) {
-    await message.reply('❌ 관리자만 사용 가능합니다.');
-    return;
-  }
+  if (command === '!스탯초기화') {
+    if (!isAdmin(message)) {
+      await message.reply('❌ 관리자만 사용 가능합니다.');
+      return;
+    }
 
   const target = message.mentions.users.first();
   if (!target) {
