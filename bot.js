@@ -4105,7 +4105,66 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
+if (command === '!스탯') {
+  const statMap = {
+    공: 'atk',
+    방: 'def',
+    체: 'hp',
+    크확: 'critChance',
+    크뎀: 'critDamage',
+    회피: 'dodge'
+  };
 
+  let totalUsed = 0;
+  const logs = [];
+
+  for (let i = 1; i < args.length; i++) {
+    const match = args[i].match(/^([가-힣]+)(\d+)$/);
+    if (!match) {
+      await message.reply(`❌ 잘못된 형식: ${args[i]}`);
+      return;
+    }
+
+    const statKor = match[1];
+    const amount = Number(match[2]);
+    const statKey = statMap[statKor];
+
+    if (!statKey) {
+      await message.reply(`❌ 없는 스탯: ${statKor}`);
+      return;
+    }
+
+    if (amount <= 0) {
+      await message.reply('❌ 1 이상 입력');
+      return;
+    }
+
+    totalUsed += amount;
+
+    logs.push({ statKor, statKey, amount });
+  }
+
+  if (player.statPoints < totalUsed) {
+    await message.reply(`❌ 포인트 부족 (필요: ${totalUsed}, 보유: ${player.statPoints})`);
+    return;
+  }
+
+  // 적용
+  for (const log of logs) {
+    player[log.statKey] = (player[log.statKey] || 0) + log.amount;
+  }
+
+  player.statPoints -= totalUsed;
+
+  // 출력
+  const resultText = logs
+    .map(l => `+${l.amount} ${l.statKor}`)
+    .join('\n');
+
+  await message.reply(
+    `✅ 스탯 적용\n${resultText}\n\n남은 포인트: ${player.statPoints}`
+  );
+}
 
 
 
