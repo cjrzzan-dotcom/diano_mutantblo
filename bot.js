@@ -1545,6 +1545,7 @@ const DUNGEON_CHANNELS_PROD = {
   '1487953322160816148': '지옥의왕좌',
 '1490976926762926100': '드높은천상',
 '1491290801987391488': '깊은심연의숲',
+'1498213015151972533': '태초의공허',
 };
 
 const DUNGEON_CHANNELS_TEST = {
@@ -1579,6 +1580,7 @@ const DISPLAY_NAMES = {
   '심연의틈': '심연의 틈',
   '지옥의심장부': '지옥의 심장부',
   '지옥의왕좌': '지옥의 왕좌',
+'태초의공허': '태초의 공허',
 };
 
 const SHOP = {
@@ -1673,6 +1675,7 @@ const MATERIALS = [
   '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', 
   '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','디아블로의 불',
   '천상의 조각','천상석','세계석조각','오염된세계석조각',
+  '태초의조각',
 ];
 
 const CRAFTS = [
@@ -1710,6 +1713,8 @@ const CRAFTS = [
 { id:'lightning_sword', label:'천상의 심판', type:'weapon', gold:100000,  materials:{ '천상의 조각':30, '천상석' :30 },  base:{atk:105,def:30} },
 { id:'lightning_armor', label:'천상의 갑주', type:'armor',  gold:100000, materials:{ '천상의 조각':30, '천상석' :30 }, base:{atk:30,def:105} },
 
+{ id:'one_sword', label:'태초의 종말', type:'weapon', gold:500000,  materials:{ '태초의 조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50  },  base:{atk:300,def:150} },
+{ id:'one_armor', label:'태초의 수호', type:'armor',  gold:500000, materials:{ '태초의 조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50 }, base:{atk:150,def:300} },
 
 {
   id: 'make_high_frag',
@@ -1851,11 +1856,14 @@ const DUNGEONS = {
   { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [1000,1500], xp: 46 },
   { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [1500,2000], xp: 50 },
 ]},
-  '지옥의왕좌': { type: 'wave', autoAllowed: false, waves: [
-    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 120, gold: [2000,2000], xp: 51 },
-    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 120, gold: [2100,2100], xp: 52 },
+  '지옥의왕좌': { type: 'random', autoAllowed: false, monsters: [
+    { name: '증오의 군주 디아블로', hp: 24500, atk: 530, def: 120, gold: [2000,2000], xp: 51 },
+    { name: '파괴의 군주 디아블로', hp: 24800, atk: 540, def: 120, gold: [2100,2100], xp: 52 },
     { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 120, gold: [2200,2200], xp: 53 },
   ]},
+'태초의공허': { type: 'random', autoAllowed: false, monsters: [
+  { name: '타타멧', hp: 30000, atk: 700, def: 300, gold: 50000,50000], xp: 100 },
+  { name: '아누', hp: 50000, atk: 1000, def: 500, gold: [80000,80000], xp: 150 },
 };
 
 function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
@@ -2543,101 +2551,135 @@ function formatItemName(item) {
   return `${enhanceText}${item.name || '이름 없는 아이템'}`;
 }
 
+function addDrop(drops, name, amount = 1, percent = 100) {
+  if (chance(percent)) drops.push([name, amount]);
+}
 
-
-
-function getMaterialDrops(monsterName){
+function getMaterialDrops(monsterName) {
   const drops = [];
-  if(chance(40)) drops.push(['낡은장비조각',1]);
-  switch(monsterName){
-    case '슬라임': if(chance(45)) drops.push(['슬라임젤리',1]); break;
-    case '늑대': if(chance(40)) drops.push(['늑대가죽',1]); break;
-    case '고블린': if(chance(35)) drops.push(['고블린뼈조각',1]); break;
-    case '오크': if(chance(30)) drops.push(['오우거가죽',1]); break;
-    case '오우거': if(chance(30)) drops.push(['오우거가죽',1]); break;
-    case '드래곤': if(chance(30)) drops.push(['작은 용비늘',1]); break;
-    case '오크전사': if(chance(35)) drops.push(['오우거가죽',2]); break;
-    case '오우거전사': if(chance(35)) drops.push(['고급장비조각',2]); break;
-    case '심연의드래곤': drops.push(['작은 용비늘',2]); if(chance(35)) drops.push(['드래곤 비늘',1]); break;
+
+  // 공통 드랍
+  addDrop(drops, '낡은장비조각', 1, 40);
+
+  // 초반 몬스터
+  const basicDrops = {
+    '슬라임': [['슬라임젤리', 1, 45]],
+    '늑대': [['늑대가죽', 1, 40]],
+    '고블린': [['고블린뼈조각', 1, 35]],
+    '오크': [['오우거가죽', 1, 30]],
+    '오우거': [['오우거가죽', 1, 30]],
+    '드래곤': [['작은 용비늘', 1, 30]],
+    '오크전사': [['오우거가죽', 2, 35]],
+    '오우거전사': [['고급장비조각', 2, 35]],
+    '심연의드래곤': [
+      ['작은 용비늘', 2, 100],
+      ['드래곤 비늘', 1, 35]
+    ],
+  };
+
+  for (const drop of basicDrops[monsterName] || []) {
+    addDrop(drops, drop[0], drop[1], drop[2]);
   }
 
-  const dragonSet = ['번개드래곤','얼음드래곤','붉은화염드래곤','푸른화염드래곤','어둠드래곤','좀비드래곤','메탈드래곤','대독드래곤','빛의 군주 드래곤','암흑의 군주 드래곤','창조 드래곤','에인절라스드래곤','요리사응구드래곤','메이드빵게드래곤'];
-  if(dragonSet.includes(monsterName)){
-    if(chance(35)) drops.push(['드래곤 비늘',1]);
-    if(chance(35)) drops.push(['드래곤 발톱',1]);
-    if(chance(35)) drops.push(['낡은장비조각',1]);
+  // 드래곤 공통
+  const dragonSet = new Set([
+    '번개드래곤', '얼음드래곤', '붉은화염드래곤', '푸른화염드래곤', '어둠드래곤',
+    '좀비드래곤', '메탈드래곤', '대독드래곤',
+    '빛의 군주 드래곤', '암흑의 군주 드래곤', '창조 드래곤',
+    '에인절라스드래곤', '요리사응구드래곤', '메이드빵게드래곤'
+  ]);
+
+  if (dragonSet.has(monsterName)) {
+    addDrop(drops, '드래곤 비늘', 1, 35);
+    addDrop(drops, '드래곤 발톱', 1, 35);
+    addDrop(drops, '낡은장비조각', 1, 35);
   }
 
-  switch(monsterName){
-    case '번개드래곤': if(chance(40)) drops.push(['번개조각',1]); break;
-    case '얼음드래곤': if(chance(40)) drops.push(['얼음조각',1]); break;
-    case '붉은화염드래곤': if(chance(40)) drops.push(['붉은화염조각',1]); break;
-    case '푸른화염드래곤': if(chance(40)) drops.push(['푸른화염조각',1]); break;
-    case '어둠드래곤': if(chance(40)) drops.push(['어둠조각',1]); break;
-    case '좀비드래곤': if(chance(40)) drops.push(['좀비드래곤의 피',1]); break;
-    case '메탈드래곤': if(chance(30)) drops.push(['메탈조각',1]); break;
-    case '대독드래곤': if(chance(30)) drops.push(['좀비드래곤의 가죽',1]); break;
+  // 드래곤 개별
+  const dragonDrops = {
+    '번개드래곤': [['번개조각', 1, 40]],
+    '얼음드래곤': [['얼음조각', 1, 40]],
+    '붉은화염드래곤': [['붉은화염조각', 1, 40]],
+    '푸른화염드래곤': [['푸른화염조각', 1, 40]],
+    '어둠드래곤': [['어둠조각', 1, 40]],
+    '좀비드래곤': [['좀비드래곤의 피', 1, 40]],
+    '메탈드래곤': [['메탈조각', 1, 30]],
+    '대독드래곤': [['좀비드래곤의 가죽', 1, 30]],
+    '빛의 군주 드래곤': [
+      ['천상의 조각', 1, 10],
+      ['천상석', 1, 10]
+    ],
+    '암흑의 군주 드래곤': [
+      ['천상의 조각', 1, 10],
+      ['천상석', 1, 10]
+    ],
+    '창조 드래곤': [
+      ['천상의 조각', 1, 15],
+      ['천상석', 1, 15]
+    ],
+    '에인절라스드래곤': [
+      ['부활권', 3, 100]
+    ],
+  };
 
-    case '빛의 군주 드래곤':
-    case '암흑의 군주 드래곤':
-      if(chance(10)) drops.push(['천상의 조각',1]);
-      if(chance(10)) drops.push(['천상석',1]);
-      break;
-
-    case '창조 드래곤':
-      if(chance(15)) drops.push(['천상의 조각',1]);
-      if(chance(15)) drops.push(['천상석',1]);
-      break;
-
-    case '에인절라스드래곤':
-      drops.push(['부활권',5]);
-      break;
-
-    case '티리엘':
-      drops.push(['천상의 조각',1]);
-      break;
+  for (const drop of dragonDrops[monsterName] || []) {
+    addDrop(drops, drop[0], drop[1], drop[2]);
   }
 
-const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','티리엘'];
+  // 천상 몬스터
+  const heavenSet = new Set(['아우리엘', '이테리엘', '말티엘', '임페리우스', '티리엘']);
 
-  if(heavenSet.includes(monsterName)){
-    if(chance(20)) drops.push(['천상석',1]);
-    if(chance(20)) drops.push(['천상의 조각',1]);
+  if (heavenSet.has(monsterName)) {
+    addDrop(drops, '천상석', 1, 20);
+    addDrop(drops, '천상의 조각', 1, 20);
   }
 
-  const hellGate = ['도살자','레오릭 왕','두리엘','안다리엘','벨리알','아즈모단','릴리트','바알','메피스토','디아블로','종말의 화신 디아블로'];
-  if(hellGate.includes(monsterName) && chance(40)) drops.push(['고급장비조각',1]);
-
-  if(monsterName === '도살자' && chance(40)) drops.push(['도살자의 도끼조각',1]);
-  if(monsterName === '레오릭 왕' && chance(40)) drops.push(['레오릭왕의 뼈조각',1]);
-  if(['두리엘','안다리엘','벨리알','아즈모단'].includes(monsterName) && chance(40)) drops.push(['악마의 살점',1]);
-  if(monsterName === '릴리트' && chance(35)) drops.push(['릴리트의 뿔',1]);
-
-  if(['바알','메피스토','디아블로'].includes(monsterName) && chance(40)) {
-    drops.push(['악마의 정수', 1]);
+  if (monsterName === '티리엘') {
+    addDrop(drops, '천상의 조각', 1, 100);
   }
 
-  if(monsterName === '종말의 화신 디아블로' && chance(40)) {
-    drops.push(['디아블로의 뿔', 1]);
+  // 지옥 몬스터 공통
+  const hellGate = new Set([
+    '도살자', '레오릭 왕', '두리엘', '안다리엘', '벨리알', '아즈모단',
+    '릴리트', '바알', '메피스토', '디아블로', '종말의 화신 디아블로'
+  ]);
+
+  if (hellGate.has(monsterName)) {
+    addDrop(drops, '고급장비조각', 1, 40);
   }
 
-  if(['메피스토','디아블로'].includes(monsterName) && chance(35)) {
-    drops.push(['세계석조각', 1]);
+  // 지옥 몬스터 개별
+  const hellDrops = {
+    '도살자': [['도살자의 도끼조각', 1, 40]],
+    '레오릭 왕': [['레오릭왕의 뼈조각', 1, 40]],
+    '두리엘': [['악마의 살점', 1, 40]],
+    '안다리엘': [['악마의 살점', 1, 40]],
+    '벨리알': [['악마의 살점', 1, 40]],
+    '아즈모단': [['악마의 살점', 1, 40]],
+    '릴리트': [['릴리트의 뿔', 1, 35]],
+    '바알': [['악마의 정수', 1, 40]],
+    '메피스토': [
+      ['악마의 정수', 1, 15],
+      ['세계석조각', 1, 10]
+    ],
+    '디아블로': [
+      ['악마의 정수', 1, 40],
+      ['세계석조각', 1, 10],
+      ['디아블로의 불', 1, 30]
+    ],
+    '종말의 화신 디아블로': [
+      ['디아블로의 뿔', 1, 40],
+      ['세계석조각', 1, 10],
+      ['디아블로의 불', 1, 35]
+    ],
+  };
+
+  for (const drop of hellDrops[monsterName] || []) {
+    addDrop(drops, drop[0], drop[1], drop[2]);
   }
 
-  if(monsterName === '종말의 화신 디아블로' && chance(15)) {
-    drops.push(['세계석조각', 1]);
-  }
-
-  if(monsterName === '종말의 화신 디아블로' && chance(35)) {
-    drops.push(['디아블로의 불', 1]);
-  }
-
-  if(monsterName === '디아블로' && chance(30)) {
-    drops.push(['디아블로의 불', 1]);
-  }
-
-  const uberHellSet = [
+  // 우버 지옥
+  const uberHellSet = new Set([
     '우버 레오릭 왕',
     '우버 안다리엘',
     '우버 두리엘',
@@ -2646,15 +2688,38 @@ const heavenSet = ['아우리엘','이테리엘','말티엘','임페리우스','
     '우버 메피스토',
     '우버 릴리트',
     '우버 종말의 화신 디아블로'
-  ];
+  ]);
 
-  if (uberHellSet.includes(monsterName)) {
-    if (chance(35)) drops.push(['오염된세계석조각', 1]);
-    if (chance(50)) drops.push(['고급장비조각', 1]);
+  if (uberHellSet.has(monsterName)) {
+    addDrop(drops, '오염된세계석조각', 1, 35);
+    addDrop(drops, '고급장비조각', 1, 50);
+    addDrop(drops, '세계석조각', 1, 10);
   }
+
+// 🔥 지옥의왕좌 전용 드랍
+const hellThroneSet = new Set([
+  '증오의 군주 디아블로',
+  '파괴의 군주 디아블로',
+  '만악의 군주 디아블로'
+]);
+
+if (hellThroneSet.has(monsterName)) {
+  addDrop(drops, '디아블로의 불', 1, 40);
+  addDrop(drops, '천상석', 1, 40);
+  addDrop(drops, '천상의 조각', 1, 40);
+  addDrop(drops, '고급장비조각', 2, 70);
+  addDrop(drops, '세계석조각', 1, 10);
+  addDrop(drops, '태초의조각', 1, 100);
+}
+
 
   return drops;
 }
+
+
+
+
+
 function giveXp(player, amount){
   player.xp += amount;
   const msgs = [];
@@ -3484,6 +3549,8 @@ const dodgeDetail = buildStatDetail([
     `📦 장착 장비`,
     getEquippedText(player),
     '',
+    `⭐ 별자리`,
+    getConstellationSummary(player),
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
   ].join('\n');
@@ -3532,13 +3599,6 @@ function buildCompactBattleText(player,target,channelId){
   lines.push(`<#${channelId}>`);
   lines.push(`❤️ ${player.hp}/${maxHp}`);
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
-
-  // ⭐ 별자리 간소화 표시
-  lines.push(`⭐ ${getConstellationSummary(player)}`);
-
-  if (setBonus.name) {
-    lines.push(`✨ ${setBonus.name}`);
-  }
 
   lines.push(
     `💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`
