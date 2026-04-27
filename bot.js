@@ -1864,7 +1864,9 @@ const DUNGEONS = {
 '태초의공허': { type: 'random', autoAllowed: false, monsters: [
   { name: '타타멧', hp: 30000, atk: 700, def: 300, gold: [50000,50000], xp: 100 },
   { name: '아누', hp: 50000, atk: 1000, def: 500, gold: [80000,80000], xp: 150 },
-]};
+    ]
+  }
+};
 
 function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
 function chance(percent){ return Math.random()*100 < percent; }
