@@ -3549,15 +3549,26 @@ client.once('ready', async () => {
 
 
 client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+
+  console.log(
+    '[COMMAND]',
+    message.author.tag,
+    message.author.id,
+    message.channel.id,
+    message.content
+  );
+
   console.log('메시지 받음:', message.content, message.channel.id);
 
-  if (message.author.bot) return;
   if (!message.content.startsWith('!')) return;
 
   const player = getPlayer(message.author.id);
   const args = message.content.trim().split(/\s+/);
   const command = args[0];
   const arg = args[1];
+
+  console.log('[실행]', command, 'by', message.author.tag);
 
   if (command === '!판매') {
     if (!player.materials) player.materials = {};
@@ -3598,6 +3609,7 @@ client.on('messageCreate', async (message) => {
     return;
   }
 
+});
 
 
 
@@ -5342,6 +5354,18 @@ const TOKEN = MODE === 'prod'
   ? (process.env.DISCORD_TOKEN_PROD || process.env.DISCORD_TOKEN)
   : (process.env.DISCORD_TOKEN_TEST || process.env.DISCORD_TOKEN);
 
+
+client.on('error', err => {
+  console.error('[CLIENT ERROR]', err);
+});
+
+process.on('unhandledRejection', err => {
+  console.error('[UNHANDLED]', err);
+});
+
+process.on('uncaughtException', err => {
+  console.error('[CRASH]', err);
+});
 
 
 console.log("MODE:", MODE);
