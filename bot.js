@@ -3484,9 +3484,6 @@ const dodgeDetail = buildStatDetail([
     `📦 장착 장비`,
     getEquippedText(player),
     '',
-    `🔮 장착 룬`,
-    getEquippedRuneStatusText(player),
-    '',
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
   ].join('\n');
