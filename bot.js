@@ -4107,6 +4107,8 @@ client.on('messageCreate', async (message) => {
   }
 
 if (command === '!스탯') {
+  if (!player.stats) player.stats = {};
+
   const statMap = {
     공: 'atk',
     방: 'def',
@@ -4141,8 +4143,12 @@ if (command === '!스탯') {
     }
 
     totalUsed += amount;
-
     logs.push({ statKor, statKey, amount });
+  }
+
+  if (logs.length === 0) {
+    await message.reply('사용법: !스탯 공10 방5 체20 크확3 크뎀10 회피2');
+    return;
   }
 
   if (player.statPoints < totalUsed) {
@@ -4150,14 +4156,15 @@ if (command === '!스탯') {
     return;
   }
 
-  // 적용
+  // ✅ 핵심: player가 아니라 player.stats 안에 넣어야 함
   for (const log of logs) {
-    player[log.statKey] = (player[log.statKey] || 0) + log.amount;
+    player.stats[log.statKey] = (player.stats[log.statKey] || 0) + log.amount;
   }
 
   player.statPoints -= totalUsed;
 
-  // 출력
+  await safeSave(player);
+
   const resultText = logs
     .map(l => `+${l.amount} ${l.statKor}`)
     .join('\n');
@@ -4166,8 +4173,6 @@ if (command === '!스탯') {
     `✅ 스탯 적용\n${resultText}\n\n남은 포인트: ${player.statPoints}`
   );
 }
-
-
 
   if (command === '!가방') {
     console.log("📦 !가방 분기 들어옴");
