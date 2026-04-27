@@ -4025,6 +4025,7 @@ async function spawnNextTargetByInteraction(interaction, player, dungeonKey){
       '`!장착 1` - 인벤토리 번호 장착',
       '`!자동` - 자동사냥',
       '`!초기화` - 데이터 초기화',
+      '`!스탯` - 스탯올리기',
     ].join('\n');
   }
 
