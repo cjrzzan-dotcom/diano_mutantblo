@@ -3108,7 +3108,13 @@ if (
   applyPlayerHit('연격 추가타', 0.5);
 }
 
+// 4. 홍염 화상 데미지
+if (target.currentHp > 0 && (target.burn || 0) > 0) {
+  const burnDmg = Math.max(1, Math.floor(finalAtk * (target.burn / 100)));
 
+  target.currentHp = Math.max(0, target.currentHp - burnDmg);
+  result.logs.push(`🔥 화상 ${target.burn}% → ${burnDmg} 피해`);
+}
 
   if(target.currentHp <= 0){
     target.currentHp = 0;
