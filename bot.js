@@ -759,6 +759,21 @@ function getConstellationOneText(player, key) {
   return lines.join('\n');
 }
 
+function getConstellationBattleStats(player) {
+  ensureConstellations(player);
+
+  return {
+    hpPercent: getConstellationValue(player, 'life'),
+    lifesteal: getConstellationValue(player, 'leech'),
+    dodge: getConstellationValue(player, 'dodge'),
+    burnMax: getConstellationValue(player, 'burn'),
+    stunChance: getConstellationValue(player, 'shock'),
+    freezeGain: getConstellationValue(player, 'freeze'),
+    comboChance: getConstellationValue(player, 'combo'),
+    pierce: getConstellationValue(player, 'pierce')
+  };
+}
+
 function getConstellationMenuText(player) {
   ensureConstellations(player);
 
@@ -1752,94 +1767,94 @@ const DUNGEONS = {
   '초심자의숲': { type: 'random', autoAllowed: true, monsters: [
     { name: '슬라임', hp: 22, atk: 6, def: 0, gold: [5,10], xp: 8 },
     { name: '늑대', hp: 28, atk: 8, def: 0, gold: [8,14], xp: 10 },
-    { name: '고블린', hp: 34, atk: 10, def: 1, gold: [10,16], xp: 12 },
-    { name: '오크', hp: 52, atk: 14, def: 2, gold: [16,24], xp: 16 },
-    { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 24 },
-    { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 45 },
+    { name: '고블린', hp: 34, atk: 10, def: 1, gold: [10,16], xp: 11 },
+    { name: '오크', hp: 52, atk: 14, def: 2, gold: [16,24], xp: 12 },
+    { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 13 },
+    { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 14 },
   ]},
   '깊은심연의숲': { type: 'random', autoAllowed: true, monsters: [
-    { name: '오크', hp: 52, atk: 14, def: 2, gold: [16,24], xp: 16 },
-    { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 24 },
-    { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 45 },
-    { name: '오크전사', hp: 120, atk: 22, def: 6, gold: [50,80], xp: 45 }, 
-    { name: '오우거전사', hp: 150, atk: 22, def: 8, gold: [50,80], xp: 45 }, 
-    { name: '심연의드래곤', hp: 180, atk: 25, def: 10, gold: [50,80], xp: 45 }, 
+    { name: '오크', hp: 52, atk: 14, def: 2, gold: [16,24], xp: 12 },
+    { name: '오우거', hp: 82, atk: 18, def: 3, gold: [25,40], xp: 13 },
+    { name: '드래곤', hp: 100, atk: 20, def: 5, gold: [50,80], xp: 14 },
+    { name: '오크전사', hp: 120, atk: 22, def: 6, gold: [50,80], xp: 15 }, 
+    { name: '오우거전사', hp: 150, atk: 22, def: 8, gold: [50,80], xp: 16 }, 
+    { name: '심연의드래곤', hp: 180, atk: 25, def: 10, gold: [50,80], xp: 17 }, 
   ]},
   '오색룡의둥지': { type: 'random', autoAllowed: true, monsters: [
-    { name: '번개드래곤', hp: 350, atk:  40, def: 10, gold: [80,100], xp: 50 },
-    { name: '얼음드래곤', hp: 400, atk: 42, def: 12, gold: [80,100], xp: 50 },
-    { name: '붉은화염드래곤', hp: 450, atk: 44, def: 14, gold: [80,100], xp: 50 },
-    { name: '푸른화염드래곤', hp: 500, atk: 46, def: 14, gold: [80,100], xp: 50 },
-    { name: '어둠드래곤', hp: 550, atk: 46, def: 14, gold: [80,100], xp: 50 },
-    { name: '좀비드래곤', hp: 800, atk: 50, def: 15, gold: [100,120], xp: 52 },
-    { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [120,140], xp: 65 },
-    { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [140,150], xp: 70 },
-    { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200 },
-    { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300 },
-    { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500 },
+    { name: '번개드래곤', hp: 350, atk:  40, def: 10, gold: [80,100], xp: 18 },
+    { name: '얼음드래곤', hp: 400, atk: 42, def: 12, gold: [80,100], xp: 18 },
+    { name: '붉은화염드래곤', hp: 450, atk: 44, def: 14, gold: [80,100], xp: 18 },
+    { name: '푸른화염드래곤', hp: 500, atk: 46, def: 14, gold: [80,100], xp: 18 },
+    { name: '어둠드래곤', hp: 550, atk: 46, def: 14, gold: [80,100], xp: 18 },
+    { name: '좀비드래곤', hp: 800, atk: 50, def: 15, gold: [100,120], xp: 20 },
+    { name: '메탈드래곤', hp: 1000, atk: 65, def: 20, gold: [120,140], xp: 21 },
+    { name: '대독드래곤', hp: 1000, atk: 60, def: 20, gold: [140,150], xp: 22 },
+    { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 50 },
+    { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 50 },
+    { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 50 },
 
 
   ]},
   '지옥의관문': { type: 'wave', autoAllowed: false, waves: [
-    { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 60 },
-    { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 70 },
-    { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 84 },
-    { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [200,250], xp: 88 },
-    { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [250,300], xp: 96 },
-    { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [300,350], xp: 105 },
-    { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [600,700], xp: 120 },
-    { name: '바알', hp: 1500, atk: 130, def: 65, gold: [700,800], xp: 130 },
-    { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 140 },
-    { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 150 },
-    { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
+    { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 23 },
+    { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 24 },
+    { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 25 },
+    { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [200,250], xp: 26 },
+    { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [250,300], xp: 27 },
+    { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [300,350], xp: 28 },
+    { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [600,700], xp: 29 },
+    { name: '바알', hp: 1500, atk: 130, def: 65, gold: [700,800], xp: 30 },
+    { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 31 },
+    { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 32 },
+    { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 35 },
   ]},
 
 '심연의틈': { type: 'random', autoAllowed: true, monsters: [
-  { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 60 },
-  { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 70 },
-  { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 84 },
-  { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [200,250], xp: 88 },
-  { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [250,300], xp: 96 },
-  { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [300,350], xp: 105 },
-  { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [600,700], xp: 120 },
-  { name: '바알', hp: 1500, atk: 130, def: 65, gold: [700,800], xp: 130 },
-  { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 140 },
-  { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 150 },
-  { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 220 },
+  { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 23 },
+  { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 24 },
+  { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 25 },
+  { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [200,250], xp: 26 },
+  { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [250,300], xp: 27 },
+  { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [300,350], xp: 28 },
+  { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [600,700], xp: 29 },
+  { name: '바알', hp: 1500, atk: 130, def: 65, gold: [700,800], xp: 30 },
+  { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 31 },
+  { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 32 },
+  { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 35 },
 
   // 🐉 드래곤 (0.2%)
-  { name: '빛의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230, rate: 0.2 },
-  { name: '암흑의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 230, rate: 0.2 },
-  { name: '창조 드래곤', hp: 6000, atk: 300, def: 115, gold: [2000,2500], xp: 240, rate: 0.2 },
+  { name: '빛의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 36, rate: 1 },
+  { name: '암흑의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 37, rate: 1 },
+  { name: '창조 드래곤', hp: 6000, atk: 300, def: 115, gold: [2000,2500], xp: 38, rate: 1 },
 
   // 🎁 잭팟 (0.2%)
-  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 200, rate: 0.2 },
-  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 300, rate: 0.2 },
-  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 500, rate: 0.2 },
+  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 50, rate: 0.2 },
+  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 50, rate: 0.2 },
+  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 50, rate: 0.2 },
 ]},
 
 
   '지옥의심장부': { type: 'wave', autoAllowed: false, waves: [
-    { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [1800,2000], xp: 120 },
-    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [2000,2200], xp: 125 },
-    { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [2200,2400], xp: 130 },
-    { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [2400,2600], xp: 135 },
-    { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [2600,2800], xp: 140 },
-    { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [2800,3000], xp: 145 },
-    { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [3000,3200], xp: 150 },
-    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [3500,4000], xp: 170 },
+    { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [800,1000], xp: 36 },
+    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [900,1100], xp: 37 },
+    { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [1000,1100], xp: 38 },
+    { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [1000,1150], xp: 39 },
+    { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [1050,1150], xp: 40 },
+    { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [1100,1150], xp: 41 },
+    { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [1150,1200], xp: 42 },
+    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [1500,2000], xp: 45 },
   ]},
 '드높은천상': { type: 'random', autoAllowed: false, monsters: [
-  { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [3200,3600], xp: 175 },
-  { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [3400,3800], xp: 180 },
-  { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [4200,4800], xp: 185 },
-  { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [5200,6000], xp: 190 },
-  { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [8000,10000], xp: 300 },
+  { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [1000,1500], xp: 43 },
+  { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [1000,1500], xp: 44 },
+  { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [1000,1500], xp: 45 },
+  { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [1000,1500], xp: 46 },
+  { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [1500,2000], xp: 50 },
 ]},
   '지옥의왕좌': { type: 'wave', autoAllowed: false, waves: [
-    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 120, gold: [10000,10000], xp: 350 },
-    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 120, gold: [10000,12000], xp: 500 },
-    { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 120, gold: [13000,15000], xp: 800 },
+    { name: '증오의 군주 디아블로', hp: 15000, atk: 450, def: 120, gold: [2000,2000], xp: 51 },
+    { name: '파괴의 군주 디아블로', hp: 20000, atk: 500, def: 120, gold: [2100,2100], xp: 52 },
+    { name: '만악의 군주 디아블로', hp: 25000, atk: 550, def: 120, gold: [2200,2200], xp: 53 },
   ]},
 };
 
@@ -2153,7 +2168,7 @@ function getPlayer(userId) {
 
   // ⭐ 여기 추가 (핵심)
   if (!player.xpRebalanceV1) {
-    player.nextXp = Math.floor(10000 + player.level * 500);
+    player.nextXp = Math.floor(player.nextXp * 1.15);
 
     const logs = giveXp(player, 0); // 기존 XP로 레벨업 처리
 
@@ -2436,7 +2451,6 @@ function getAttackPower(player){
   const baseAtk = player.baseAtk + player.stats.atk;
   let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
 
-  // 불사의 심장 조건부 공격력
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
   const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
   const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
@@ -2452,8 +2466,11 @@ function getAttackPower(player){
   }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
+  const baseResult = atkBeforeBless + blessAtkBonus;
 
-  return atkBeforeBless + blessAtkBonus;
+  const hiddenConstellationBonus = getHiddenConstellationBonus(player);
+
+  return baseResult + hiddenConstellationBonus.atk;
 }
 function getMaxHpWithBless(player){
   const wb = getBlessingBonuses(player.equipment.weapon);
@@ -2463,7 +2480,15 @@ function getMaxHpWithBless(player){
   const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
   const blessHpBonus = Math.floor(player.maxHp * (totalBlessHpPercent / 100));
 
-  return player.maxHp + blessHpBonus;
+  const base = player.maxHp + blessHpBonus;
+
+  const constellationStats = getConstellationBattleStats(player);
+  const hiddenConstellationBonus = getHiddenConstellationBonus(player);
+
+  let total = Math.floor(base * (1 + constellationStats.hpPercent / 100));
+  total += hiddenConstellationBonus.hp;
+
+  return total;
 }
 
 function getDefensePower(player){
@@ -2491,7 +2516,13 @@ function getCritDamage(player){
 }
 function getDodge(player){
   const eq = getEquippedBonuses(player);
-  return round1(Math.min(STAT_CAPS.dodge, player.stats.dodge + eq.dodge));
+
+  const baseDodge = player.stats.dodge + eq.dodge;
+  const capped = Math.min(STAT_CAPS.dodge, baseDodge);
+
+  const constellationDodge = getConstellationValue(player, 'dodge');
+
+  return round1(capped + constellationDodge);
 }
 
 function grantMaterial(player, name, amount, lines){
@@ -2630,7 +2661,7 @@ function giveXp(player, amount){
   while(player.xp >= player.nextXp){
     player.xp -= player.nextXp;
     player.level += 1;
-    player.nextXp = Math.floor(10000 + player.level * 500);
+    player.nextXp = Math.floor(player.nextXp * 1.15);
     player.maxHp += 12;
     player.hp = player.maxHp;
     player.statPoints += 3;
@@ -2706,6 +2737,20 @@ function getEnhancePreviewText(player, item){
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
 
+  // ❄️ 빙결: 적 1턴 행동 불가
+  if (target.frozen) {
+    logs.push('❄️ 빙결 상태! 적 행동 불가');
+    target.frozen = false;
+    return;
+  }
+
+  // ⚡ 마비: 적 1턴 행동 불가
+  if (target.stunned) {
+    logs.push('⚡ 마비 상태! 적 행동 불가');
+    target.stunned = false;
+    return;
+  }
+
   const eq = getEquippedBonuses(player);
   const runeBonus = getRuneBonus(player);
   const setBonus = getRuneSetBonus(player);
@@ -2721,10 +2766,11 @@ function enemyAttack(player, target, logs){
   const baseDef = player.baseDef + Math.floor(player.level / 3);
   const finalDef = baseDef + eq.def + totalBlessFlatDef + runeBonus.def + setBonus.def;
 
-  const finalDodge = Math.min(
-    STAT_CAPS.dodge,
-    player.stats.dodge + eq.dodge + totalBlessDodge
-  );
+  const constellationDodge = getConstellationValue(player, 'dodge');
+
+  const finalDodge =
+    Math.min(STAT_CAPS.dodge, player.stats.dodge + eq.dodge + totalBlessDodge) +
+    constellationDodge;
 
   if (chance(finalDodge)) {
     logs.push(makeDodgeLine());
@@ -2865,7 +2911,13 @@ function performAttack(player, dungeonKey){
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
   const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
   const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
-  const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+let totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+
+const constellationStats = getConstellationBattleStats(player);
+const hiddenConstellationBonus = getHiddenConstellationBonus(player);
+
+totalMaxHp = Math.floor(totalMaxHp * (1 + constellationStats.hpPercent / 100));
+totalMaxHp += hiddenConstellationBonus.hp;
 
   // 불사의 심장: 체력 30% 이하 공격력 +20%
   if (
@@ -2891,77 +2943,106 @@ function performAttack(player, dungeonKey){
     player.stats.critDamage + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage + setBonus.critDamage
   );
 
-  let damage = finalAtk - target.def;
-  let isCrit = false;
+
+// 관통 적용
+const pierceRate = constellationStats.pierce || 0;
+const effectiveDef = Math.max(0, Math.floor(target.def * (1 - pierceRate / 100)));
+
+// 흡혈 합산
+const totalLifesteal =
+  totalBlessLifesteal +
+  setBonus.lifesteal +
+  constellationStats.lifesteal;
+
+function applyPlayerHit(label, baseDamageRate = 1) {
+  let hitDamage = Math.max(1, finalAtk - effectiveDef);
+  hitDamage = Math.floor(hitDamage * baseDamageRate);
+
+  let hitCrit = false;
 
   if (chance(finalCritChance)) {
-    damage *= 1.5 + (finalCritDamage / 100);
-    isCrit = true;
+    hitDamage = Math.floor(hitDamage * (1.5 + finalCritDamage / 100));
+    hitCrit = true;
   }
 
-  damage = Math.max(1, Math.floor(damage));
+  hitDamage = Math.max(1, hitDamage);
 
-  target.currentHp -= damage;
-  result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+  target.currentHp -= hitDamage;
 
-  // 광기의 연격: 추가타 30%, 추가타도 크리 가능
-  if (
-    target.currentHp > 0 &&
-    setBonus.extraHitChance > 0 &&
-    chance(setBonus.extraHitChance)
-  ) {
-    let extraDamage = Math.max(1, Math.floor(damage * (setBonus.extraHitDamageRate || 0.5)));
-    let extraCrit = false;
+  if (label === '기본') {
+    result.logs.push(makeDamageLine('👤 플레이어', target.name, hitDamage, hitCrit));
+  } else {
+    result.logs.push(hitCrit ? `⚡ ${label} 치명타! ${hitDamage}` : `⚡ ${label} ${hitDamage}`);
+  }
 
-    if (chance(finalCritChance)) {
-      extraDamage = Math.floor(extraDamage * (1.5 + finalCritDamage / 100));
-      extraCrit = true;
+  // 🔥 상태이상 적용 시작
+
+  // 🔥 화상 (스택형)
+  if (constellationStats.burnMax > 0) {
+    target.burn = Math.min(
+      (target.burn || 0) + 1,
+      constellationStats.burnMax
+    );
+  }
+
+  // ⚡ 마비 (즉발 1턴)
+  if (constellationStats.stunChance > 0 && chance(constellationStats.stunChance)) {
+    target.stunned = true;
+    result.logs.push('⚡ 마비!');
+  }
+
+  // ❄️ 빙결 (게이지형)
+  if (constellationStats.freezeGain > 0) {
+    target.freezeGauge = (target.freezeGauge || 0) + constellationStats.freezeGain;
+
+    if (target.freezeGauge >= 100) {
+      target.freezeGauge = 0;
+      target.frozen = true;
+      result.logs.push('❄️ 빙결!');
     }
-
-    target.currentHp -= extraDamage;
-    result.logs.push(extraCrit ? `⚡ 추가타 치명타! ${extraDamage}` : `⚡ 추가타 ${extraDamage}`);
   }
 
-  // 흡혈 적용
-const totalLifesteal = totalBlessLifesteal + setBonus.lifesteal;
+  // 🔥 상태이상 적용 끝
 
-target.currentHp -= damage;
-result.logs.push(makeDamageLine('👤 플레이어', target.name, damage, isCrit));
+  // 🩸 흡혈
+  if (totalLifesteal > 0 && hitDamage > 0) {
+    const heal = Math.floor(hitDamage * (totalLifesteal / 100));
+    const beforeHp = player.hp;
 
-// 기본타 흡혈
-if (totalLifesteal > 0 && damage > 0) {
-  const heal = Math.floor(damage * (totalLifesteal / 100));
-  const beforeHp = player.hp;
-  player.hp = Math.min(totalMaxHp, player.hp + heal);
-  const actualHeal = player.hp - beforeHp;
-  if (actualHeal > 0) result.logs.push(`🩸 흡혈 +${actualHeal}`);
+    player.hp = Math.min(totalMaxHp, player.hp + heal);
+
+    const actualHeal = player.hp - beforeHp;
+    if (actualHeal > 0) {
+      result.logs.push(`🩸 흡혈 +${actualHeal}`);
+    }
+  }
+
+  return hitDamage;
 }
 
-// 추가타 + 추가타 흡혈
+// 1. 기본타
+applyPlayerHit('기본', 1);
+
+// 2. 룬전설 / 세트 추가타 30%
 if (
   target.currentHp > 0 &&
   setBonus.extraHitChance > 0 &&
   chance(setBonus.extraHitChance)
 ) {
-  let extraDamage = Math.max(1, Math.floor(damage * (setBonus.extraHitDamageRate || 0.5)));
-  let extraCrit = false;
-
-  if (chance(finalCritChance)) {
-    extraDamage = Math.floor(extraDamage * (1.5 + finalCritDamage / 100));
-    extraCrit = true;
-  }
-
-  target.currentHp -= extraDamage;
-  result.logs.push(extraCrit ? `⚡ 추가타 치명타! ${extraDamage}` : `⚡ 추가타 ${extraDamage}`);
-
-  if (totalLifesteal > 0 && extraDamage > 0) {
-    const heal = Math.floor(extraDamage * (totalLifesteal / 100));
-    const beforeHp = player.hp;
-    player.hp = Math.min(totalMaxHp, player.hp + heal);
-    const actualHeal = player.hp - beforeHp;
-    if (actualHeal > 0) result.logs.push(`🩸 추가타 흡혈 +${actualHeal}`);
-  }
+  applyPlayerHit('룬 추가타', setBonus.extraHitDamageRate || 0.5);
 }
+
+// 3. 연격의 별 추가타
+if (
+  target.currentHp > 0 &&
+  constellationStats.comboChance > 0 &&
+  chance(constellationStats.comboChance)
+) {
+  applyPlayerHit('연격 추가타', 0.5);
+}
+
+
+
   if(target.currentHp <= 0){
     target.currentHp = 0;
     result.killedTarget = { ...target };
@@ -3446,24 +3527,17 @@ function buildCompactBattleText(player,target,channelId){
     lines.push('━━━━━━━━━━');
   }
 
-  const runeBonus = getRuneBonus(player);
   const setBonus = getRuneSetBonus(player);
-
-  const wb = getBlessingBonuses(player.equipment.weapon);
-  const ab = getBlessingBonuses(player.equipment.armor);
-  const rb = getBlessingBonuses(player.equipment.ring);
-  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
-
-  const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
-  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
-  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
-  const maxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+  const maxHp = getMaxHpWithBless(player);
 
   if (player.hp > maxHp) player.hp = maxHp;
 
   lines.push(`<#${channelId}>`);
   lines.push(`❤️ ${player.hp}/${maxHp}`);
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
+
+  // ⭐ 별자리 간소화 표시
+  lines.push(`⭐ ${getConstellationSummary(player)}`);
 
   if (setBonus.name) {
     lines.push(`✨ ${setBonus.name}`);
