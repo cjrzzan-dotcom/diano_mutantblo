@@ -531,6 +531,252 @@ function getEquippedRuneKeys(player) {
   return player.equippedRunes.map(r => (r ? r.key : null));
 }
 
+const CONSTELLATIONS = {
+  life: {
+    name: '생명의 별',
+    icon: '❤️',
+    type: 'hpPercent',
+    values: [5, 7, 10, 13, 15],
+    desc: '체력 증가'
+  },
+  leech: {
+    name: '흡수의 별',
+    icon: '🩸',
+    type: 'lifesteal',
+    values: [1, 1.5, 2, 2.5, 3],
+    desc: '흡혈'
+  },
+  dodge: {
+    name: '그림자의 별',
+    icon: '🌫️',
+    type: 'dodge',
+    values: [1, 2, 3, 4, 5],
+    desc: '회피 증가 / 회피 최대치 초과 가능'
+  },
+  burn: {
+    name: '홍염의 별',
+    icon: '🔥',
+    type: 'burn',
+    values: [5, 7, 10, 12, 15],
+    desc: '타격 시 화상 +1%, 최대 누적'
+  },
+  shock: {
+    name: '천벌의 별',
+    icon: '⚡',
+    type: 'stun',
+    values: [1, 1.5, 2, 2.5, 3],
+    desc: '마비 확률'
+  },
+  freeze: {
+    name: '서리의 별',
+    icon: '❄️',
+    type: 'freeze',
+    values: [5, 6, 7, 8, 10],
+    desc: '빙결 게이지 누적'
+  },
+  combo: {
+    name: '연격의 별',
+    icon: '⚔️',
+    type: 'combo',
+    values: [1, 3, 5, 7, 10],
+    desc: '50% 데미지 추가타'
+  },
+  pierce: {
+    name: '파쇄의 별',
+    icon: '🗡️',
+    type: 'pierce',
+    values: [1, 3, 5, 7, 10],
+    desc: '방어 관통'
+  }
+};
+
+const CONSTELLATION_KEYS = Object.keys(CONSTELLATIONS);
+
+const CONSTELLATION_EXP_REQUIRED = {
+  2: 10000,
+  3: 30000,
+  4: 50000,
+  5: 100000
+};
+
+const CONSTELLATION_ESSENCE_REQUIRED = {
+  1: 1,
+  2: 3,
+  3: 5,
+  4: 7,
+  5: 10
+};
+
+const CONSTELLATION_COLOR = {
+  0: '⬜',
+  1: '🟦',
+  2: '🟩',
+  3: '🟨',
+  4: '🟧',
+  5: '🟥'
+};
+
+const CONSTELLATION_BOSS_NAMES = new Set([
+  '종말의 화신 디아블로',
+  '악흑의 군주 드래곤',
+  '빛의 군주 드래곤',
+  '창조 드래곤',
+  '우버 종말의 화신 디아블로',
+  '티리엘'
+  '파괴의 군주 디아블로'
+  '증오의 군주 디아블로'
+  '만악의 군주 디아블로'
+  '아누'
+]);
+
+
+function makeConstellationMenuRows() {
+  const row1 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('constellation_view_life')
+      .setLabel('생명')
+      .setEmoji('❤️')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('constellation_view_leech')
+      .setLabel('흡수')
+      .setEmoji('🩸')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('constellation_view_dodge')
+      .setLabel('그림자')
+      .setEmoji('🌫️')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('constellation_view_burn')
+      .setLabel('홍염')
+      .setEmoji('🔥')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  const row2 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('constellation_view_shock')
+      .setLabel('천벌')
+      .setEmoji('⚡')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('constellation_view_freeze')
+      .setLabel('서리')
+      .setEmoji('❄️')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('constellation_view_combo')
+      .setLabel('연격')
+      .setEmoji('⚔️')
+      .setStyle(ButtonStyle.Secondary),
+
+    new ButtonBuilder()
+      .setCustomId('constellation_view_pierce')
+      .setLabel('파쇄')
+      .setEmoji('🗡️')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  const row3 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('constellation_craft_essence')
+      .setLabel('별의 정수 제작')
+      .setEmoji('🔮')
+      .setStyle(ButtonStyle.Primary)
+  );
+
+  return [row1, row2, row3];
+}
+
+function makeConstellationDetailRows(key) {
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`constellation_equip_${key}`)
+        .setLabel('장착')
+        .setStyle(ButtonStyle.Success),
+
+      new ButtonBuilder()
+        .setCustomId(`constellation_unequip_${key}`)
+        .setLabel('해제')
+        .setStyle(ButtonStyle.Secondary),
+
+      new ButtonBuilder()
+        .setCustomId(`constellation_upgrade_${key}`)
+        .setLabel('강화')
+        .setStyle(ButtonStyle.Primary),
+
+      new ButtonBuilder()
+        .setCustomId('constellation_menu')
+        .setLabel('뒤로')
+        .setStyle(ButtonStyle.Danger)
+    )
+  ];
+}
+
+function getConstellationOneText(player, key) {
+  ensureConstellations(player);
+
+  const info = CONSTELLATIONS[key];
+  const c = player.constellations[key];
+
+  if (!info || !c) return '없는 별자리입니다.';
+
+  const lv = c.level || 0;
+  const equipped = player.constellationLoadout.includes(key);
+
+  const lines = [];
+
+  lines.push(`${info.icon} ${info.name}`);
+  lines.push('');
+  lines.push(`현재 레벨: Lv.${lv}`);
+  lines.push(`장착 상태: ${equipped ? '장착중' : '미장착'}`);
+  lines.push('');
+
+  if (lv <= 0) {
+    lines.push('효과: 미해금');
+    lines.push(`해금 필요: 별의 정수 ${CONSTELLATION_ESSENCE_REQUIRED[1]}개`);
+  } else {
+    const value = info.values[lv - 1];
+
+    lines.push(`효과: ${info.desc} +${value}%`);
+
+    if (lv < 5) {
+      const nextLevel = lv + 1;
+      lines.push(`경험치: ${c.exp || 0}/${CONSTELLATION_EXP_REQUIRED[nextLevel]}`);
+      lines.push(`다음 강화 필요: 별의 정수 ${CONSTELLATION_ESSENCE_REQUIRED[nextLevel]}개`);
+    } else {
+      lines.push('최대 레벨입니다.');
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function getConstellationMenuText(player) {
+  ensureConstellations(player);
+
+  const lines = [];
+
+  lines.push('⭐ 별자리 ⭐');
+  lines.push(getConstellationSummary(player));
+  lines.push('');
+  lines.push('해금한 별자리는 모두 적용됩니다.');
+  lines.push('장착한 2개 별자리만 사냥 경험치를 얻습니다.');
+  lines.push('');
+  lines.push(`🌠 별의 파편: ${player.materials['별의 파편'] || 0}개`);
+  lines.push(`🔮 별의 정수: ${player.materials['별의 정수'] || 0}개`);
+
+  return lines.join('\n');
+}
+
+
 function getRuneComboKey(player) {
   const keys = getEquippedRuneKeys(player);
   if (keys.some(k => !k)) return null;
@@ -755,6 +1001,147 @@ function buildAutoComboTable() {
 }
 
 const AUTO_RUNE_COMBOS = buildAutoComboTable();
+
+
+function ensureConstellations(player) {
+  if (!player.constellations) player.constellations = {};
+  if (!Array.isArray(player.constellationLoadout)) player.constellationLoadout = [];
+
+  for (const key of CONSTELLATION_KEYS) {
+    if (!player.constellations[key]) {
+      player.constellations[key] = {
+        level: 0,
+        exp: 0
+      };
+    }
+
+    if (typeof player.constellations[key].level !== 'number') {
+      player.constellations[key].level = 0;
+    }
+
+    if (typeof player.constellations[key].exp !== 'number') {
+      player.constellations[key].exp = 0;
+    }
+  }
+
+  if (!player.materials) player.materials = {};
+  if (!player.materials['별의 파편']) player.materials['별의 파편'] = 0;
+  if (!player.materials['별의 정수']) player.materials['별의 정수'] = 0;
+}
+
+function getConstellationValue(player, key) {
+  ensureConstellations(player);
+
+  const data = CONSTELLATIONS[key];
+  const c = player.constellations[key];
+
+  if (!data || !c || c.level <= 0) return 0;
+
+  return data.values[c.level - 1] || 0;
+}
+
+function getConstellationSummary(player) {
+  ensureConstellations(player);
+
+  return CONSTELLATION_KEYS
+    .map(key => {
+      const lv = player.constellations[key].level || 0;
+      return CONSTELLATION_COLOR[lv] || '⬜';
+    })
+    .join(' ');
+}
+
+function getConstellationDetailText(player) {
+  ensureConstellations(player);
+
+  const lines = [];
+
+  lines.push('⭐ 별자리 ⭐');
+  lines.push(getConstellationSummary(player));
+  lines.push('');
+
+  for (const key of CONSTELLATION_KEYS) {
+    const info = CONSTELLATIONS[key];
+    const c = player.constellations[key];
+    const lv = c.level || 0;
+    const equipped = player.constellationLoadout.includes(key) ? ' ✅장착' : '';
+
+    if (lv <= 0) {
+      lines.push(`${info.icon} ${info.name} Lv.0 ${CONSTELLATION_COLOR[0]}${equipped}`);
+      lines.push(`   효과: 미해금`);
+      continue;
+    }
+
+    const value = info.values[lv - 1];
+    const nextExp = CONSTELLATION_EXP_REQUIRED[lv + 1];
+
+    lines.push(`${info.icon} ${info.name} Lv.${lv} ${CONSTELLATION_COLOR[lv]}${equipped}`);
+    lines.push(`   효과: ${info.desc} +${value}%`);
+
+    if (lv < 5) {
+      lines.push(`   경험치: ${c.exp}/${nextExp}`);
+      lines.push(`   다음 강화 필요: 별의 정수 ${CONSTELLATION_ESSENCE_REQUIRED[lv + 1]}개`);
+    } else {
+      lines.push(`   최대 레벨`);
+    }
+  }
+
+  lines.push('');
+  lines.push(`🌠 별의 파편: ${player.materials['별의 파편'] || 0}개`);
+  lines.push(`🔮 별의 정수: ${player.materials['별의 정수'] || 0}개`);
+
+  return lines.join('\n');
+}
+
+function grantConstellationExp(player) {
+  ensureConstellations(player);
+
+  for (const key of player.constellationLoadout) {
+    const c = player.constellations[key];
+    if (!c) continue;
+    if (c.level <= 0) continue;
+    if (c.level >= 5) continue;
+
+    c.exp += 1;
+  }
+}
+
+function grantConstellationDrops(player, target) {
+  ensureConstellations(player);
+
+  const lines = [];
+  let amount = 0;
+
+  if (target && CONSTELLATION_BOSS_NAMES.has(target.name)) {
+    amount += 1;
+  } else if (Math.random() < 0.03) {
+    amount += 1;
+  }
+
+  if (amount > 0) {
+    player.materials['별의 파편'] = (player.materials['별의 파편'] || 0) + amount;
+    lines.push(`🌠 별의 파편 +${amount}`);
+  }
+
+  return lines;
+}
+
+function getHiddenConstellationBonus(player) {
+  ensureConstellations(player);
+
+  const minLevel = Math.min(
+    ...CONSTELLATION_KEYS.map(key => player.constellations[key].level || 0)
+  );
+
+  if (minLevel >= 5) return { hp: 1500, atk: 150 };
+  if (minLevel >= 4) return { hp: 700, atk: 80 };
+  if (minLevel >= 3) return { hp: 400, atk: 50 };
+  if (minLevel >= 2) return { hp: 200, atk: 30 };
+  if (minLevel >= 1) return { hp: 100, atk: 20 };
+
+  return { hp: 0, atk: 0 };
+}
+
 
 function getRuneSetBonus(player) {
   const comboKey = getRuneComboKey(player);
@@ -2581,7 +2968,13 @@ if (
     result.logs.push(makeKillLine(target.name));
 
     const drops = grantDrops(player, target);
-    result.levelUps = drops.levelUps;
+   
+    const constellationDropLines = grantConstellationDrops(player, target);
+    result.logs.push(...constellationDropLines);
+    // 장착한 별자리 경험치 +1
+    grantConstellationExp(player);
+   
+ result.levelUps = drops.levelUps;
     player.run.lastDrops = drops.lines;
     result.logs.push(...drops.lines);
     player.run.kills += 1;
@@ -3262,8 +3655,9 @@ function buildStatusButtons(player){
     ),
 
     new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('rune_draw').setLabel('🎲 룬뽑기').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('룬장착').setStyle(ButtonStyle.Primary)
+       new ButtonBuilder().setCustomId('rune_draw').setLabel('🎲 룬뽑기').setStyle(ButtonStyle.Success),
+       new ButtonBuilder().setCustomId('rune_equip_menu').setLabel('룬장착').setStyle(ButtonStyle.Primary),
+       new ButtonBuilder().setCustomId('constellation_menu').setLabel('⭐ 별자리').setStyle(ButtonStyle.Secondary)
     )
   ];
 }
@@ -3636,6 +4030,10 @@ client.on('messageCreate', async (message) => {
     await message.reply(`💰 ${matName} ${amount}개 판매 (+${total}G)`);
     return;
   }
+
+
+
+
 
   if (command === '!가방') {
     console.log("📦 !가방 분기 들어옴");
@@ -4189,6 +4587,149 @@ ${buildMaterialSellText(player, page)}`,
   });
   return;
 }
+if (id === 'constellation_menu') {
+  await interaction.update({
+    content: '```' + getConstellationMenuText(player) + '```',
+    components: makeConstellationMenuRows()
+  });
+  return;
+}
+if (id.startsWith('constellation_view_')) {
+  const key = id.replace('constellation_view_', '');
+
+  if (!CONSTELLATIONS[key]) {
+    await interaction.reply({
+      content: '없는 별자리입니다.',
+      ephemeral: true
+    });
+    return;
+  }
+
+  await interaction.update({
+    content: '```' + getConstellationOneText(player, key) + '```',
+    components: makeConstellationDetailRows(key)
+  });
+  return;
+}
+if (id.startsWith('constellation_equip_')) {
+  const key = id.replace('constellation_equip_', '');
+
+  if (!CONSTELLATIONS[key]) {
+    await interaction.reply({ content: '없는 별자리입니다.', ephemeral: true });
+    return;
+  }
+
+  if (player.constellations[key].level <= 0) {
+    await interaction.reply({ content: '아직 해금하지 않은 별자리입니다.', ephemeral: true });
+    return;
+  }
+
+  if (player.constellationLoadout.includes(key)) {
+    await interaction.reply({ content: '이미 장착 중입니다.', ephemeral: true });
+    return;
+  }
+
+  if (player.constellationLoadout.length >= 2) {
+    await interaction.reply({ content: '별자리는 최대 2개까지만 장착할 수 있습니다.', ephemeral: true });
+    return;
+  }
+
+  player.constellationLoadout.push(key);
+
+  await interaction.update({
+    content: '```' + getConstellationOneText(player, key) + '```',
+    components: makeConstellationDetailRows(key)
+  });
+  return;
+}
+if (id.startsWith('constellation_unequip_')) {
+  const key = id.replace('constellation_unequip_', '');
+
+  if (!CONSTELLATIONS[key]) {
+    await interaction.reply({ content: '없는 별자리입니다.', ephemeral: true });
+    return;
+  }
+
+  player.constellationLoadout = player.constellationLoadout.filter(k => k !== key);
+
+  await interaction.update({
+    content: '```' + getConstellationOneText(player, key) + '```',
+    components: makeConstellationDetailRows(key)
+  });
+  return;
+}
+if (id.startsWith('constellation_upgrade_')) {
+  const key = id.replace('constellation_upgrade_', '');
+
+  if (!CONSTELLATIONS[key]) {
+    await interaction.reply({ content: '없는 별자리입니다.', ephemeral: true });
+    return;
+  }
+
+  const c = player.constellations[key];
+  const currentLevel = c.level || 0;
+
+  if (currentLevel >= 5) {
+    await interaction.reply({ content: '이미 최대 레벨입니다.', ephemeral: true });
+    return;
+  }
+
+  const nextLevel = currentLevel + 1;
+  const needEssence = CONSTELLATION_ESSENCE_REQUIRED[nextLevel];
+
+  if ((player.materials['별의 정수'] || 0) < needEssence) {
+    await interaction.reply({
+      content: `별의 정수가 부족합니다. 필요: ${needEssence}개`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  if (nextLevel >= 2) {
+    const needExp = CONSTELLATION_EXP_REQUIRED[nextLevel];
+
+    if ((c.exp || 0) < needExp) {
+      await interaction.reply({
+        content: `경험치가 부족합니다. 현재 ${c.exp || 0}/${needExp}`,
+        ephemeral: true
+      });
+      return;
+    }
+  }
+
+  player.materials['별의 정수'] -= needEssence;
+  c.level = nextLevel;
+  c.exp = 0;
+
+  await interaction.update({
+    content: '```' + getConstellationOneText(player, key) + '```',
+    components: makeConstellationDetailRows(key)
+  });
+  return;
+}
+if (id === 'constellation_craft_essence') {
+  const fragments = player.materials['별의 파편'] || 0;
+
+  if (fragments < 100) {
+    await interaction.reply({
+      content: `별의 파편이 부족합니다. 현재 ${fragments}/100`,
+      ephemeral: true
+    });
+    return;
+  }
+
+  player.materials['별의 파편'] -= 100;
+  player.materials['별의 정수'] = (player.materials['별의 정수'] || 0) + 1;
+
+  await interaction.update({
+    content: '```' + getConstellationMenuText(player) + '```',
+    components: makeConstellationMenuRows()
+  });
+  return;
+}
+
+
+
 
 if (id === 'craft_cat_material') {
   await interaction.reply({
