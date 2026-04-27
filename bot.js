@@ -3631,8 +3631,8 @@ if(command === '!가방'){
   });
 
   return;
-}
-
+   }
+ });
   if(command === '!도움말'){
     await message.reply(formatHelp());
     return;
