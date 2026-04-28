@@ -1059,12 +1059,18 @@ function getConstellationValue(player, key) {
 function getConstellationSummary(player) {
   ensureConstellations(player);
 
-  return CONSTELLATION_KEYS
-    .map(key => {
-      const lv = player.constellations[key].level || 0;
-      return CONSTELLATION_COLOR[lv] || '⬜';
-    })
-    .join(' ');
+  const rows = [];
+
+  for (const key in CONSTELLATIONS) {
+    const c = player.constellations[key];
+    if (!c || c.level <= 0) continue;
+
+    const color = CONSTELLATION_COLOR[c.level] || '⬜';
+
+    rows.push(color);
+  }
+
+  return rows.length ? rows.join(' ') : '해금 없음';
 }
 
 function getConstellationDetailText(player) {
