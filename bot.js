@@ -1070,7 +1070,7 @@ function getConstellationSummary(player) {
     rows.push(color);
   }
 
-  return rows.length ? rows.join(' ') : '해금 없음';
+  return rows.length ? rows.join('') : '해금 없음'; // ← 공백 없음
 }
 
 function getConstellationDetailText(player) {
@@ -1296,6 +1296,16 @@ function getRuneSetText(player) {
   }
 
   return lines.join('\n');
+}
+
+function getEquippedConstellationIcons(player) {
+  const equipped = player.constellationLoadout || [];
+
+  if (equipped.length === 0) return '없음';
+
+  return equipped
+    .map(key => CONSTELLATIONS[key]?.icon || key)
+    .join('  ');
 }
 
 
@@ -3463,10 +3473,11 @@ function inventoryText(player, page = 1){
 }
 
 
-function getConstellationSummary(player) {
+// 장착 아이콘
+function getEquippedConstellationIcons(player) {
   const equipped = player.constellationLoadout || [];
 
-  if (equipped.length === 0) return '장착 없음';
+  if (equipped.length === 0) return '없음';
 
   return equipped
     .map(key => {
@@ -3614,7 +3625,8 @@ const dodgeDetail = buildStatDetail([
     `📦 장착 장비`,
     getEquippedText(player),
     '',
-`⭐ 별자리` :
+`⭐ 별자리`,
+`🧷 장착: ${getEquippedConstellationIcons(player)}`,
 getConstellationSummary(player),
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
