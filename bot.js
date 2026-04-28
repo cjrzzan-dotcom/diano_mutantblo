@@ -1717,8 +1717,8 @@ const CRAFTS = [
 { id:'lightning_sword', label:'천상의 심판', type:'weapon', gold:100000,  materials:{ '천상의 조각':30, '천상석' :30 },  base:{atk:105,def:30} },
 { id:'lightning_armor', label:'천상의 갑주', type:'armor',  gold:100000, materials:{ '천상의 조각':30, '천상석' :30 }, base:{atk:30,def:105} },
 
-{ id:'one_sword', label:'태초의 종말', type:'weapon', gold:500000,  materials:{ '태초의 조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50  },  base:{atk:300,def:150} },
-{ id:'one_armor', label:'태초의 수호', type:'armor',  gold:500000, materials:{ '태초의 조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50 }, base:{atk:150,def:300} },
+{ id:'one_sword', label:'태초의 종말', type:'weapon', gold:500000,  materials:{ '태초의조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50  },  base:{atk:300,def:150} },
+{ id:'one_armor', label:'태초의 수호', type:'armor',  gold:500000, materials:{ '태초의조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50 }, base:{atk:150,def:300} },
 
 {
   id: 'make_high_frag',
