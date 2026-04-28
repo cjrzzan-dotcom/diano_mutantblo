@@ -3478,8 +3478,6 @@ function getConstellationSummary(player) {
     .join('  ');
 }
 
-
-
 function getEquippedText(player){
   const w = player.equipment?.weapon;
   const a = player.equipment?.armor;
@@ -3616,8 +3614,7 @@ const dodgeDetail = buildStatDetail([
     `📦 장착 장비`,
     getEquippedText(player),
     '',
-`⭐ 별자리`,
-`: ${getEquippedConstellationIcons(player)}`,
+`⭐ 별자리` :
 getConstellationSummary(player),
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
