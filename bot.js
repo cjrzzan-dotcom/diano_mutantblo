@@ -1112,13 +1112,19 @@ function getConstellationDetailText(player) {
 function grantConstellationExp(player) {
   ensureConstellations(player);
 
-  for (const key of player.constellationLoadout) {
+  for (const key in player.constellations) {
     const c = player.constellations[key];
     if (!c) continue;
-    if (c.level <= 0) continue;
-    if (c.level >= 5) continue;
+    if (c.level <= 0) continue; // 해금 안된건 제외
+    if (c.level >= 5) continue; // 만렙 제외
 
-    c.exp += 1;
+    const isEquipped = player.constellationLoadout.includes(key);
+
+    if (isEquipped) {
+      c.exp += 3; // 착용
+    } else {
+      c.exp += 1; // 해금만
+    }
   }
 }
 
@@ -1149,10 +1155,10 @@ function getHiddenConstellationBonus(player) {
     ...CONSTELLATION_KEYS.map(key => player.constellations[key].level || 0)
   );
 
-  if (minLevel >= 5) return { hp: 1500, atk: 150 };
-  if (minLevel >= 4) return { hp: 700, atk: 80 };
-  if (minLevel >= 3) return { hp: 400, atk: 50 };
-  if (minLevel >= 2) return { hp: 200, atk: 30 };
+  if (minLevel >= 5) return { hp: 1500, atk: 150, Def: 30 };
+  if (minLevel >= 4) return { hp: 700, atk: 80, Def: 20  };
+  if (minLevel >= 3) return { hp: 400, atk: 50, Def: 15  };
+  if (minLevel >= 2) return { hp: 200, atk: 30 , Def: 10 };
   if (minLevel >= 1) return { hp: 100, atk: 20 };
 
   return { hp: 0, atk: 0 };
@@ -3450,6 +3456,22 @@ function inventoryText(player, page = 1){
     .join('\n');
 }
 
+
+function getConstellationSummary(player) {
+  const equipped = player.constellationLoadout || [];
+
+  if (equipped.length === 0) return '장착 없음';
+
+  return equipped
+    .map(key => {
+      const data = CONSTELLATIONS[key];
+      if (!data) return key;
+
+      return data.icon;
+    })
+    .join('  ');
+}
+
 function getEquippedText(player){
   const w = player.equipment?.weapon;
   const a = player.equipment?.armor;
@@ -3586,8 +3608,9 @@ const dodgeDetail = buildStatDetail([
     `📦 장착 장비`,
     getEquippedText(player),
     '',
-    `⭐ 별자리`,
-    getConstellationSummary(player),
+`⭐ 별자리`,
+`: ${getEquippedConstellationIcons(player)}`,
+getConstellationSummary(player),
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
   ].join('\n');
