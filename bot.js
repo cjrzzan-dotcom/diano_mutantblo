@@ -3477,20 +3477,7 @@ function getConstellationSummary(player) {
     })
     .join('  ');
 }
-function getEquippedConstellationIcons(player) {
-  const equipped = player.constellationLoadout || [];
 
-  if (equipped.length === 0) return '없음';
-
-  return equipped
-    .map(key => {
-      const data = CONSTELLATIONS[key];
-      if (!data) return key;
-
-      return data.icon;
-    })
-    .join('  ');
-}
 
 
 function getEquippedText(player){
