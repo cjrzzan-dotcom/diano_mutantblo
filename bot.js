@@ -1515,6 +1515,8 @@ const MATERIAL_PRICES = {
 
   '좀비드래곤의 가죽': 300,
 
+  '디아불로의 불' : 1000000,
+
   '빛의 조각': 350,
 
   '암흑의 조각': 400,
@@ -1533,6 +1535,7 @@ const MATERIAL_PRICES = {
   '천상의 조각': 5000,
   '디아블로의 불': 1000,
   '세계석조각': 1000,
+  '세계석':8000,
   '부활권':500000,
 
 };
@@ -1676,7 +1679,7 @@ const MATERIALS = [
   '도살자의 도끼조각', '레오릭왕의 뼈조각', '악마의 정수','악마의 살점', 
   '릴리트의 뿔', '디아블로의 뿔', '고급장비조각','디아블로의 불',
   '천상의 조각','천상석','세계석조각','오염된세계석조각',
-  '태초의조각','별의 파편','별의 정수',
+  '태초의조각','별의 파편','별의 정수','세계석'
 ];
 
 const CRAFTS = [
@@ -1762,6 +1765,17 @@ const CRAFTS = [
   },
   result: {
     '축성석': 1
+  }
+},
+{
+  id: 'world_stone',
+  label: '세계석',
+  type: 'material',
+  materials: {
+    '세계석조각': 10
+  },
+  result: {
+    '세계석': 1
   }
 }
 
@@ -2500,6 +2514,20 @@ function getMaxHpWithBless(player){
   total += hiddenConstellationBonus.hp;
 
   return total;
+}
+
+function getFinalMaxHp(player){
+  const baseHp = getMaxHpWithBless(player);
+
+  const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
+
+  const runeHpBonus = Math.floor(baseHp * ((runeBonus.hpPercent || 0) / 100));
+  const hpAfterRune = baseHp + runeHpBonus;
+
+  const setHpBonus = Math.floor(hpAfterRune * ((setBonus.hpPercent || 0) / 100));
+
+  return hpAfterRune + setHpBonus;
 }
 
 function getDefensePower(player){
@@ -3601,8 +3629,7 @@ function buildCompactBattleText(player,target,channelId){
   }
 
   const setBonus = getRuneSetBonus(player);
-  const maxHp = getMaxHpWithBless(player);
-
+  const maxHp = getFinalMaxHp(player);
   if (player.hp > maxHp) player.hp = maxHp;
 
   lines.push(`<#${channelId}>`);
