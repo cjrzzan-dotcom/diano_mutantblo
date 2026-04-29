@@ -3869,29 +3869,46 @@ function buildFullStatusText(player){
 
   return [
     (player.rebirth || 0) > 0 ? `:star2: :star2: :star2: :star2: :star2:환생: ${player.rebirth}회:star2: :star2: :star2: :star2: :star2:  ` : null,
-    `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
-    `🎯 스탯포인트: ${player.statPoints}`,
-    (player.rebirth || 0) > 0 ? `🔷 마나: ${player.mana || 0}/${player.maxMana || 0}` : null,
-    '',
-    `❤️ HP: ${player.hp}/${totalMaxHp} (${hpDetail})`,
-    `⚔️ 공격력: ${totalAtk} (${atkDetail})`,
-    `🛡️ 방어력: ${totalDef} (${defDetail})`,
-    `💥 크리확률: ${totalCrit}% (${critDetail})`,
-    `🔥 크리데미지: +${totalCritDmg}% (${critDmgDetail})`,
-    `💨 회피: ${totalDodge}% (${dodgeDetail})`,
-    `🩸 흡혈: ${(totalBlessLifesteal + (setBonus.lifesteal||0))}%`,
-    `🔁 데미지반사: ${totalBlessReflect}%`,
-    '',
-    `📦 장착 장비`,
-    getEquippedText(player),
-    '',
-    `⭐ 별자리`,
-    `🧷 장착: ${getEquippedConstellationIcons(player)}`,
-    getConstellationSummary(player),
-    `✨ 룬 조합 효과`,
-    getRuneSetText(player),
+  `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
+  `🎯 스탯포인트: ${player.statPoints}`,
+
+  '',
+  `❤️ HP: ${player.hp}/${totalMaxHp} (${hpDetail})`,
+  (player.rebirth || 0) > 0 
+    ? `🔷 마나: ${player.mana || 0}/${player.maxMana || 0}` 
+    : null,
+
+  `⚔️ 공격력: ${totalAtk} (${atkDetail})`,
+  `🛡️ 방어력: ${totalDef} (${defDetail})`,
+  `💥 크리확률: ${totalCrit}% (${critDetail})`,
+  `🔥 크리데미지: +${totalCritDmg}% (${critDmgDetail})`,
+  `💨 회피: ${totalDodge}% (${dodgeDetail})`,
+  `🩸 흡혈: ${(totalBlessLifesteal + (setBonus.lifesteal||0))}%`,
+  `🔁 데미지반사: ${totalBlessReflect}%`,
+
+  '',
+  // 🔥 장비 압축
+  player.equipment.weapon
+    ? `⚔️ ${player.equipment.weapon.name}`
+    : '⚔️ 없음',
+
+  player.equipment.armor
+    ? `🛡️ ${player.equipment.armor.name}`
+    : '🛡️ 없음',
+
+  player.equipment.ring
+    ? `💍 ${player.equipment.ring.name}`
+    : '💍 없음',
+
+  '',
+  `⭐ 별자리`,
+  `🧷 ${getEquippedConstellationIcons(player)}`,
+  getConstellationSummary(player),
+
+  `✨ 룬 조합 효과`,
+  getRuneSetText(player),
     (player.rebirth || 0) > 0 
-      ? `:star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2:`
+      ? `:star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2:`
       : null
   ].filter(v => v !== null).join('\n');
 }
