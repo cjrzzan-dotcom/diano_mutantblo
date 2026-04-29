@@ -3384,13 +3384,6 @@ function equipItemByIndex(player, idx){
   return `✅ ${item.name} 장착 완료!`;
 }
 
-
-function getEnhanceLevelText(item){
-  if(!item || !item.enhanceLevel) return '';
-  return ` [+${item.enhanceLevel}]`;
-}
-
-
 function tryEnhanceItem(player, item){
   if(!item) return '없는 아이템입니다.';
 
@@ -3413,7 +3406,6 @@ function tryEnhanceItem(player, item){
 
   player.gold -= needGold;
 
-  // 성공
   if(Math.random() <= successChance){
     item.enhanceLevel += 1;
 
@@ -3427,7 +3419,6 @@ function tryEnhanceItem(player, item){
     return `🔨 ${item.name} 강화 성공! (+${item.enhanceLevel})`;
   }
 
-  // 실패
   if(current >= 7){
     item.enhanceLevel -= 1;
 
@@ -3449,9 +3440,112 @@ function tryEnhanceItem(player, item){
   return `❌ ${item.name} 강화 실패...`;
 }
 
+
+// ================== 🔥 환생 환급 시스템 ==================
+
+const ENHANCE_GOLD_COSTS = [100, 150, 250, 400, 700, 1000, 1500, 3000, 5000, 10000];
+
+const RARITY_REFUND_GOLD = {
+  common: 0,
+  rare: 1000,
+  epic: 3000,
+  unique: 10000,
+  legendary: 30000
+};
+
+function getEnhanceRefundGold(enhanceLevel = 0) {
+  let gold = 0;
+
+  for (let i = 0; i < enhanceLevel; i++) {
+    const cost = ENHANCE_GOLD_COSTS[i] || 0;
+
+    if (i >= 7) {
+      gold += cost * i; // 실패 비용 포함
+    } else {
+      gold += cost;
+    }
+  }
+
+  return gold;
+}
+
+function refundRebirthItem(player, item) {
+  if (!item) return [];
+
+  if (!player.materials) player.materials = {};
+  player.gold = player.gold || 0;
+
+  const logs = [];
+
+  // 제작 정보 찾기
+  const craft = CRAFTS.find(c =>
+    c.id === item.recipeId ||
+    c.id === item.craftId ||
+    c.label === item.name.replace(/^[^\s]+\s/, '')
+  );
+
+  // 제작 재료 / 골드 환급
+  if (craft) {
+    if (craft.gold) {
+      player.gold += craft.gold;
+      logs.push(`💰 제작 골드 +${craft.gold}`);
+    }
+
+    for (const [mat, amount] of Object.entries(craft.materials || {})) {
+      player.materials[mat] = (player.materials[mat] || 0) + amount;
+      logs.push(`📦 ${mat} +${amount}`);
+    }
+  }
+
+  // 강화 환급
+  const enhanceGold = getEnhanceRefundGold(item.enhanceLevel || 0);
+  if (enhanceGold > 0) {
+    player.gold += enhanceGold;
+    logs.push(`⚒️ 강화 골드 +${enhanceGold}`);
+  }
+
+  // 담금질 환급
+  const temperCount = item.temperCount || 0;
+  if (temperCount > 0) {
+    const amount = temperCount * 3;
+    player.materials['세계석조각'] = (player.materials['세계석조각'] || 0) + amount;
+    logs.push(`🔥 세계석조각 +${amount}`);
+  }
+
+  // 축성 환급
+  if (item.blessing) {
+    player.materials['축성석'] = (player.materials['축성석'] || 0) + 1;
+    logs.push(`✨ 축성석 +1`);
+  }
+
+  // 등급 환급
+  const rarityGold = RARITY_REFUND_GOLD[item.rarity] || 0;
+  if (rarityGold > 0) {
+    player.gold += rarityGold;
+    logs.push(`💎 등급 골드 +${rarityGold}`);
+  }
+
+  return logs;
+}
+
+// ================== 🥴 환생 시스템 ==================
+
+function doRebirth(player) {
+  const logs = [];
+
+  logs.push('🥴 환생 준비 완료');
+
+  return logs;
+}
+
+
+// ================== 기존 코드 계속 ==================
+
 function equipmentText(player){
   const weaponText = player.equipment.weapon
-    ? `+${player.equipment.weapon.enhanceLevel || 0}${player.equipment.weapon.blessing ? ' (축성)' : ''} ${player.equipment.weapon.name}[담금질${player.equipment.weapon.temperCount || 0}/5]\n${getItemStatTextWithBless(player.equipment.weapon) || '(스탯없음)'}`
+    ? `+${player.equipment.weapon.enhanceLevel || 0}${player.equipment.weapon.blessing ? ' (축성)' : ''} ${player.equipment.weapon.name}[
+
+${player.equipment.weapon.temperCount || 0}/5]\n${getItemStatTextWithBless(player.equipment.weapon) || '(스탯없음)'}`
     : '없음';
 
   const armorText = player.equipment.armor
@@ -3468,6 +3562,9 @@ function equipmentText(player){
     `💍 반지: ${ringText}`
   ].join('\n\n');
 }
+
+
+
 function materialsText(player){
   const rows = Object.entries(player.materials).filter(([,v])=>v>0).map(([k,v])=>`${k} ${v}`);
   return rows.length ? rows.join(' / ') : '없음';
@@ -4237,6 +4334,24 @@ client.on('messageCreate', async (message) => {
   const arg = args[1];
 
   console.log('[실행]', command, 'by', message.author.tag);
+
+
+
+if (command === '!환생') {
+  if (player.level < 45) {
+    await message.reply('❌ 환생은 45레벨 이상부터 가능합니다.');
+    return;
+  }
+
+  const logs = doRebirth(player);
+
+  await safeSave(player);
+
+  await message.reply(logs.join('\n'));
+  return;
+}
+
+
 
 if (command === '!초기화') {
   if (!isAdmin(message)) {
