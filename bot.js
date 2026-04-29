@@ -3533,15 +3533,58 @@ function refundRebirthItem(player, item) {
 function doRebirth(player) {
   const logs = [];
 
-  // 🔥 장비 가져오기
-  const items = [
-    player.equipment.weapon,
-    player.equipment.armor,
-    player.equipment.ring
-  ];
+  const weapon = player.equipment.weapon || null;
+  const armor = player.equipment.armor || null;
+  const ring = player.equipment.ring || null;
+
+  // 테스트 고정
+  const keepItem = weapon;    // 무기 유지
+  const refundItem = armor;   // 갑옷 환급
+  const gambleItem = ring;    // 반지 도박
 
   logs.push('🥴 환생 시작!');
-  logs.push('장비 확인 완료');
+  logs.push('⚔️ 무기: 유지');
+  logs.push('🛡️ 갑옷: 환급');
+  logs.push('💍 반지: 도박');
+
+  // 갑옷 환급
+  if (refundItem) {
+    logs.push('━━━━━━━━━━');
+    logs.push(`🛡️ ${refundItem.name} 환급`);
+    logs.push(...refundRebirthItem(player, refundItem));
+  }
+
+  // 반지 도박
+  let gambleKept = false;
+
+  if (gambleItem) {
+    logs.push('━━━━━━━━━━');
+    logs.push(`💍 ${gambleItem.name} 도박`);
+
+    if (Math.random() < 0.65) {
+      gambleKept = true;
+      logs.push('🎲 성공! 반지 유지');
+    } else {
+      logs.push('💥 실패! 반지 파괴');
+    }
+  }
+
+  // 장비 초기화
+  player.equipment.weapon = null;
+  player.equipment.armor = null;
+  player.equipment.ring = null;
+
+  // 유지 장비 다시 장착
+  if (keepItem) {
+    player.equipment[keepItem.type] = keepItem;
+  }
+
+  if (gambleKept && gambleItem) {
+    player.equipment[gambleItem.type] = gambleItem;
+  }
+
+  logs.push('━━━━━━━━━━');
+  logs.push('장비 처리 완료');
 
   return logs;
 }
