@@ -2197,14 +2197,13 @@ function getDefaultPlayer(userId){
 
 
 
-
 function getPlayer(userId) {
   if (!gameData) gameData = {};
 
   if (!gameData[userId]) {
     gameData[userId] = getDefaultPlayer(userId);
   }
-
+}
   const player = gameData[userId];
 
   if (!player.inventory) player.inventory = [];
