@@ -2214,17 +2214,14 @@ function getPlayer(userId) {
   if (!player.pendingRuneAction) player.pendingRuneAction = null;
 
   // ⭐ 여기 추가 (핵심)
-  if (!player.xpRebalanceV1) {
-    player.nextXp = Math.floor(player.nextXp * 1.15);
+if (!player.xpRebalanceV1) {
+  player.nextXp = Math.floor(50 * Math.pow(1.15, player.level - 1));
 
-    const logs = giveXp(player, 0); // 기존 XP로 레벨업 처리
+  const logs = giveXp(player, 0);
 
-    player.xpRebalanceV1 = true;
+  player.xpRebalanceV1 = true;
 
-    console.log(`XP 보정 적용: ${userId}`, logs);
-  }
-
-  return player;
+  console.log(`XP 보정 적용: ${userId}`, logs);
 }
 
 function formatItemFullText(item) {
@@ -2779,7 +2776,7 @@ function giveXp(player, amount){
   while(player.xp >= player.nextXp){
     player.xp -= player.nextXp;
     player.level += 1;
-    player.nextXp = Math.floor(player.nextXp * 1.15);
+    player.nextXp = Math.floor(50 * Math.pow(1.15, player.level - 1));
     player.maxHp += 12;
     player.hp = player.maxHp;
     player.statPoints += 3;
@@ -3502,77 +3499,77 @@ function getEquippedText(player){
 }
 
 function buildFullStatusText(player){
-  const eq = getEquippedBonuses(player);
-  const runeBonus = getRuneBonus(player);
-  const setBonus = getRuneSetBonus(player);
+  const eq = getEquippedBonuses(player) || {};
+  const runeBonus = getRuneBonus(player) || {};
+  const setBonus = getRuneSetBonus(player) || {};
 
-  const hiddenConstellationBonus = getHiddenConstellationBonus(player);
-  const constellationDodge = getConstellationValue(player, 'dodge');
+  const hiddenConstellationBonus = getHiddenConstellationBonus(player) || {};
+  const constellationDodge = getConstellationValue(player, 'dodge') || 0;
 
-  const wb = getBlessingBonuses(player.equipment.weapon);
-  const ab = getBlessingBonuses(player.equipment.armor);
-  const rb = getBlessingBonuses(player.equipment.ring);
+  const wb = getBlessingBonuses(player.equipment.weapon) || {};
+  const ab = getBlessingBonuses(player.equipment.armor) || {};
+  const rb = getBlessingBonuses(player.equipment.ring) || {};
 
-  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
-  const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
-  const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
-  const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
+  const totalBlessAtkPercent = (wb.atkPercent||0) + (ab.atkPercent||0) + (rb.atkPercent||0);
+  const totalBlessCritChance = (wb.critChance||0) + (ab.critChance||0) + (rb.critChance||0);
+  const totalBlessCritDamage = (wb.critDamage||0) + (ab.critDamage||0) + (rb.critDamage||0);
+  const totalBlessLifesteal = (wb.lifesteal||0) + (ab.lifesteal||0) + (rb.lifesteal||0);
 
-  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
-  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
-  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
-  const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
+  const totalBlessFlatDef = (wb.flatDef||0) + (ab.flatDef||0) + (rb.flatDef||0);
+  const totalBlessDodge = (wb.dodge||0) + (ab.dodge||0) + (rb.dodge||0);
+  const totalBlessHpPercent = (wb.hpPercent||0) + (ab.hpPercent||0) + (rb.hpPercent||0);
+  const totalBlessReflect = (wb.reflect||0) + (ab.reflect||0) + (rb.reflect||0);
 
-  const baseAtk = player.baseAtk + player.stats.atk;
-  let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
+  const baseAtk = (player.baseAtk||0) + (player.stats.atk||0);
+  let atkBeforeBless = baseAtk + (eq.atk||0) + (runeBonus.atk||0) + (setBonus.atk||0);
 
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
-  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
-  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
+  const runeHpBonus = Math.floor(baseHpWithBless * ((runeBonus.hpPercent||0) / 100));
+  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * ((setBonus.hpPercent||0) / 100));
 
   const hpWithoutConstellation = baseHpWithBless + runeHpBonus + setHpBonus;
   const totalMaxHp = getFinalMaxHp(player);
   const constellationHpBonus = totalMaxHp - hpWithoutConstellation;
 
   if (
-    setBonus.lowHpAtkPercent > 0 &&
-    setBonus.lowHpThreshold > 0 &&
+    (setBonus.lowHpAtkPercent||0) > 0 &&
+    (setBonus.lowHpThreshold||0) > 0 &&
     totalMaxHp > 0 &&
     (player.hp / totalMaxHp) * 100 <= setBonus.lowHpThreshold
   ) {
-    atkBeforeBless += Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
+    atkBeforeBless += Math.floor(atkBeforeBless * ((setBonus.lowHpAtkPercent||0) / 100));
   }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-  const totalAtk = atkBeforeBless + blessAtkBonus + hiddenConstellationBonus.atk;
+  const totalAtk = atkBeforeBless + blessAtkBonus + (hiddenConstellationBonus.atk||0);
 
-  const baseDef = player.baseDef + Math.floor(player.level / 3);
+  const baseDef = (player.baseDef||0) + Math.floor(player.level / 3);
   const totalDef =
     baseDef +
-    eq.def +
+    (eq.def||0) +
     totalBlessFlatDef +
-    runeBonus.def +
-    setBonus.def +
-    hiddenConstellationBonus.def;
+    (runeBonus.def||0) +
+    (setBonus.def||0) +
+    (hiddenConstellationBonus.def||0);
 
-  const baseCrit = player.stats.critChance;
+  const baseCrit = player.stats.critChance||0;
   const cappedCrit = Math.min(
     STAT_CAPS.critChance,
-    baseCrit + eq.critChance + totalBlessCritChance
+    baseCrit + (eq.critChance||0) + totalBlessCritChance
   );
-  const totalCrit = cappedCrit + setBonus.critChance;
+  const totalCrit = cappedCrit + (setBonus.critChance||0);
 
-  const baseCritDmg = player.stats.critDamage;
+  const baseCritDmg = player.stats.critDamage||0;
   const totalCritDmg = Math.min(
     STAT_CAPS.critDamage,
-    baseCritDmg + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage + setBonus.critDamage
+    baseCritDmg + (eq.critDamage||0) + totalBlessCritDamage + (runeBonus.critDamage||0) + (setBonus.critDamage||0)
   );
 
-  const baseDodge = player.stats.dodge;
+  const baseDodge = player.stats.dodge||0;
   const totalDodge = round1(
     Math.min(
       STAT_CAPS.dodge,
-      baseDodge + eq.dodge + totalBlessDodge
+      baseDodge + (eq.dodge||0) + totalBlessDodge
     ) + constellationDodge
   );
 
@@ -3635,7 +3632,7 @@ function buildFullStatusText(player){
     `💥 크리확률: ${totalCrit}% (${critDetail})`,
     `🔥 크리데미지: +${totalCritDmg}% (${critDmgDetail})`,
     `💨 회피: ${totalDodge}% (${dodgeDetail})`,
-    `🩸 흡혈: ${totalBlessLifesteal + setBonus.lifesteal}%`,
+    `🩸 흡혈: ${(totalBlessLifesteal + (setBonus.lifesteal||0))}%`,
     `🔁 데미지반사: ${totalBlessReflect}%`,
     '',
     `📦 장착 장비`,
