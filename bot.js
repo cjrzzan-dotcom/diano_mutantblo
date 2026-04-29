@@ -2506,10 +2506,17 @@ function getEquippedBonuses(player){
   return bonus;
 }
 
+
+
 function getRebirthMaxMana(rebirth) {
   if (!rebirth || rebirth <= 0) return 0;
 
   return 1 + (rebirth - 1) * 2;
+}
+
+function getRebirthSmashMultiplier(rebirth) {
+  if (!rebirth || rebirth <= 0) return 1;
+  return 1.2 + ((rebirth - 1) * 0.15);
 }
 
 function getAttackPower(player){
@@ -3106,6 +3113,23 @@ function applyPlayerHit(label, baseDamageRate = 1) {
   let hitDamage = Math.max(1, finalAtk - effectiveDef);
   hitDamage = Math.floor(hitDamage * baseDamageRate);
 
+ // 🔥 강타: 기본 공격에만 적용
+let isSmash = false;
+
+if (
+  label === '기본' &&                // 🔥 이 조건 추가
+  (player.rebirth || 0) > 0 &&
+  (player.mana || 0) > 0
+) {
+  const multi = getRebirthSmashMultiplier(player.rebirth);
+
+  hitDamage = Math.floor(hitDamage * multi);
+
+  player.mana -= 1;
+  isSmash = true;
+}
+  }
+
   let hitCrit = false;
 
   if (chance(finalCritChance)) {
@@ -3117,15 +3141,20 @@ function applyPlayerHit(label, baseDamageRate = 1) {
 
   target.currentHp -= hitDamage;
 
-  if (label === '기본') {
-    result.logs.push(makeDamageLine('👤 플레이어', target.name, hitDamage, hitCrit));
-  } else {
+if (label === '기본') {
+  if (isSmash) {
+    result.logs.push(`💥 강타! x${getRebirthSmashMultiplier(player.rebirth).toFixed(2)}`);
+  }
+  result.logs.push(makeDamageLine('👤 플레이어', target.name, hitDamage, hitCrit));
+} else {
+    if (isSmash) {
+      result.logs.push(`💥 강타! x${getRebirthSmashMultiplier(player.rebirth).toFixed(2)}`);
+    }
+
     result.logs.push(hitCrit ? `⚡ ${label} 치명타! ${hitDamage}` : `⚡ ${label} ${hitDamage}`);
   }
 
-  // 🔥 상태이상 적용 시작
-
-  // 🔥 화상 (스택형)
+  // 🔥 화상
   if (constellationStats.burnMax > 0) {
     target.burn = Math.min(
       (target.burn || 0) + 1,
@@ -3133,13 +3162,13 @@ function applyPlayerHit(label, baseDamageRate = 1) {
     );
   }
 
-  // ⚡ 마비 (즉발 1턴)
+  // ⚡ 마비
   if (constellationStats.stunChance > 0 && chance(constellationStats.stunChance)) {
     target.stunned = true;
     result.logs.push('⚡ 마비!');
   }
 
-  // ❄️ 빙결 (게이지형)
+  // ❄️ 빙결
   if (constellationStats.freezeGain > 0) {
     target.freezeGauge = (target.freezeGauge || 0) + constellationStats.freezeGain;
 
@@ -3149,8 +3178,6 @@ function applyPlayerHit(label, baseDamageRate = 1) {
       result.logs.push('❄️ 빙결!');
     }
   }
-
-  // 🔥 상태이상 적용 끝
 
   // 🩸 흡혈
   if (totalLifesteal > 0 && hitDamage > 0) {
@@ -3256,6 +3283,18 @@ if (target.currentHp > 0 && (target.burn || 0) > 0) {
   }
 
   enemyAttack(player, target, result.logs);
+
+// 🔷 턴 종료 마나 회복
+if ((player.rebirth || 0) > 0) {
+  player.maxMana = player.maxMana || getRebirthMaxMana(player.rebirth);
+
+  if (player.mana === undefined || player.mana === null) {
+    player.mana = player.maxMana;
+  } else {
+    player.mana = Math.min(player.maxMana, player.mana + 1);
+  }
+}
+
   return result;
 }
 
