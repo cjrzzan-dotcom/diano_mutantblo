@@ -2212,16 +2212,23 @@ function getPlayer(userId) {
   if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
   if (!player.pendingRuneAction) player.pendingRuneAction = null;
 
-  // ⭐ 여기 추가 (핵심)
-if (!player.xpRebalanceV1) {
-  player.nextXp = Math.floor(50 * Math.pow(1.15, player.level - 1));
+  // ✅ run / target 기본값 보정
+  if (!player.run) player.run = {};
+  if (!player.run.target) player.run.target = {};
+  if (!player.run.target.respawnAt) player.run.target.respawnAt = 0;
 
-  const logs = giveXp(player, 0);
+  // ✅ XP 보정
+  if (!player.xpRebalanceV1) {
+    player.nextXp = Math.floor(50 * Math.pow(1.15, player.level - 1));
 
-  player.xpRebalanceV1 = true;
+    const logs = giveXp(player, 0);
 
-  console.log(`XP 보정 적용: ${userId}`, logs);
- }
+    player.xpRebalanceV1 = true;
+
+    console.log(`XP 보정 적용: ${userId}`, logs);
+  }
+
+  return player;
 }
 function formatItemFullText(item) {
   if (!item) return '없음';
