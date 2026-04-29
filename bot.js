@@ -3586,6 +3586,31 @@ function doRebirth(player) {
   logs.push('━━━━━━━━━━');
   logs.push('장비 처리 완료');
 
+// ================== 🔥 환생 스탯 ==================
+
+  player.rebirth = (player.rebirth || 0) + 1;
+
+  if (!player.rebirthBonus) {
+    player.rebirthBonus = { atk: 0, def: 0, hp: 0 };
+  }
+
+  player.rebirthBonus.atk += 10;
+  player.rebirthBonus.def += 5;
+  player.rebirthBonus.hp += 30;
+
+  logs.push('━━━━━━━━━━');
+  logs.push(`🥴 환생 ${player.rebirth}회 달성!`);
+  logs.push(`⚔️ 공격 +10 / 🛡️ 방어 +5 / ❤️ 체력 +30`);
+
+  // ================== 🔥 레벨 초기화 ==================
+
+player.level = 1;
+player.xp = 0;
+player.nextXp = 100;
+
+player.hp = player.maxHp;
+
+logs.push('📉 레벨 1로 초기화');
   return logs;
 }
 
