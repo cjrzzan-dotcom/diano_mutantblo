@@ -2505,6 +2505,13 @@ function getEquippedBonuses(player){
   }
   return bonus;
 }
+
+function getRebirthMaxMana(rebirth) {
+  if (!rebirth || rebirth <= 0) return 0;
+
+  return 1 + (rebirth - 1) * 2;
+}
+
 function getAttackPower(player){
   const eq = getEquippedBonuses(player) || {};
   const runeBonus = getRuneBonus(player) || {};
@@ -3603,6 +3610,13 @@ function doRebirth(player) {
   logs.push(`🥴 환생 ${player.rebirth}회 달성!`);
   logs.push(`⚔️ 공격 +10 / 🛡️ 방어 +5 / ❤️ 체력 +30`);
 
+// ================== 🔷 환생 마나 ==================
+
+player.maxMana = getRebirthMaxMana(player.rebirth);
+player.mana = player.maxMana;
+
+logs.push(`🔷 최대 마나 +${player.maxMana}`);
+
   // ================== 🔥 레벨 초기화 ==================
 
 player.level = 1;
@@ -3854,7 +3868,7 @@ function buildFullStatusText(player){
   ]);
 
   return [
-    (player.rebirth || 0) > 0 ? `:star2: :star2: :star2:  환생: ${player.rebirth}회:star2: :star2: :star2:  ` : null,
+    (player.rebirth || 0) > 0 ? `:star2: :star2: :star2: :star2: :star2:환생: ${player.rebirth}회:star2: :star2: :star2: :star2: :star2:  ` : null,
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
     (player.rebirth || 0) > 0 ? `🔷 마나: ${player.mana || 0}/${player.maxMana || 0}` : null,
@@ -3877,6 +3891,9 @@ function buildFullStatusText(player){
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
   ].filter(v => v !== null).join('\n');
+(player.rebirth || 0) > 0 
+  ? `:star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: `
+  : null,
 }
 
 function buildBagText(player){
