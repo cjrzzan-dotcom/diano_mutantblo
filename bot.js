@@ -2170,7 +2170,7 @@ function getDefaultPlayer(userId){
     userId,
     level: 1,
     xp: 0,
-    nextXp: 50,
+    nextXp: 100,
     statPoints: 0,
     maxHp: 100,
     hp: 100,
@@ -3533,11 +3533,18 @@ function refundRebirthItem(player, item) {
 function doRebirth(player) {
   const logs = [];
 
-  logs.push('🥴 환생 준비 완료');
+  // 🔥 장비 가져오기
+  const items = [
+    player.equipment.weapon,
+    player.equipment.armor,
+    player.equipment.ring
+  ];
+
+  logs.push('🥴 환생 시작!');
+  logs.push('장비 확인 완료');
 
   return logs;
 }
-
 
 // ================== 기존 코드 계속 ==================
 
