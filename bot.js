@@ -3894,7 +3894,6 @@ function buildFullStatusText(player){
 (player.rebirth || 0) > 0 
   ? `:star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: `
   : null,
-}
 
 function buildBagText(player){
   const mats = Object.entries(player.materials || {})
