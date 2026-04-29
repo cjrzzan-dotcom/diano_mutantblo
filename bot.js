@@ -2506,40 +2506,39 @@ function getEquippedBonuses(player){
   return bonus;
 }
 function getAttackPower(player){
-  const eq = getEquippedBonuses(player);
-  const runeBonus = getRuneBonus(player);
-  const setBonus = getRuneSetBonus(player);
+  const eq = getEquippedBonuses(player) || {};
+  const runeBonus = getRuneBonus(player) || {};
+  const setBonus = getRuneSetBonus(player) || {};
+  const rebirthBonus = player.rebirthBonus || { atk:0, def:0, hp:0 };
 
-  const wb = getBlessingBonuses(player.equipment.weapon);
-  const ab = getBlessingBonuses(player.equipment.armor);
-  const rb = getBlessingBonuses(player.equipment.ring);
+  const wb = getBlessingBonuses(player.equipment.weapon) || {};
+  const ab = getBlessingBonuses(player.equipment.armor) || {};
+  const rb = getBlessingBonuses(player.equipment.ring) || {};
 
-  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
-  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+  const totalBlessAtkPercent = (wb.atkPercent||0) + (ab.atkPercent||0) + (rb.atkPercent||0);
+  const totalBlessHpPercent = (wb.hpPercent||0) + (ab.hpPercent||0) + (rb.hpPercent||0);
 
-  const baseAtk = player.baseAtk + player.stats.atk;
-  let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
+  const baseAtk = (player.baseAtk||0) + (player.stats.atk||0);
+  let atkBeforeBless = baseAtk + (eq.atk||0) + (runeBonus.atk||0) + (setBonus.atk||0);
 
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
-  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
-  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
-  const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+  const runeHpBonus = Math.floor(baseHpWithBless * ((runeBonus.hpPercent||0) / 100));
+  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * ((setBonus.hpPercent||0) / 100));
+  const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus + (rebirthBonus.hp||0);
 
   if (
-    setBonus.lowHpAtkPercent > 0 &&
-    setBonus.lowHpThreshold > 0 &&
+    (setBonus.lowHpAtkPercent||0) > 0 &&
+    (setBonus.lowHpThreshold||0) > 0 &&
     totalMaxHp > 0 &&
     (player.hp / totalMaxHp) * 100 <= setBonus.lowHpThreshold
   ) {
-    atkBeforeBless += Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
+    atkBeforeBless += Math.floor(atkBeforeBless * ((setBonus.lowHpAtkPercent||0) / 100));
   }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-  const baseResult = atkBeforeBless + blessAtkBonus;
+  const hiddenConstellationBonus = getHiddenConstellationBonus(player) || {};
 
-  const hiddenConstellationBonus = getHiddenConstellationBonus(player);
-
-  return baseResult + hiddenConstellationBonus.atk;
+  return atkBeforeBless + blessAtkBonus + (hiddenConstellationBonus.atk||0) + (rebirthBonus.atk||0);
 }
 function getMaxHpWithBless(player){
   const wb = getBlessingBonuses(player.equipment.weapon);
@@ -2563,31 +2562,33 @@ function getMaxHpWithBless(player){
 function getFinalMaxHp(player){
   const baseHp = getMaxHpWithBless(player);
 
-  const runeBonus = getRuneBonus(player);
-  const setBonus = getRuneSetBonus(player);
+  const runeBonus = getRuneBonus(player) || {};
+  const setBonus = getRuneSetBonus(player) || {};
+  const rebirthBonus = player.rebirthBonus || { atk:0, def:0, hp:0 };
 
   const runeHpBonus = Math.floor(baseHp * ((runeBonus.hpPercent || 0) / 100));
   const hpAfterRune = baseHp + runeHpBonus;
 
   const setHpBonus = Math.floor(hpAfterRune * ((setBonus.hpPercent || 0) / 100));
 
-  return hpAfterRune + setHpBonus;
+  return hpAfterRune + setHpBonus + (rebirthBonus.hp || 0);
 }
 
 function getDefensePower(player){
-  const eq = getEquippedBonuses(player);
-  const runeBonus = getRuneBonus(player);
-  const setBonus = getRuneSetBonus(player);
+  const eq = getEquippedBonuses(player) || {};
+  const runeBonus = getRuneBonus(player) || {};
+  const setBonus = getRuneSetBonus(player) || {};
+  const rebirthBonus = player.rebirthBonus || { atk:0, def:0, hp:0 };
 
-  const wb = getBlessingBonuses(player.equipment.weapon);
-  const ab = getBlessingBonuses(player.equipment.armor);
-  const rb = getBlessingBonuses(player.equipment.ring);
+  const wb = getBlessingBonuses(player.equipment.weapon) || {};
+  const ab = getBlessingBonuses(player.equipment.armor) || {};
+  const rb = getBlessingBonuses(player.equipment.ring) || {};
 
-  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
+  const totalBlessFlatDef = (wb.flatDef||0) + (ab.flatDef||0) + (rb.flatDef||0);
 
-  const baseDef = player.baseDef + Math.floor(player.level / 3);
+  const baseDef = (player.baseDef||0) + Math.floor((player.level||1) / 3);
 
-  return baseDef + eq.def + totalBlessFlatDef + runeBonus.def + setBonus.def;
+  return baseDef + (eq.def||0) + totalBlessFlatDef + (runeBonus.def||0) + (setBonus.def||0) + (rebirthBonus.def||0);
 }
 function getCritChance(player){
   const eq = getEquippedBonuses(player);
@@ -3703,6 +3704,7 @@ function buildFullStatusText(player){
   const eq = getEquippedBonuses(player) || {};
   const runeBonus = getRuneBonus(player) || {};
   const setBonus = getRuneSetBonus(player) || {};
+  const rebirthBonus = player.rebirthBonus || { atk:0, def:0, hp:0 };
 
   const hiddenConstellationBonus = getHiddenConstellationBonus(player) || {};
   const constellationDodge = getConstellationValue(player, 'dodge') || 0;
@@ -3722,15 +3724,24 @@ function buildFullStatusText(player){
   const totalBlessReflect = (wb.reflect||0) + (ab.reflect||0) + (rb.reflect||0);
 
   const baseAtk = (player.baseAtk||0) + (player.stats.atk||0);
-  let atkBeforeBless = baseAtk + (eq.atk||0) + (runeBonus.atk||0) + (setBonus.atk||0);
+
+  let atkBeforeBless =
+    baseAtk +
+    (eq.atk||0) +
+    (runeBonus.atk||0) +
+    (setBonus.atk||0);
 
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
   const runeHpBonus = Math.floor(baseHpWithBless * ((runeBonus.hpPercent||0) / 100));
   const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * ((setBonus.hpPercent||0) / 100));
 
-  const hpWithoutConstellation = baseHpWithBless + runeHpBonus + setHpBonus;
+  const hpWithoutConstellationAndRebirth = baseHpWithBless + runeHpBonus + setHpBonus;
   const totalMaxHp = getFinalMaxHp(player);
-  const constellationHpBonus = totalMaxHp - hpWithoutConstellation;
+
+  const constellationHpBonus =
+    totalMaxHp -
+    hpWithoutConstellationAndRebirth -
+    (rebirthBonus.hp || 0);
 
   if (
     (setBonus.lowHpAtkPercent||0) > 0 &&
@@ -3742,31 +3753,46 @@ function buildFullStatusText(player){
   }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-  const totalAtk = atkBeforeBless + blessAtkBonus + (hiddenConstellationBonus.atk||0);
+
+  const totalAtk =
+    atkBeforeBless +
+    blessAtkBonus +
+    (hiddenConstellationBonus.atk||0) +
+    (rebirthBonus.atk||0);
 
   const baseDef = (player.baseDef||0) + Math.floor(player.level / 3);
+
   const totalDef =
     baseDef +
     (eq.def||0) +
     totalBlessFlatDef +
     (runeBonus.def||0) +
     (setBonus.def||0) +
-    (hiddenConstellationBonus.def||0);
+    (hiddenConstellationBonus.def||0) +
+    (rebirthBonus.def||0);
 
   const baseCrit = player.stats.critChance||0;
+
   const cappedCrit = Math.min(
     STAT_CAPS.critChance,
     baseCrit + (eq.critChance||0) + totalBlessCritChance
   );
+
   const totalCrit = cappedCrit + (setBonus.critChance||0);
 
   const baseCritDmg = player.stats.critDamage||0;
+
   const totalCritDmg = Math.min(
     STAT_CAPS.critDamage,
-    baseCritDmg + (eq.critDamage||0) + totalBlessCritDamage + (runeBonus.critDamage||0) + (setBonus.critDamage||0)
+    baseCritDmg +
+    (eq.critDamage||0) +
+    totalBlessCritDamage +
+    (runeBonus.critDamage||0) +
+    (setBonus.critDamage||0)
   );
 
   const baseDodge = player.stats.dodge||0;
+
   const totalDodge = round1(
     Math.min(
       STAT_CAPS.dodge,
@@ -3774,12 +3800,14 @@ function buildFullStatusText(player){
     ) + constellationDodge
   );
 
-  const blessHpBonus = hpWithoutConstellation - player.maxHp;
+  const blessHpBonus = hpWithoutConstellationAndRebirth - player.maxHp;
+
   const buildStatDetail = (parts) => parts.filter(Boolean).join(' + ');
 
   const hpDetail = buildStatDetail([
     `기본 ${player.maxHp}`,
     blessHpBonus ? `축성/룬/조합 ${blessHpBonus}` : null,
+    rebirthBonus.hp ? `환생 ${rebirthBonus.hp}` : null,
     constellationHpBonus ? `별자리 ${constellationHpBonus}` : null
   ]);
 
@@ -3789,6 +3817,7 @@ function buildFullStatusText(player){
     runeBonus.atk ? `룬 ${runeBonus.atk}` : null,
     setBonus.atk ? `조합 ${setBonus.atk}` : null,
     blessAtkBonus ? `축성 ${blessAtkBonus}` : null,
+    rebirthBonus.atk ? `환생 ${rebirthBonus.atk}` : null,
     hiddenConstellationBonus.atk ? `별자리 ${hiddenConstellationBonus.atk}` : null
   ]);
 
@@ -3798,6 +3827,7 @@ function buildFullStatusText(player){
     runeBonus.def ? `룬 ${runeBonus.def}` : null,
     setBonus.def ? `조합 ${setBonus.def}` : null,
     totalBlessFlatDef ? `축성 ${totalBlessFlatDef}` : null,
+    rebirthBonus.def ? `환생 ${rebirthBonus.def}` : null,
     hiddenConstellationBonus.def ? `별자리 ${hiddenConstellationBonus.def}` : null
   ]);
 
@@ -3826,6 +3856,8 @@ function buildFullStatusText(player){
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
+    (player.rebirth || 0) > 0 ? `🥴 환생: ${player.rebirth}회` : null,
+    (player.rebirth || 0) > 0 ? `🔷 마나: ${player.mana || 0}/${player.maxMana || 0}` : null,
     '',
     `❤️ HP: ${player.hp}/${totalMaxHp} (${hpDetail})`,
     `⚔️ 공격력: ${totalAtk} (${atkDetail})`,
@@ -3844,7 +3876,7 @@ function buildFullStatusText(player){
     getConstellationSummary(player),
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
-  ].join('\n');
+  ].filter(v => v !== null).join('\n');
 }
 
 function buildBagText(player){
