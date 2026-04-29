@@ -2203,7 +2203,7 @@ function getPlayer(userId) {
   if (!gameData[userId]) {
     gameData[userId] = getDefaultPlayer(userId);
   }
-}
+
   const player = gameData[userId];
 
   if (!player.inventory) player.inventory = [];
@@ -2221,8 +2221,8 @@ if (!player.xpRebalanceV1) {
   player.xpRebalanceV1 = true;
 
   console.log(`XP 보정 적용: ${userId}`, logs);
+ }
 }
-
 function formatItemFullText(item) {
   if (!item) return '없음';
 
