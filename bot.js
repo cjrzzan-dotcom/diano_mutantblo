@@ -3608,9 +3608,13 @@ player.level = 1;
 player.xp = 0;
 player.nextXp = 100;
 
+// 여기 추가
+player.maxHp = 100 + (player.rebirthBonus?.hp || 0);
 player.hp = player.maxHp;
 
 logs.push('📉 레벨 1로 초기화');
+
+
   return logs;
 }
 
