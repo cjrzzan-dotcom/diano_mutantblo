@@ -3506,6 +3506,9 @@ function buildFullStatusText(player){
   const runeBonus = getRuneBonus(player);
   const setBonus = getRuneSetBonus(player);
 
+  const hiddenConstellationBonus = getHiddenConstellationBonus(player);
+  const constellationDodge = getConstellationValue(player, 'dodge');
+
   const wb = getBlessingBonuses(player.equipment.weapon);
   const ab = getBlessingBonuses(player.equipment.armor);
   const rb = getBlessingBonuses(player.equipment.ring);
@@ -3523,12 +3526,13 @@ function buildFullStatusText(player){
   const baseAtk = player.baseAtk + player.stats.atk;
   let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
 
-
-  // 불사의 심장 조건부 공격력
   const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
   const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
   const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
-  const totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
+
+  const hpWithoutConstellation = baseHpWithBless + runeHpBonus + setHpBonus;
+  const totalMaxHp = getFinalMaxHp(player);
+  const constellationHpBonus = totalMaxHp - hpWithoutConstellation;
 
   if (
     setBonus.lowHpAtkPercent > 0 &&
@@ -3540,17 +3544,23 @@ function buildFullStatusText(player){
   }
 
   const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-  const totalAtk = atkBeforeBless + blessAtkBonus;
+  const totalAtk = atkBeforeBless + blessAtkBonus + hiddenConstellationBonus.atk;
 
   const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const totalDef = baseDef + eq.def + totalBlessFlatDef + runeBonus.def + setBonus.def;
+  const totalDef =
+    baseDef +
+    eq.def +
+    totalBlessFlatDef +
+    runeBonus.def +
+    setBonus.def +
+    hiddenConstellationBonus.def;
 
   const baseCrit = player.stats.critChance;
   const cappedCrit = Math.min(
     STAT_CAPS.critChance,
     baseCrit + eq.critChance + totalBlessCritChance
   );
-  const totalCrit = cappedCrit + setBonus.critChance; // 전설 조합은 cap 위로 추가
+  const totalCrit = cappedCrit + setBonus.critChance;
 
   const baseCritDmg = player.stats.critDamage;
   const totalCritDmg = Math.min(
@@ -3559,75 +3569,81 @@ function buildFullStatusText(player){
   );
 
   const baseDodge = player.stats.dodge;
-  const totalDodge = Math.min(
-    STAT_CAPS.dodge,
-    baseDodge + eq.dodge + totalBlessDodge
+  const totalDodge = round1(
+    Math.min(
+      STAT_CAPS.dodge,
+      baseDodge + eq.dodge + totalBlessDodge
+    ) + constellationDodge
   );
 
-  const blessHpBonus = totalMaxHp - player.maxHp;
+  const blessHpBonus = hpWithoutConstellation - player.maxHp;
   const buildStatDetail = (parts) => parts.filter(Boolean).join(' + ');
-const hpDetail = buildStatDetail([
-  `기본 ${player.maxHp}`,
-  blessHpBonus ? `축성/룬/조합 ${blessHpBonus}` : null
-]);
 
-const atkDetail = buildStatDetail([
-  `기본 ${baseAtk}`,
-  eq.atk ? `장비 ${eq.atk}` : null,
-  runeBonus.atk ? `룬 ${runeBonus.atk}` : null,
-  setBonus.atk ? `조합 ${setBonus.atk}` : null,
-  blessAtkBonus ? `축성 ${blessAtkBonus}` : null
-]);
+  const hpDetail = buildStatDetail([
+    `기본 ${player.maxHp}`,
+    blessHpBonus ? `축성/룬/조합 ${blessHpBonus}` : null,
+    constellationHpBonus ? `별자리 ${constellationHpBonus}` : null
+  ]);
 
-const defDetail = buildStatDetail([
-  `기본 ${baseDef}`,
-  eq.def ? `장비 ${eq.def}` : null,
-  runeBonus.def ? `룬 ${runeBonus.def}` : null,
-  setBonus.def ? `조합 ${setBonus.def}` : null,
-  totalBlessFlatDef ? `축성 ${totalBlessFlatDef}` : null
-]);
+  const atkDetail = buildStatDetail([
+    `기본 ${baseAtk}`,
+    eq.atk ? `장비 ${eq.atk}` : null,
+    runeBonus.atk ? `룬 ${runeBonus.atk}` : null,
+    setBonus.atk ? `조합 ${setBonus.atk}` : null,
+    blessAtkBonus ? `축성 ${blessAtkBonus}` : null,
+    hiddenConstellationBonus.atk ? `별자리 ${hiddenConstellationBonus.atk}` : null
+  ]);
 
-const critDetail = buildStatDetail([
-  `기본 ${baseCrit}%`,
-  eq.critChance ? `장비 ${eq.critChance}%` : null,
-  totalBlessCritChance ? `축성 ${totalBlessCritChance}%` : null,
-  setBonus.critChance ? `조합 ${setBonus.critChance}%` : null
-]);
+  const defDetail = buildStatDetail([
+    `기본 ${baseDef}`,
+    eq.def ? `장비 ${eq.def}` : null,
+    runeBonus.def ? `룬 ${runeBonus.def}` : null,
+    setBonus.def ? `조합 ${setBonus.def}` : null,
+    totalBlessFlatDef ? `축성 ${totalBlessFlatDef}` : null,
+    hiddenConstellationBonus.def ? `별자리 ${hiddenConstellationBonus.def}` : null
+  ]);
 
-const critDmgDetail = buildStatDetail([
-  `기본 ${baseCritDmg}%`,
-  eq.critDamage ? `장비 ${eq.critDamage}%` : null,
-  runeBonus.critDamage ? `룬 ${runeBonus.critDamage}%` : null,
-  setBonus.critDamage ? `조합 ${setBonus.critDamage}%` : null,
-  totalBlessCritDamage ? `축성 ${totalBlessCritDamage}%` : null
-]);
+  const critDetail = buildStatDetail([
+    `기본 ${baseCrit}%`,
+    eq.critChance ? `장비 ${eq.critChance}%` : null,
+    totalBlessCritChance ? `축성 ${totalBlessCritChance}%` : null,
+    setBonus.critChance ? `조합 ${setBonus.critChance}%` : null
+  ]);
 
-const dodgeDetail = buildStatDetail([
-  `기본 ${baseDodge}%`,
-  eq.dodge ? `장비 ${eq.dodge}%` : null,
-  totalBlessDodge ? `축성 ${totalBlessDodge}%` : null
-]);
+  const critDmgDetail = buildStatDetail([
+    `기본 ${baseCritDmg}%`,
+    eq.critDamage ? `장비 ${eq.critDamage}%` : null,
+    runeBonus.critDamage ? `룬 ${runeBonus.critDamage}%` : null,
+    setBonus.critDamage ? `조합 ${setBonus.critDamage}%` : null,
+    totalBlessCritDamage ? `축성 ${totalBlessCritDamage}%` : null
+  ]);
 
+  const dodgeDetail = buildStatDetail([
+    `기본 ${baseDodge}%`,
+    eq.dodge ? `장비 ${eq.dodge}%` : null,
+    totalBlessDodge ? `축성 ${totalBlessDodge}%` : null,
+    constellationDodge ? `별자리 ${constellationDodge}%` : null
+  ]);
 
   return [
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
     '',
-`❤️ HP: ${player.hp}/${totalMaxHp} (${hpDetail})`,
-`⚔️ 공격력: ${totalAtk} (${atkDetail})`,
-`🛡️ 방어력: ${totalDef} (${defDetail})`,
-`💥 크리확률: ${totalCrit}% (${critDetail})`,
-`🔥 크리데미지: +${totalCritDmg}% (${critDmgDetail})`,
-`💨 회피: ${totalDodge}% (${dodgeDetail})`,
+    `❤️ HP: ${player.hp}/${totalMaxHp} (${hpDetail})`,
+    `⚔️ 공격력: ${totalAtk} (${atkDetail})`,
+    `🛡️ 방어력: ${totalDef} (${defDetail})`,
+    `💥 크리확률: ${totalCrit}% (${critDetail})`,
+    `🔥 크리데미지: +${totalCritDmg}% (${critDmgDetail})`,
+    `💨 회피: ${totalDodge}% (${dodgeDetail})`,
     `🩸 흡혈: ${totalBlessLifesteal + setBonus.lifesteal}%`,
     `🔁 데미지반사: ${totalBlessReflect}%`,
     '',
     `📦 장착 장비`,
     getEquippedText(player),
     '',
-`⭐ 별자리`,
-`🧷 장착: ${getEquippedConstellationIcons(player)}`,
-getConstellationSummary(player),
+    `⭐ 별자리`,
+    `🧷 장착: ${getEquippedConstellationIcons(player)}`,
+    getConstellationSummary(player),
     `✨ 룬 조합 효과`,
     getRuneSetText(player)
   ].join('\n');
