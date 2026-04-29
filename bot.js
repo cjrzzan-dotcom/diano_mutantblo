@@ -2212,11 +2212,16 @@ function getPlayer(userId) {
   if (!player.equippedRunes) player.equippedRunes = [null, null, null, null];
   if (!player.pendingRuneAction) player.pendingRuneAction = null;
 
-  // ✅ run / target 기본값 보정
+  // ✅ run 기본값 보정
   if (!player.run) player.run = {};
-  if (!player.run.target) player.run.target = {};
-  if (!player.run.target.respawnAt) player.run.target.respawnAt = 0;
+  if (!('target' in player.run)) player.run.target = null;
+  if (!player.run.lastDrops) player.run.lastDrops = [];
+  if (!player.run.kills) player.run.kills = 0;
 
+  // ✅ 잘못 저장된 빈 몬스터 제거
+  if (player.run.target && !player.run.target.name) {
+    player.run.target = null;
+  }
   // ✅ XP 보정
   if (!player.xpRebalanceV1) {
     player.nextXp = Math.floor(50 * Math.pow(1.15, player.level - 1));
