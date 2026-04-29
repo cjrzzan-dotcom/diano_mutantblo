@@ -3128,7 +3128,7 @@ if (
   player.mana -= 1;
   isSmash = true;
 }
-  }
+  
 
   let hitCrit = false;
 
