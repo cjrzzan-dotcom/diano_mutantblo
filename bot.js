@@ -3854,9 +3854,9 @@ function buildFullStatusText(player){
   ]);
 
   return [
+    (player.rebirth || 0) > 0 ? `:star2: :star2: :star2:  환생: ${player.rebirth}회:star2: :star2: :star2:  ` : null,
     `🏷️ 레벨: ${player.level} (${player.xp}/${player.nextXp})`,
     `🎯 스탯포인트: ${player.statPoints}`,
-    (player.rebirth || 0) > 0 ? `🥴 환생: ${player.rebirth}회` : null,
     (player.rebirth || 0) > 0 ? `🔷 마나: ${player.mana || 0}/${player.maxMana || 0}` : null,
     '',
     `❤️ HP: ${player.hp}/${totalMaxHp} (${hpDetail})`,
