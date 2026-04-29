@@ -3577,70 +3577,75 @@ function refundRebirthItem(player, item) {
 
 // ================== 🥴 환생 시스템 ==================
 
-function doRebirth(player) {
+function doRebirth(player, keepIndex, refundIndex, lastIndex, lastChoice) {
   const logs = [];
 
-  const weapon = player.equipment.weapon || null;
-  const armor = player.equipment.armor || null;
-  const ring = player.equipment.ring || null;
+  const items = [
+    player.equipment.weapon || null,
+    player.equipment.armor || null,
+    player.equipment.ring || null
+  ];
 
-  // 테스트 고정
-  const keepItem = weapon;    // 무기 유지
-  const refundItem = armor;   // 갑옷 환급
-  const gambleItem = ring;    // 반지 도박
+  const names = ['무기', '갑옷', '반지'];
+
+  const keepItem = items[keepIndex];
+  const refundItem = items[refundIndex];
+  const lastItem = items[lastIndex];
 
   logs.push('🥴 환생 시작!');
-  logs.push('⚔️ 무기: 유지');
-  logs.push('🛡️ 갑옷: 환급');
-  logs.push('💍 반지: 도박');
+  logs.push(`✅ 유지: ${names[keepIndex]} ${keepItem?.name || '없음'}`);
+  logs.push(`📦 환급: ${names[refundIndex]} ${refundItem?.name || '없음'}`);
+  logs.push(`🎯 선택: ${names[lastIndex]} ${lastItem?.name || '없음'} → ${lastChoice}`);
 
-  // 갑옷 환급
+  // 🔥 환급 (2번)
   if (refundItem) {
     logs.push('━━━━━━━━━━');
-    logs.push(`🛡️ ${refundItem.name} 환급`);
+    logs.push(`📦 ${refundItem.name} 환급`);
     logs.push(...refundRebirthItem(player, refundItem));
   }
 
-  // 반지 도박
-  let gambleKept = false;
+  // 🔥 마지막 선택
+  let lastKept = false;
 
-  if (gambleItem) {
+  if (lastItem) {
     logs.push('━━━━━━━━━━');
-    logs.push(`💍 ${gambleItem.name} 도박`);
 
-    if (Math.random() < 0.65) {
-      gambleKept = true;
-      logs.push('🎲 성공! 반지 유지');
+    if (lastChoice === '환급') {
+      logs.push(`📦 ${lastItem.name} 안전 환급`);
+      logs.push(...refundRebirthItem(player, lastItem));
     } else {
-      logs.push('💥 실패! 반지 파괴');
+      logs.push(`🎲 ${lastItem.name} 도박`);
+
+      if (Math.random() < 0.65) {
+        lastKept = true;
+        logs.push('🎲 성공! 장비 유지');
+      } else {
+        logs.push('💥 실패! 장비 파괴');
+      }
     }
   }
 
-  // 장비 초기화
+  // 🔥 장비 초기화
   player.equipment.weapon = null;
   player.equipment.armor = null;
   player.equipment.ring = null;
 
-  // 유지 장비 다시 장착
+  // 🔥 유지
   if (keepItem) {
     player.equipment[keepItem.type] = keepItem;
   }
 
-  if (gambleKept && gambleItem) {
-    player.equipment[gambleItem.type] = gambleItem;
+  if (lastKept && lastItem) {
+    player.equipment[lastItem.type] = lastItem;
   }
 
   logs.push('━━━━━━━━━━');
   logs.push('장비 처리 완료');
 
-// ================== 🔥 환생 스탯 ==================
-
+  // 🔥 환생 스탯
   player.rebirth = (player.rebirth || 0) + 1;
 
-  if (!player.rebirthBonus) {
-    player.rebirthBonus = { atk: 0, def: 0, hp: 0 };
-  }
-
+  player.rebirthBonus = player.rebirthBonus || { atk:0, def:0, hp:0 };
   player.rebirthBonus.atk += 10;
   player.rebirthBonus.def += 5;
   player.rebirthBonus.hp += 30;
@@ -3649,25 +3654,21 @@ function doRebirth(player) {
   logs.push(`🥴 환생 ${player.rebirth}회 달성!`);
   logs.push(`⚔️ 공격 +10 / 🛡️ 방어 +5 / ❤️ 체력 +30`);
 
-// ================== 🔷 환생 마나 ==================
+  // 🔷 마나
+  player.maxMana = getRebirthMaxMana(player.rebirth);
+  player.mana = player.maxMana;
 
-player.maxMana = getRebirthMaxMana(player.rebirth);
-player.mana = player.maxMana;
+  logs.push(`🔷 최대 마나 ${player.maxMana}`);
 
-logs.push(`🔷 최대 마나 +${player.maxMana}`);
+  // 🔥 초기화
+  player.level = 1;
+  player.xp = 0;
+  player.nextXp = 100;
 
-  // ================== 🔥 레벨 초기화 ==================
+  player.maxHp = 100 + (player.rebirthBonus?.hp || 0);
+  player.hp = player.maxHp;
 
-player.level = 1;
-player.xp = 0;
-player.nextXp = 100;
-
-// 여기 추가
-player.maxHp = 100 + (player.rebirthBonus?.hp || 0);
-player.hp = player.maxHp;
-
-logs.push('📉 레벨 1로 초기화');
-
+  logs.push('📉 레벨 1로 초기화');
 
   return logs;
 }
@@ -4545,16 +4546,50 @@ client.on('messageCreate', async (message) => {
 
 if (command === '!환생') {
   if (player.level < 45) {
-    await message.reply('❌ 환생은 45레벨 이상부터 가능합니다.');
+    await message.reply('❌ 45레벨 이상만 가능합니다.');
     return;
   }
 
-  const logs = doRebirth(player);
+  if (args.length < 5) {
+    await message.reply(
+      [
+        '🥴 환생 사용법',
+        '`!환생 유지 환급 마지막 선택`',
+        '',
+        '1 = 무기 / 2 = 갑옷 / 3 = 반지',
+        '',
+        '예:',
+        '`!환생 1 2 3 도박`',
+        '`!환생 1 2 3 환급`'
+      ].join('\n')
+    );
+    return;
+  }
+
+  const keepIndex = Number(args[1]) - 1;
+  const refundIndex = Number(args[2]) - 1;
+  const lastIndex = Number(args[3]) - 1;
+  const lastChoice = args[4];
+
+  const selected = [keepIndex, refundIndex, lastIndex];
+
+  if (
+    selected.some(v => Number.isNaN(v) || v < 0 || v > 2) ||
+    new Set(selected).size !== 3
+  ) {
+    await message.reply('❌ 1~3 서로 다른 숫자만 입력');
+    return;
+  }
+
+  if (lastChoice !== '도박' && lastChoice !== '환급') {
+    await message.reply('❌ 마지막 선택은 "도박" 또는 "환급"만 가능');
+    return;
+  }
+
+  const logs = doRebirth(player, keepIndex, refundIndex, lastIndex, lastChoice);
 
   await safeSave(player);
-
   await message.reply(logs.join('\n'));
-  return;
 }
 
 
