@@ -3935,9 +3935,10 @@ function buildBagText(player){
   ].join('\n');
 }
 
-function buildCompactBattleText(player,target,channelId){
+function buildCompactBattleText(player, target, channelId){
   const lines = [];
 
+  // 🔥 몬스터
   if(target){
     lines.push(`👿 ${target.name}`);
     lines.push(`❤️ ${target.currentHp}/${target.hp}`);
@@ -3948,14 +3949,26 @@ function buildCompactBattleText(player,target,channelId){
     lines.push('━━━━━━━━━━');
   }
 
-  const setBonus = getRuneSetBonus(player);
   const maxHp = getFinalMaxHp(player);
   if (player.hp > maxHp) player.hp = maxHp;
 
+  // 🔥 환생 표시
+  if ((player.rebirth || 0) > 0) {
+    lines.push(`:star2: :star2: 환생 ${player.rebirth}회:star2: :star2:`);
+  }
+
   lines.push(`<#${channelId}>`);
+
+  // 🔥 체력 → 마나 순서
   lines.push(`❤️ ${player.hp}/${maxHp}`);
+
+  if ((player.rebirth || 0) > 0) {
+    lines.push(`🔷 ${player.mana || 0}/${player.maxMana || 0}`);
+  }
+
   lines.push(`⚔️ ${getAttackPower(player)} / 🛡️ ${getDefensePower(player)}`);
 
+  // 🔥 포션
   lines.push(
     `💊 ${player.potions.small || 0} / 🍗 ${player.potions.mid || 0} / 🍖 ${player.potions.big || 0} / 🥩 ${player.potions.large || 0} / 🍖🍖 ${player.potions.huge || 0} / 🧪 ${player.potions.elixir || 0}`
   );
