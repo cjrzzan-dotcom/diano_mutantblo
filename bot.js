@@ -3938,6 +3938,15 @@ function buildBagText(player){
 function buildCompactBattleText(player, target, channelId){
   const lines = [];
 
+  // 🔷 마나 보정
+  if ((player.rebirth || 0) > 0) {
+    player.maxMana = player.maxMana || getRebirthMaxMana(player.rebirth);
+
+    if (player.mana === undefined || player.mana === null) {
+      player.mana = player.maxMana;
+    }
+  }
+
   // 🔥 몬스터
   if(target){
     lines.push(`👿 ${target.name}`);
