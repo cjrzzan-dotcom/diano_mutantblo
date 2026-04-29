@@ -3889,11 +3889,12 @@ function buildFullStatusText(player){
     `🧷 장착: ${getEquippedConstellationIcons(player)}`,
     getConstellationSummary(player),
     `✨ 룬 조합 효과`,
-    getRuneSetText(player)
+    getRuneSetText(player),
+    (player.rebirth || 0) > 0 
+      ? `:star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2:`
+      : null
   ].filter(v => v !== null).join('\n');
-(player.rebirth || 0) > 0 
-  ? `:star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: :star2: `
-  : null,
+}
 
 function buildBagText(player){
   const mats = Object.entries(player.materials || {})
