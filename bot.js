@@ -1741,6 +1741,7 @@ const CRAFTS = [
 
 { id:'one_sword', label:'태초의 종말', type:'weapon', gold:500000,  materials:{ '태초의조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50  },  base:{atk:300,def:150} },
 { id:'one_armor', label:'태초의 수호', type:'armor',  gold:500000, materials:{ '태초의조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50 }, base:{atk:150,def:300} },
+{ id:'one_ring', label:'태초반지', type:'ring',  gold:500000, materials:{ '태초의조각':30, '천상석' :10, '천상의 조각' :10, '오염된세계석조각':10,'세계석' : 30 }, base:{atk:0,def:0} },
 
 {
   id: 'make_high_frag',
@@ -2425,6 +2426,7 @@ function rollRarity(){
 function createRingStats(recipeId) {
   const isLilith = recipeId === 'lilith_ring';
   const isDiablo = recipeId === 'diablo_ring';
+  const isPrimordial = recipeId === 'primordial_ring'; // ⭐ 태초 추가
 
   let pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
   let countMin = 1;
@@ -2440,32 +2442,44 @@ function createRingStats(recipeId) {
     defBonus: 0
   };
 
-  // 릴리트 반지: 크리/회피 쪽 특화, 공격은 조금
+  // 🔥 릴리트 반지
   if (isLilith) {
     countMin = 2;
     countMax = 3;
-    valueMin = 3;
-    valueMax = 6;
+    valueMin = 1;
+    valueMax = 3;
   }
 
-  // 디아불 반지: 공격/방어 중심 + 보조 옵션 약간
+  // 🔥 디아불 반지
   if (isDiablo) {
     pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
-    countMin = 2;
-    countMax = 3;
+    countMin = 3;
+    countMax = 4;
+    valueMin = 3;
+    valueMax = 5;
+
+    out.atkBonus += rand(15, 20);
+    out.defBonus += rand(15, 20);
+  }
+
+  // 🔥 태초 반지 (불반지 상위, 구조 동일)
+  if (isPrimordial) {
+    pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
+    countMin = 3;
+    countMax = 5;
     valueMin = 5;
     valueMax = 8;
 
-    // 디아불 기본 추가 스탯
-    out.atkBonus += rand(15, 20);
-    out.defBonus += rand(15, 20);
+    // ⭐ 공/방만 강화
+    out.atkBonus += rand(30, 45);
+    out.defBonus += rand(30, 45);
   }
 
   const count = rand(countMin, countMax);
 
   const picked = [];
   while (picked.length < count) {
-    const k = pick(pool);
+    const k = pick(pool); // ✅ 수정됨
     if (!picked.includes(k)) picked.push(k);
   }
 
