@@ -3040,205 +3040,207 @@ function performAttack(player, dungeonKey){
       result.logs.push(`✨ 다음 몬스터 매칭: ${player.run.target.name}`);
       return result;
     }
+
     result.logs.push('현재 매칭 가능한 몬스터가 없습니다.');
     return result;
   }
 
   const target = player.run.target;
 
-  const eq = getEquippedBonuses(player);
-  const runeBonus = getRuneBonus(player);
-  const setBonus = getRuneSetBonus(player);
+  const eq = getEquippedBonuses(player) || {};
+  const runeBonus = getRuneBonus(player) || {};
+  const setBonus = getRuneSetBonus(player) || {};
 
-  const wb = getBlessingBonuses(player.equipment.weapon);
-  const ab = getBlessingBonuses(player.equipment.armor);
-  const rb = getBlessingBonuses(player.equipment.ring);
+  const wb = getBlessingBonuses(player.equipment.weapon) || {};
+  const ab = getBlessingBonuses(player.equipment.armor) || {};
+  const rb = getBlessingBonuses(player.equipment.ring) || {};
 
-  const totalBlessAtkPercent = wb.atkPercent + ab.atkPercent + rb.atkPercent;
-  const totalBlessCritChance = wb.critChance + ab.critChance + rb.critChance;
-  const totalBlessCritDamage = wb.critDamage + ab.critDamage + rb.critDamage;
-  const totalBlessLifesteal = wb.lifesteal + ab.lifesteal + rb.lifesteal;
-  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+  const constellationStats = getConstellationBattleStats(player) || {};
 
-  const baseAtk = player.baseAtk + player.stats.atk;
-  let atkBeforeBless = baseAtk + eq.atk + runeBonus.atk + setBonus.atk;
+  const finalAtk = getAttackPower(player);
+  const totalMaxHp = getFinalMaxHp(player);
 
-  const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
-  const runeHpBonus = Math.floor(baseHpWithBless * (runeBonus.hpPercent / 100));
-  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * (setBonus.hpPercent / 100));
-let totalMaxHp = baseHpWithBless + runeHpBonus + setHpBonus;
-
-const constellationStats = getConstellationBattleStats(player);
-const hiddenConstellationBonus = getHiddenConstellationBonus(player);
-
-totalMaxHp = Math.floor(totalMaxHp * (1 + constellationStats.hpPercent / 100));
-totalMaxHp += hiddenConstellationBonus.hp;
-
-  // 불사의 심장: 체력 30% 이하 공격력 +20%
-  if (
-    setBonus.lowHpAtkPercent > 0 &&
-    setBonus.lowHpThreshold > 0 &&
-    totalMaxHp > 0 &&
-    (player.hp / totalMaxHp) * 100 <= setBonus.lowHpThreshold
-  ) {
-    const lowHpBonus = Math.floor(atkBeforeBless * (setBonus.lowHpAtkPercent / 100));
-    atkBeforeBless += lowHpBonus;
-    result.logs.push(`🔥 저체력 버프 +${lowHpBonus}`);
+  if (player.hp > totalMaxHp) {
+    player.hp = totalMaxHp;
   }
 
-  const blessAtkBonus = Math.floor(atkBeforeBless * (totalBlessAtkPercent / 100));
-  const finalAtk = atkBeforeBless + blessAtkBonus;
+  // 치명타 계산
+  const totalBlessCritChance =
+    (wb.critChance || 0) +
+    (ab.critChance || 0) +
+    (rb.critChance || 0);
 
-  // 치명 폭발: 기본/장비/축성은 45% 캡, 조합은 캡 위로 추가
-  const baseCritChance = player.stats.critChance + eq.critChance + totalBlessCritChance;
-  const finalCritChance = Math.min(STAT_CAPS.critChance, baseCritChance) + (setBonus.critChance || 0);
+  const totalBlessCritDamage =
+    (wb.critDamage || 0) +
+    (ab.critDamage || 0) +
+    (rb.critDamage || 0);
+
+  const baseCritChance =
+    (player.stats.critChance || 0) +
+    (eq.critChance || 0) +
+    totalBlessCritChance;
+
+  const finalCritChance =
+    Math.min(STAT_CAPS.critChance, baseCritChance) +
+    (setBonus.critChance || 0);
 
   const finalCritDamage = Math.min(
     STAT_CAPS.critDamage,
-    player.stats.critDamage + eq.critDamage + totalBlessCritDamage + runeBonus.critDamage + setBonus.critDamage
+    (player.stats.critDamage || 0) +
+    (eq.critDamage || 0) +
+    totalBlessCritDamage +
+    (runeBonus.critDamage || 0) +
+    (setBonus.critDamage || 0)
   );
 
+  // 관통 적용
+  const pierceRate = constellationStats.pierce || 0;
+  const effectiveDef = Math.max(
+    0,
+    Math.floor(target.def * (1 - pierceRate / 100))
+  );
 
-// 관통 적용
-const pierceRate = constellationStats.pierce || 0;
-const effectiveDef = Math.max(0, Math.floor(target.def * (1 - pierceRate / 100)));
+  // 흡혈 합산
+  const totalLifesteal =
+    (wb.lifesteal || 0) +
+    (ab.lifesteal || 0) +
+    (rb.lifesteal || 0) +
+    (setBonus.lifesteal || 0) +
+    (constellationStats.lifesteal || 0);
 
-// 흡혈 합산
-const totalLifesteal =
-  totalBlessLifesteal +
-  setBonus.lifesteal +
-  constellationStats.lifesteal;
+  function applyPlayerHit(label, baseDamageRate = 1) {
+    let hitDamage = Math.max(1, finalAtk - effectiveDef);
+    hitDamage = Math.floor(hitDamage * baseDamageRate);
 
-function applyPlayerHit(label, baseDamageRate = 1) {
-  let hitDamage = Math.max(1, finalAtk - effectiveDef);
-  hitDamage = Math.floor(hitDamage * baseDamageRate);
+    // 🔥 강타: 기본 공격에만 적용
+    let isSmash = false;
 
- // 🔥 강타: 기본 공격에만 적용
-let isSmash = false;
+    if (
+      label === '기본' &&
+      (player.rebirth || 0) > 0 &&
+      (player.mana || 0) > 0
+    ) {
+      const multi = getRebirthSmashMultiplier(player.rebirth);
 
-if (
-  label === '기본' &&                // 🔥 이 조건 추가
-  (player.rebirth || 0) > 0 &&
-  (player.mana || 0) > 0
-) {
-  const multi = getRebirthSmashMultiplier(player.rebirth);
-
-  hitDamage = Math.floor(hitDamage * multi);
-
-  player.mana -= 1;
-  isSmash = true;
-}
-  
-
-  let hitCrit = false;
-
-  if (chance(finalCritChance)) {
-    hitDamage = Math.floor(hitDamage * (1.5 + finalCritDamage / 100));
-    hitCrit = true;
-  }
-
-  hitDamage = Math.max(1, hitDamage);
-
-  target.currentHp -= hitDamage;
-
-if (label === '기본') {
-  if (isSmash) {
-    result.logs.push(`💥 강타! x${getRebirthSmashMultiplier(player.rebirth).toFixed(2)}`);
-  }
-  result.logs.push(makeDamageLine('👤 플레이어', target.name, hitDamage, hitCrit));
-} else {
-    if (isSmash) {
-      result.logs.push(`💥 강타! x${getRebirthSmashMultiplier(player.rebirth).toFixed(2)}`);
+      hitDamage = Math.floor(hitDamage * multi);
+      player.mana -= 1;
+      isSmash = true;
     }
 
-    result.logs.push(hitCrit ? `⚡ ${label} 치명타! ${hitDamage}` : `⚡ ${label} ${hitDamage}`);
-  }
+    // 치명타
+    let hitCrit = false;
 
-  // 🔥 화상
-  if (constellationStats.burnMax > 0) {
-    target.burn = Math.min(
-      (target.burn || 0) + 1,
-      constellationStats.burnMax
-    );
-  }
-
-  // ⚡ 마비
-  if (constellationStats.stunChance > 0 && chance(constellationStats.stunChance)) {
-    target.stunned = true;
-    result.logs.push('⚡ 마비!');
-  }
-
-  // ❄️ 빙결
-  if (constellationStats.freezeGain > 0) {
-    target.freezeGauge = (target.freezeGauge || 0) + constellationStats.freezeGain;
-
-    if (target.freezeGauge >= 100) {
-      target.freezeGauge = 0;
-      target.frozen = true;
-      result.logs.push('❄️ 빙결!');
+    if (chance(finalCritChance)) {
+      hitDamage = Math.floor(hitDamage * (1.5 + finalCritDamage / 100));
+      hitCrit = true;
     }
-  }
 
-  // 🩸 흡혈
-  if (totalLifesteal > 0 && hitDamage > 0) {
-    const heal = Math.floor(hitDamage * (totalLifesteal / 100));
-    const beforeHp = player.hp;
+    hitDamage = Math.max(1, hitDamage);
+    target.currentHp = Math.max(0, target.currentHp - hitDamage);
 
-    player.hp = Math.min(totalMaxHp, player.hp + heal);
+    // 로그
+    if (label === '기본') {
+      if (isSmash) {
+        result.logs.push(`💥 강타! x${getRebirthSmashMultiplier(player.rebirth).toFixed(2)}`);
+      }
 
-    const actualHeal = player.hp - beforeHp;
-    if (actualHeal > 0) {
-      result.logs.push(`🩸 흡혈 +${actualHeal}`);
+      result.logs.push(makeDamageLine('👤 플레이어', target.name, hitDamage, hitCrit));
+    } else {
+      result.logs.push(
+        hitCrit
+          ? `⚡ ${label} 치명타! ${hitDamage}`
+          : `⚡ ${label} ${hitDamage}`
+      );
     }
+
+    // 🔥 화상 스택
+    if (constellationStats.burnMax > 0) {
+      target.burn = Math.min(
+        (target.burn || 0) + 1,
+        constellationStats.burnMax
+      );
+    }
+
+    // ⚡ 마비
+    if (
+      constellationStats.stunChance > 0 &&
+      chance(constellationStats.stunChance)
+    ) {
+      target.stunned = true;
+      result.logs.push('⚡ 마비!');
+    }
+
+    // ❄️ 빙결
+    if (constellationStats.freezeGain > 0) {
+      target.freezeGauge = (target.freezeGauge || 0) + constellationStats.freezeGain;
+
+      if (target.freezeGauge >= 100) {
+        target.freezeGauge = 0;
+        target.frozen = true;
+        result.logs.push('❄️ 빙결!');
+      }
+    }
+
+    // 🩸 흡혈
+    if (totalLifesteal > 0 && hitDamage > 0) {
+      const heal = Math.floor(hitDamage * (totalLifesteal / 100));
+      const beforeHp = player.hp;
+
+      player.hp = Math.min(totalMaxHp, player.hp + heal);
+
+      const actualHeal = player.hp - beforeHp;
+      if (actualHeal > 0) {
+        result.logs.push(`🩸 흡혈 +${actualHeal}`);
+      }
+    }
+
+    return hitDamage;
   }
 
-  return hitDamage;
-}
+  // 1. 기본타
+  applyPlayerHit('기본', 1);
 
-// 1. 기본타
-applyPlayerHit('기본', 1);
+  // 2. 룬/세트 추가타
+  if (
+    target.currentHp > 0 &&
+    (setBonus.extraHitChance || 0) > 0 &&
+    chance(setBonus.extraHitChance)
+  ) {
+    applyPlayerHit('룬 추가타', setBonus.extraHitDamageRate || 0.5);
+  }
 
-// 2. 룬전설 / 세트 추가타 30%
-if (
-  target.currentHp > 0 &&
-  setBonus.extraHitChance > 0 &&
-  chance(setBonus.extraHitChance)
-) {
-  applyPlayerHit('룬 추가타', setBonus.extraHitDamageRate || 0.5);
-}
+  // 3. 연격의 별 추가타
+  if (
+    target.currentHp > 0 &&
+    (constellationStats.comboChance || 0) > 0 &&
+    chance(constellationStats.comboChance)
+  ) {
+    applyPlayerHit('연격 추가타', 0.5);
+  }
 
-// 3. 연격의 별 추가타
-if (
-  target.currentHp > 0 &&
-  constellationStats.comboChance > 0 &&
-  chance(constellationStats.comboChance)
-) {
-  applyPlayerHit('연격 추가타', 0.5);
-}
+  // 4. 홍염 화상 데미지
+  if (target.currentHp > 0 && (target.burn || 0) > 0) {
+    const burnDmg = Math.max(1, Math.floor(finalAtk * (target.burn / 100)));
 
-// 4. 홍염 화상 데미지
-if (target.currentHp > 0 && (target.burn || 0) > 0) {
-  const burnDmg = Math.max(1, Math.floor(finalAtk * (target.burn / 100)));
+    target.currentHp = Math.max(0, target.currentHp - burnDmg);
+    result.logs.push(`🔥 화상 ${target.burn}% → ${burnDmg} 피해`);
+  }
 
-  target.currentHp = Math.max(0, target.currentHp - burnDmg);
-  result.logs.push(`🔥 화상 ${target.burn}% → ${burnDmg} 피해`);
-}
-
+  // 몬스터 사망 처리
   if(target.currentHp <= 0){
     target.currentHp = 0;
     result.killedTarget = { ...target };
     result.logs.push(makeKillLine(target.name));
 
     const drops = grantDrops(player, target);
-   
-
 
     const constellationDropLines = grantConstellationDrops(player, target);
     result.logs.push(...constellationDropLines);
+
     // 장착한 별자리 경험치 +1
     grantConstellationExp(player);
-   
- result.levelUps = drops.levelUps;
+
+    result.levelUps = drops.levelUps;
     player.run.lastDrops = drops.lines;
     result.logs.push(...drops.lines);
     player.run.kills += 1;
@@ -3246,20 +3248,30 @@ if (target.currentHp > 0 && (target.burn || 0) > 0) {
     const dungeon = DUNGEONS[dungeonKey];
     player.run.target = null;
 
-// 🔷 전투 종료 마나 회복
-if ((player.rebirth || 0) > 0) {
-  player.maxMana = player.maxMana || getRebirthMaxMana(player.rebirth);
-  player.mana = player.maxMana;
+    // 🔷 몬스터 처치 시 마나 풀 회복
+    if ((player.rebirth || 0) > 0) {
+      player.maxMana = player.maxMana || getRebirthMaxMana(player.rebirth);
+      player.mana = player.maxMana;
 
-  result.logs.push(`🔷 마나 회복 +1 (${player.mana}/${player.maxMana})`);
-}
-
-    if(dungeon.type === 'random'){
-      endBattle(player);
-      result.logs.push('🏘️ 전투 종료! 이제 마을 기능을 사용할 수 있습니다.');
-      return result;
+      result.logs.push(`🔷 마나 풀 회복 (${player.mana}/${player.maxMana})`);
     }
 
+    // 랜덤 던전: 다음 몬스터 예약
+if(dungeon.type === 'random'){
+  player.run.target = null;
+  player.run.nextTarget = getRandomMonster(dungeonKey);
+
+  if (player.run.nextTarget) {
+    result.logs.push(`✨ 다음 몬스터 매칭 예정: ${player.run.nextTarget.name}`);
+  } else {
+    endBattle(player);
+    result.logs.push('🏘️ 더 이상 매칭 가능한 몬스터가 없어 전투 종료!');
+  }
+
+  return result;
+}
+
+    // 웨이브 던전
     if(dungeon.type === 'wave'){
       player.run.waveIndex += 1;
       player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
@@ -3274,6 +3286,7 @@ if ((player.rebirth || 0) > 0) {
       return result;
     }
 
+    // 일반 던전 웨이브
     player.run.waveIndex += 1;
     const next = getWaveMonster(dungeonKey, player.run.waveIndex);
 
