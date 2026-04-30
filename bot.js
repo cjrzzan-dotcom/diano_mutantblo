@@ -3231,6 +3231,8 @@ if (target.currentHp > 0 && (target.burn || 0) > 0) {
 
     const drops = grantDrops(player, target);
    
+
+
     const constellationDropLines = grantConstellationDrops(player, target);
     result.logs.push(...constellationDropLines);
     // 장착한 별자리 경험치 +1
@@ -3243,6 +3245,14 @@ if (target.currentHp > 0 && (target.burn || 0) > 0) {
 
     const dungeon = DUNGEONS[dungeonKey];
     player.run.target = null;
+
+// 🔷 전투 종료 마나 회복
+if ((player.rebirth || 0) > 0) {
+  player.maxMana = player.maxMana || getRebirthMaxMana(player.rebirth);
+  player.mana = Math.min(player.maxMana, (player.mana || 0) + 1);
+
+  result.logs.push(`🔷 마나 회복 +1 (${player.mana}/${player.maxMana})`);
+}
 
     if(dungeon.type === 'random'){
       endBattle(player);
@@ -3283,18 +3293,6 @@ if (target.currentHp > 0 && (target.burn || 0) > 0) {
   }
 
   enemyAttack(player, target, result.logs);
-
-// 🔷 턴 종료 마나 회복
-if ((player.rebirth || 0) > 0) {
-  player.maxMana = player.maxMana || getRebirthMaxMana(player.rebirth);
-
-  if (player.mana === undefined || player.mana === null) {
-    player.mana = player.maxMana;
-  } else {
-    player.mana = Math.min(player.maxMana, player.mana + 1);
-  }
-}
-
   return result;
 }
 
@@ -3641,6 +3639,25 @@ function doRebirth(player, keepIndex, refundIndex, lastIndex, lastChoice) {
 
   logs.push('━━━━━━━━━━');
   logs.push('장비 처리 완료');
+
+// 🎒 인벤토리 장비 전부 환급
+if (player.inventory && player.inventory.length > 0) {
+  logs.push('━━━━━━━━━━');
+  logs.push('🎒 인벤토리 장비 환급');
+
+  const newInventory = [];
+
+  for (const item of player.inventory) {
+    if (item && ['weapon', 'armor', 'ring'].includes(item.type)) {
+      logs.push(`📦 ${item.name} 환급`);
+      logs.push(...refundRebirthItem(player, item));
+    } else {
+      newInventory.push(item); // 장비 아닌 건 유지
+    }
+  }
+
+  player.inventory = newInventory;
+}
 
   // 🔥 환생 스탯
   player.rebirth = (player.rebirth || 0) + 1;
