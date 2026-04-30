@@ -2892,49 +2892,44 @@ function getEnhancePreviewText(player, item){
 function enemyAttack(player, target, logs){
   if(!target || target.currentHp <= 0 || !player.run || player.run.isDown) return;
 
-  // ❄️ 빙결: 적 1턴 행동 불가
+  // ❄️ 빙결
   if (target.frozen) {
     logs.push('❄️ 빙결 상태! 적 행동 불가');
     target.frozen = false;
     return;
   }
 
-  // ⚡ 마비: 적 1턴 행동 불가
+  // ⚡ 마비
   if (target.stunned) {
     logs.push('⚡ 마비 상태! 적 행동 불가');
     target.stunned = false;
     return;
   }
 
-  const eq = getEquippedBonuses(player);
-  const runeBonus = getRuneBonus(player);
-  const setBonus = getRuneSetBonus(player);
+  // 🔥 스탯 (함수로 통일)
+  const finalDef = getDefensePower(player);
+  const finalDodge = getDodge(player);
 
-  const wb = getBlessingBonuses(player.equipment.weapon);
-  const ab = getBlessingBonuses(player.equipment.armor);
-  const rb = getBlessingBonuses(player.equipment.ring);
+  const setBonus = getRuneSetBonus(player) || {};
+  const wb = getBlessingBonuses(player.equipment.weapon) || {};
+  const ab = getBlessingBonuses(player.equipment.armor) || {};
+  const rb = getBlessingBonuses(player.equipment.ring) || {};
 
-  const totalBlessFlatDef = wb.flatDef + ab.flatDef + rb.flatDef;
-  const totalBlessDodge = wb.dodge + ab.dodge + rb.dodge;
-  const totalBlessReflect = wb.reflect + ab.reflect + rb.reflect;
+  const totalBlessReflect =
+    (wb.reflect || 0) +
+    (ab.reflect || 0) +
+    (rb.reflect || 0);
 
-  const baseDef = player.baseDef + Math.floor(player.level / 3);
-  const finalDef = baseDef + eq.def + totalBlessFlatDef + runeBonus.def + setBonus.def;
-
-  const constellationDodge = getConstellationValue(player, 'dodge');
-
-  const finalDodge =
-    Math.min(STAT_CAPS.dodge, player.stats.dodge + eq.dodge + totalBlessDodge) +
-    constellationDodge;
-
+  // 💨 회피
   if (chance(finalDodge)) {
     logs.push(makeDodgeLine());
     return;
   }
 
+  // 💥 데미지
   let dmg = Math.max(1, target.atk - finalDef);
 
-  // 철벽 수호 피해감소 15%
+  // 🛡️ 피해 감소
   if (setBonus.damageReduce > 0) {
     dmg = Math.max(1, Math.floor(dmg * (1 - setBonus.damageReduce / 100)));
   }
@@ -2942,6 +2937,7 @@ function enemyAttack(player, target, logs){
   player.hp -= dmg;
   logs.push(makeEnemyDamageLine(target.name, dmg));
 
+  // 🔁 반사
   if (totalBlessReflect > 0 && dmg > 0 && target.currentHp > 0) {
     const reflectDmg = Math.floor(dmg * (totalBlessReflect / 100));
 
@@ -2951,15 +2947,16 @@ function enemyAttack(player, target, logs){
     }
   }
 
+  // 💀 사망 처리
   if(player.hp <= 0){
     player.hp = 0;
     player.respawnAt = Date.now() + 15 * 60 * 1000;
 
+    player.run.isDown = true;
+
     if(player.reviveTickets > 0){
-      player.run.isDown = true;
       logs.push('💀 쓰러졌습니다! [부활권]으로 즉시 부활하거나 15분 후 자동 부활합니다.');
     } else {
-      player.run.isDown = true;
       logs.push('💀 사망! 부활권이 없어 15분 후 자동 부활합니다.');
     }
   }
