@@ -3249,7 +3249,7 @@ if (target.currentHp > 0 && (target.burn || 0) > 0) {
 // 🔷 전투 종료 마나 회복
 if ((player.rebirth || 0) > 0) {
   player.maxMana = player.maxMana || getRebirthMaxMana(player.rebirth);
-  player.mana = Math.min(player.maxMana, (player.mana || 0) + 1);
+  player.mana = player.maxMana;
 
   result.logs.push(`🔷 마나 회복 +1 (${player.mana}/${player.maxMana})`);
 }
