@@ -1426,7 +1426,6 @@ function tryBlessItem(player, item){
       { key: 'hpPercent', label: '체력 15% 증가', value: 15 },
       { key: 'reflect', label: '데미지반사 15%', value: 15 },
     ];
-  } else if (item.type === 'ring') {
 } else if (item.type === 'ring') {
   options = [
     { key: 'constellationExpPlus', label: '착용 별자리 경험치 +1', value: 1 },
