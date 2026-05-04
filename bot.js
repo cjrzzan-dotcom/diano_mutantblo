@@ -225,6 +225,23 @@ function isAdmin(message) {
 return message.author.id === '335720453408817166';
 }
 
+function removeBlessing(player, item){
+  if (!item) return '❌ 장비가 없습니다.';
+  if (!item.blessing) return '❌ 축성된 옵션이 없습니다.';
+
+  const cost = 5;
+  if ((player.materials['축성석'] || 0) < cost) {
+    return `❌ 축성석이 ${cost}개 필요합니다.`;
+  }
+
+  const old = item.blessing.label;
+
+  delete item.blessing;
+  player.materials['축성석'] -= cost;
+
+  return `🧪 축성 제거 완료!\n삭제된 옵션: ${old}\n(축성석 -${cost})`;
+}
+
 function endBattle(player) {
   player.run = null;
 }
@@ -4255,6 +4272,23 @@ function buildEnhanceMenuButtons(player){
         .setCustomId('bless_select')
         .setLabel('축성')
         .setStyle(ButtonStyle.Success),
+    ),
+
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('remove_bless_weapon')
+        .setLabel('🧪 무기 제거')
+        .setStyle(ButtonStyle.Danger),
+
+      new ButtonBuilder()
+        .setCustomId('remove_bless_armor')
+        .setLabel('🧪 갑옷 제거')
+        .setStyle(ButtonStyle.Danger),
+
+      new ButtonBuilder()
+        .setCustomId('remove_bless_ring')
+        .setLabel('🧪 반지 제거')
+        .setStyle(ButtonStyle.Danger),
     )
   ];
 }
@@ -5682,6 +5716,34 @@ if (id === 'bless_weapon' || id === 'bless_armor' || id === 'bless_ring') {
   });
   return;
 }
+
+if (
+  id === 'remove_bless_weapon' ||
+  id === 'remove_bless_armor' ||
+  id === 'remove_bless_ring'
+) {
+  await interaction.deferReply({ ephemeral: true });
+
+  let item = null;
+  if (id === 'remove_bless_weapon') item = player.equipment.weapon;
+  if (id === 'remove_bless_armor') item = player.equipment.armor;
+  if (id === 'remove_bless_ring') item = player.equipment.ring;
+
+  if (!item) {
+    await interaction.editReply({ content: '❌ 장비가 없습니다.' });
+    return;
+  }
+
+  const result = removeBlessing(player, item);
+  await safeSave(player);
+
+  await interaction.editReply({
+    content: result
+  });
+  return;
+}
+
+
 
 if ((id === 'attack' || id === 'auto') && Date.now() < player.respawnAt) {
   const min = Math.ceil((player.respawnAt - Date.now()) / 60000);
