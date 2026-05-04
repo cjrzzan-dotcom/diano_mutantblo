@@ -3083,7 +3083,7 @@ function usePotionOutOfBattle(player, key){
   if(!item) return '잘못된 물약입니다.';
   if((player.potions[key]||0) <= 0) return `${item.label}이 없습니다.`;
 
-  const maxHp = getMaxHpWithBless(player);
+  const maxHp = getTotalMaxHP(player);
 
   player.potions[key] -= 1;
   player.hp = Math.min(maxHp, player.hp + item.heal);
