@@ -6456,6 +6456,18 @@ if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_
   return;
 }
 
+
+if (id.startsWith('craft_') && id !== 'craft_list' && !id.startsWith('craft_cat_')) {
+  const craftId = id.replace('craft_', '');
+  const res = tryCraft(player, craftId);
+  await safeSave(player);
+  await interaction.reply({
+    content: res.text,
+    ephemeral: true
+  });
+  return;
+}
+
 if (id.startsWith('equip_')) {
   const idx = Number(id.replace('equip_', ''));
   const text = equipItemByIndex(player, idx);
