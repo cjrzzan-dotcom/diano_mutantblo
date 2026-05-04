@@ -1345,7 +1345,7 @@ function buildBlessButtons(player){
         .setCustomId('bless_ring')
         .setLabel('💍 반지')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
+        .setDisabled(!player.equipment?ring),
     )
   ];
 }
@@ -1425,10 +1425,13 @@ function tryBlessItem(player, item){
       { key: 'reflect', label: '데미지반사 15%', value: 15 },
     ];
   } else if (item.type === 'ring') {
-    return '❌ 반지는 아직 축성할 수 없습니다.';
-  } else {
-    return '❌ 축성할 수 없는 장비입니다.';
-  }
+} else if (item.type === 'ring') {
+  options = [
+    { key: 'constellationExpPlus', label: '착용 별자리 경험치 +1', value: 1 },
+    { key: 'bonusXp', label: '경험치 +15', value: 15 },
+    { key: 'goldPercent', label: '골드 +30%', value: 30 },
+  ];
+}
 
   const blessed = pick(options);
 
@@ -2902,22 +2905,43 @@ if (hellThroneSet.has(monsterName)) {
 
 
 function giveXp(player, amount){
-  player.xp += amount;
+  const ringXpBonus = player.equipment?.ring?.blessing?.bonusXp || 0;
+  const finalAmount = amount + ringXpBonus;
+
+  player.xp += finalAmount;
+
   const msgs = [];
+
+  if (ringXpBonus > 0) {
+    msgs.push(`💍 반지 축성 효과! 경험치 +${ringXpBonus}`);
+  }
+
   while(player.xp >= player.nextXp){
     player.xp -= player.nextXp;
     player.level += 1;
     player.nextXp = Math.floor(50 * Math.pow(1.15, player.level - 1));
     player.maxHp += 12;
-    player.hp = player.maxHp;
+    player.hp = getFinalMaxHp ? getFinalMaxHp(player) : player.maxHp;
     player.statPoints += 3;
     msgs.push(`Lv.${player.level} 달성! 스탯포인트 +3`);
   }
+
   return msgs;
 }
+
 function grantDrops(player, monster){
   const lines = [];
-  const gold = rand(monster.gold[0], monster.gold[1]);
+
+  let gold = rand(monster.gold[0], monster.gold[1]);
+
+  const ringGoldBonus = player.equipment?.ring?.blessing?.goldPercent || 0;
+
+  if (ringGoldBonus > 0) {
+    const bonusGold = Math.floor(gold * (ringGoldBonus / 100));
+    gold += bonusGold;
+    lines.push(`💍 반지 축성 효과! 골드 +${ringGoldBonus}% (+${bonusGold})`);
+  }
+
   player.gold += gold;
   lines.push(`💰 골드 +${gold}`);
 
