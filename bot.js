@@ -1365,6 +1365,23 @@ function buildBlessButtons(player){
         .setLabel('💍 반지')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!player.equipment?.ring),
+
+
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('remove_bless_weapon')
+        .setLabel('🧪 무기 제거')
+        .setStyle(ButtonStyle.Danger),
+
+      new ButtonBuilder()
+        .setCustomId('remove_bless_armor')
+        .setLabel('🧪 갑옷 제거')
+        .setStyle(ButtonStyle.Danger),
+
+      new ButtonBuilder()
+        .setCustomId('remove_bless_ring')
+        .setLabel('🧪 반지 제거')
+        .setStyle(ButtonStyle.Danger),
     )
   ];
 }
@@ -4272,23 +4289,6 @@ function buildEnhanceMenuButtons(player){
         .setCustomId('bless_select')
         .setLabel('축성')
         .setStyle(ButtonStyle.Success),
-    ),
-
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('remove_bless_weapon')
-        .setLabel('🧪 무기 제거')
-        .setStyle(ButtonStyle.Danger),
-
-      new ButtonBuilder()
-        .setCustomId('remove_bless_armor')
-        .setLabel('🧪 갑옷 제거')
-        .setStyle(ButtonStyle.Danger),
-
-      new ButtonBuilder()
-        .setCustomId('remove_bless_ring')
-        .setLabel('🧪 반지 제거')
-        .setStyle(ButtonStyle.Danger),
     )
   ];
 }
