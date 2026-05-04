@@ -3098,7 +3098,6 @@ function usePotionInBattle(player, key){
   if(!player.run?.target) return { logs:['현재 전투 중인 몬스터가 없습니다.'] };
   if(player.run.isDown) return { logs:['쓰러진 상태입니다. 먼저 부활권을 사용하세요.'] };
 
-  // ✅ 전투/상태창에서 쓰는 최종 최대체력으로 맞추기
   const maxHp = getFinalMaxHp(player);
 
   player.potions[key] -= 1;
