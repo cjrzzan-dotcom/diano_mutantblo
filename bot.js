@@ -1564,14 +1564,15 @@ const MATERIAL_PRICES = {
 
 const DUNGEON_CHANNELS_PROD = {
   '1487952892852965426': '초심자의숲',
+  '1491290801987391488': '깊은심연의숲',
   '1487952924092010667': '오색룡의둥지',
   '1487953115024982076': '지옥의관문',
   '1497130371752394753': '심연의틈',
   '1487953176677060780': '지옥의심장부',
   '1487953322160816148': '지옥의왕좌',
-'1490976926762926100': '드높은천상',
-'1491290801987391488': '깊은심연의숲',
-'1498213015151972533': '태초의공허',
+  '1490976926762926100': '드높은천상',
+  '1499426998785937611': '심연의끝자락',
+  '1498213015151972533': '태초의공허',
 };
 
 const DUNGEON_CHANNELS_TEST = {
@@ -1852,28 +1853,32 @@ const DUNGEONS = {
     { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 35 },
   ]},
 
-'심연의틈': { type: 'random', autoAllowed: true, monsters: [
-  { name: '도살자', hp: 750, atk: 60, def: 30, gold: [70,100], xp: 23 },
-  { name: '레오릭 왕', hp: 800, atk: 70, def: 35, gold: [100,150], xp: 24 },
-  { name: '두리엘', hp: 900, atk: 80, def: 40, gold: [150,200], xp: 25 },
-  { name: '안다리엘', hp: 950, atk: 90, def: 45, gold: [200,250], xp: 26 },
-  { name: '벨리알', hp: 1000, atk: 100, def: 50, gold: [250,300], xp: 27 },
-  { name: '아즈모단', hp: 1100, atk: 110, def: 55, gold: [300,350], xp: 28 },
-  { name: '릴리트', hp: 1300, atk: 120, def: 60, gold: [600,700], xp: 29 },
-  { name: '바알', hp: 1500, atk: 130, def: 65, gold: [700,800], xp: 30 },
-  { name: '메피스토', hp: 1700, atk: 140, def: 70, gold: [800,900], xp: 31 },
-  { name: '디아블로', hp: 2000, atk: 150, def: 75, gold: [900,1000], xp: 32 },
-  { name: '종말의 화신 디아블로', hp: 4000, atk: 200, def: 80, gold: [1000,1500], xp: 35 },
+'심연의끝자락': { type: 'random', autoAllowed: false, monsters: [
+  { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [800,1000], xp: 36 },
+  { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [900,1100], xp: 37 },
+  { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [1000,1100], xp: 38 },
+  { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [1000,1150], xp: 39 },
+  { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [1050,1150], xp: 40 },
+  { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [1100,1150], xp: 41 },
+  { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [1150,1200], xp: 42 },
+  { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [1500,2000], xp: 45 },
 
-  // 🐉 드래곤 (0.2%)
-  { name: '빛의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 36, rate: 1 },
-  { name: '암흑의 군주 드래곤', hp: 6000, atk: 280, def: 100, gold: [1500,2000], xp: 37, rate: 1 },
-  { name: '창조 드래곤', hp: 6000, atk: 300, def: 115, gold: [2000,2500], xp: 38, rate: 1 },
+  // 🐉 특수 드래곤
+  { name: '창조 드래곤', hp: 8000, atk: 300, def: 115, gold: [2000,2500], xp: 38, rate: 1 },
 
-  // 🎁 잭팟 (0.2%)
-  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 50, rate: 0.2 },
-  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 50, rate: 0.2 },
-  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 50, rate: 0.2 },
+  // 🎁 잭팟
+  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 50, rate: 1 },
+  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 50, rate: 1 },
+  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 50, rate: 1 },
+  { name: '황금라스드래곤', hp: 100, atk: 50, def: 30, gold: [10000,10000], xp: 500, rate: 0.5 },
+  { name: '황금응구드래곤', hp: 100, atk: 50, def: 30, gold: [15000,15000], xp: 500, rate: 0.3 },
+
+  // 👼 천상
+  { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [1000,1500], xp: 43 },
+  { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [1000,1500], xp: 44 },
+  { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [1000,1500], xp: 45 },
+  { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [1000,1500], xp: 46, rate: 5 },
+  { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [1500,2000], xp: 50, rate: 3 },
 ]},
 
 
@@ -1888,6 +1893,33 @@ const DUNGEONS = {
     { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [1500,2000], xp: 45 },
   ]},
 '드높은천상': { type: 'random', autoAllowed: false, monsters: [
+  { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [1000,1500], xp: 43 },
+  { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [1000,1500], xp: 44 },
+  { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [1000,1500], xp: 45 },
+  { name: '임페리우스', hp: 16000, atk: 480, def: 100, gold: [1000,1500], xp: 46 },
+  { name: '티리엘', hp: 22000, atk: 520, def: 100, gold: [1500,2000], xp: 50 },
+]},
+
+'심연의끝자락': { type: 'random', autoAllowed: false, monsters: [
+
+    { name: '우버 레오릭 왕', hp: 5000, atk: 210, def: 82, gold: [800,1000], xp: 36 },
+    { name: '우버 안다리엘', hp: 5500, atk: 230, def: 84, gold: [900,1100], xp: 37 },
+    { name: '우버 두리엘', hp: 6000, atk: 250, def: 86, gold: [1000,1100], xp: 38 },
+    { name: '우버 바알', hp: 6500, atk: 270, def: 88, gold: [1000,1150], xp: 39 },
+    { name: '우버 디아블로', hp: 7000, atk: 290, def: 90, gold: [1050,1150], xp: 40 },
+    { name: '우버 메피스토', hp: 7500, atk: 310, def: 92, gold: [1100,1150], xp: 41 },
+    { name: '우버 릴리트', hp: 8000, atk: 350, def: 94, gold: [1150,1200], xp: 42 },
+    { name: '우버 종말의 화신 디아블로', hp: 10000, atk: 400, def: 100, gold: [1500,2000], xp: 45 },
+
+  { name: '창조 드래곤', hp: 8000, atk: 300, def: 115, gold: [2000,2500], xp: 38, rate: 1 },
+
+  { name: '메이드빵게드래곤', hp: 100, atk: 50, def: 30, gold: [3000,5000], xp: 50, rate: 0.2 },
+  { name: '요리사응구드래곤', hp: 100, atk: 50, def: 30, gold: [5000,10000], xp: 50, rate: 0.2 },
+  { name: '에인절라스드래곤', hp: 100, atk: 50, def: 30, gold: [1000,1500], xp: 50, rate: 0.2 },
+  { name: '황금응구드래곤', hp: 100, atk: 50, def: 30, gold: [15000,15000], xp: 500, rate: 0.2 },
+  { name: '황금라스드래곤', hp: 100, atk: 50, def: 30, gold: [10000,10000], xp: 500, rate: 0.2 },
+
+
   { name: '아우리엘', hp: 9000, atk: 360, def: 100, gold: [1000,1500], xp: 43 },
   { name: '이테리엘', hp: 10000, atk: 380, def: 100, gold: [1000,1500], xp: 44 },
   { name: '말티엘', hp: 13000, atk: 430, def: 100, gold: [1000,1500], xp: 45 },
@@ -2382,6 +2414,31 @@ function formatItemSimpleText(item) {
     else base = monsters.find(m => m.name === '티리엘');
   }
 
+else if (dungeonKey === '심연의끝자락') {
+  const roll = Math.random() * 100;
+
+  if (roll < 0.3) base = monsters.find(m => m.name === '황금응구드래곤');
+  else if (roll < 0.8) base = monsters.find(m => m.name === '황금라스드래곤');
+  else if (roll < 1.8) base = monsters.find(m => m.name === '창조 드래곤');
+  else if (roll < 2.8) base = monsters.find(m => m.name === '에인절라스드래곤');
+  else if (roll < 3.8) base = monsters.find(m => m.name === '메이드빵게드래곤');
+  else if (roll < 4.8) base = monsters.find(m => m.name === '요리사응구드래곤');
+  else if (roll < 9.8) base = monsters.find(m => m.name === '임페리우스');
+  else if (roll < 12.8) base = monsters.find(m => m.name === '티리엘');
+
+  else if (roll < 20.73) base = monsters.find(m => m.name === '우버 레오릭 왕');
+  else if (roll < 28.66) base = monsters.find(m => m.name === '우버 안다리엘');
+  else if (roll < 36.59) base = monsters.find(m => m.name === '우버 두리엘');
+  else if (roll < 44.52) base = monsters.find(m => m.name === '우버 바알');
+  else if (roll < 52.45) base = monsters.find(m => m.name === '우버 디아블로');
+  else if (roll < 60.38) base = monsters.find(m => m.name === '우버 메피스토');
+  else if (roll < 68.31) base = monsters.find(m => m.name === '우버 릴리트');
+  else if (roll < 76.24) base = monsters.find(m => m.name === '우버 종말의 화신 디아블로');
+  else if (roll < 84.17) base = monsters.find(m => m.name === '아우리엘');
+  else if (roll < 92.10) base = monsters.find(m => m.name === '이테리엘');
+  else base = monsters.find(m => m.name === '말티엘');
+}
+
   else {
     base = pick(monsters);
   }
@@ -2701,7 +2758,10 @@ function getMaterialDrops(monsterName) {
     ],
     '암흑의 군주 드래곤': [
       ['천상의 조각', 1, 10],
-      ['천상석', 1, 10]
+      ['천상석', 1, 10],
+      ['부활권', 5, 20],
+      ['별의 파편', 10, 50],
+      ['세계석조각', 15, 50],
     ],
     '창조 드래곤': [
       ['천상의 조각', 1, 15],
@@ -2709,6 +2769,16 @@ function getMaterialDrops(monsterName) {
     ],
     '에인절라스드래곤': [
       ['부활권', 3, 100]
+    ], 
+   '황금응구드래곤': [
+      ['부활권', 5, 100],
+      ['별의 파편', 10, 100],
+      ['세계석조각', 15, 100],
+    ],
+    '황금라스드래곤': [
+      ['부활권', 5, 100],
+      ['별의 파편', 10, 100],
+      ['세계석조각', 15, 100],
     ],
   };
 
@@ -2722,6 +2792,7 @@ function getMaterialDrops(monsterName) {
   if (heavenSet.has(monsterName)) {
     addDrop(drops, '천상석', 1, 20);
     addDrop(drops, '천상의 조각', 1, 20);
+    addDrop(drops, '별의 파편', 1, 5);
   }
 
   if (monsterName === '티리엘') {
@@ -2784,6 +2855,7 @@ function getMaterialDrops(monsterName) {
     addDrop(drops, '오염된세계석조각', 1, 35);
     addDrop(drops, '고급장비조각', 1, 50);
     addDrop(drops, '세계석조각', 1, 10);
+    addDrop(drops, '별의 파편', 1, 5);
   }
 
 // 🔥 지옥의왕좌 전용 드랍
