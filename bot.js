@@ -490,6 +490,23 @@ function getGroupedRunes(player) {
   return Array.from(map.values());
 }
 
+function getTotalMaxHp(player){
+  const runeBonus = getRuneBonus(player);
+  const setBonus = getRuneSetBonus(player);
+
+  const wb = getBlessingBonuses(player.equipment.weapon);
+  const ab = getBlessingBonuses(player.equipment.armor);
+  const rb = getBlessingBonuses(player.equipment.ring);
+
+  const totalBlessHpPercent = wb.hpPercent + ab.hpPercent + rb.hpPercent;
+
+  const baseHpWithBless = player.maxHp + Math.floor(player.maxHp * (totalBlessHpPercent / 100));
+  const runeHpBonus = Math.floor(baseHpWithBless * ((runeBonus.hpPercent || 0) / 100));
+  const setHpBonus = Math.floor((baseHpWithBless + runeHpBonus) * ((setBonus.hpPercent || 0) / 100));
+
+  return baseHpWithBless + runeHpBonus + setHpBonus;
+}
+
 function getRuneBonus(player) {
   const bonus = {
     atk: 0,
@@ -3081,7 +3098,8 @@ function usePotionInBattle(player, key){
   if(!player.run?.target) return { logs:['현재 전투 중인 몬스터가 없습니다.'] };
   if(player.run.isDown) return { logs:['쓰러진 상태입니다. 먼저 부활권을 사용하세요.'] };
 
-  const maxHp = getMaxHpWithBless(player);
+  // ✅ 전투/상태창에서 쓰는 최종 최대체력으로 맞추기
+  const maxHp = getTotalMaxHp(player);
 
   player.potions[key] -= 1;
   player.hp = Math.min(maxHp, player.hp + item.heal);
