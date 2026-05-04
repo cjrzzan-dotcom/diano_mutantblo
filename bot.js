@@ -3099,7 +3099,7 @@ function usePotionInBattle(player, key){
   if(player.run.isDown) return { logs:['쓰러진 상태입니다. 먼저 부활권을 사용하세요.'] };
 
   // ✅ 전투/상태창에서 쓰는 최종 최대체력으로 맞추기
-  const maxHp = getTotalMaxHp(player);
+  const maxHp = getFinalMaxHp(player);
 
   player.potions[key] -= 1;
   player.hp = Math.min(maxHp, player.hp + item.heal);
