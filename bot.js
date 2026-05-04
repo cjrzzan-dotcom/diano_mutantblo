@@ -1135,18 +1135,20 @@ function getConstellationDetailText(player) {
 function grantConstellationExp(player) {
   ensureConstellations(player);
 
+  const ringBonus = player.equipment?.ring?.blessing?.constellationExpPlus || 0;
+
   for (const key in player.constellations) {
     const c = player.constellations[key];
     if (!c) continue;
-    if (c.level <= 0) continue; // 해금 안된건 제외
-    if (c.level >= 5) continue; // 만렙 제외
+    if (c.level <= 0) continue;
+    if (c.level >= 5) continue;
 
     const isEquipped = player.constellationLoadout.includes(key);
 
     if (isEquipped) {
-      c.exp += 3; // 착용
+      c.exp += 3 + ringBonus;
     } else {
-      c.exp += 1; // 해금만
+      c.exp += 1;
     }
   }
 }
@@ -1345,7 +1347,7 @@ function buildBlessButtons(player){
         .setCustomId('bless_ring')
         .setLabel('💍 반지')
         .setStyle(ButtonStyle.Secondary)
-        .setDisabled(!player.equipment?ring),
+        .setDisabled(!player.equipment?.ring),
     )
   ];
 }
