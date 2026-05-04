@@ -4501,6 +4501,12 @@ function buildEquipmentButtons(player, page = 1){
 
   return rows.slice(0, 5);
 }
+
+function getEnhanceLevelText(item){
+  const lv = item.enhanceLevel || 0;
+  return lv > 0 ? ` +${lv}` : '';
+}
+
 function buildEnhanceItemButtons(player){
   const rows = [];
 
