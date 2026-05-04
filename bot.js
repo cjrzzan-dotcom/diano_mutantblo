@@ -1609,7 +1609,7 @@ const DISPLAY_NAMES = {
   '드높은천상': '드높은 천상',
   '심연의끝자락': '심연의 끝자락',
   '지옥의왕좌': '지옥의 왕좌',
-'태초의공허': '태초의 공허',
+  '태초의공허': '태초의 공허',
 };
 
 const SHOP = {
@@ -3391,7 +3391,11 @@ if(next){
 
 return result;
 
+  }
 
+  enemyAttack(player, target, result.logs);
+  return result;
+}
 
 
 function tryUpgradeStat(player, key){
