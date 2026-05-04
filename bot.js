@@ -1365,7 +1365,7 @@ function buildBlessButtons(player){
         .setLabel('💍 반지')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(!player.equipment?.ring),
-
+    ),
 
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -1385,8 +1385,6 @@ function buildBlessButtons(player){
     )
   ];
 }
-
-
 
 function createRandomOptionsByRarity(rarityKey){
   const optionPool = [
