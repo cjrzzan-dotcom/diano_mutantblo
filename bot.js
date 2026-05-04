@@ -1606,6 +1606,8 @@ const DISPLAY_NAMES = {
   '지옥의관문': '지옥의 관문',
   '심연의틈': '심연의 틈',
   '지옥의심장부': '지옥의 심장부',
+  '드높은천상': '드높은 천상',
+  '심연의끝자락': '심연의 끝자락',
   '지옥의왕좌': '지옥의 왕좌',
 '태초의공허': '태초의 공허',
 };
@@ -3340,44 +3342,54 @@ if(dungeon.type === 'random'){
   return result;
 }
 
-    // 웨이브 던전
-    if(dungeon.type === 'wave'){
-      player.run.waveIndex += 1;
-      player.run.nextTarget = getWaveMonster(dungeonKey, player.run.waveIndex);
+// 웨이브 던전
+if(dungeon.type === 'wave'){
+  player.run.waveIndex += 1;
 
-      if(player.run.nextTarget){
-        result.logs.push(`✨ 다음 몬스터 매칭 예정: ${player.run.nextTarget.name}`);
-      } else {
-        result.logs.push('🏆 모든 웨이브를 클리어했습니다!');
-        endBattle(player);
-      }
-
-      return result;
-    }
-
-    // 일반 던전 웨이브
-    player.run.waveIndex += 1;
-    const next = getWaveMonster(dungeonKey, player.run.waveIndex);
-
-    if(!next){
-      player.run.target = null;
-      player.run.nextTarget = null;
-      player.run = null;
-      result.clearedDungeon = true;
-      result.logs.push(`🏆 ${DISPLAY_NAMES[dungeonKey]} 클리어!`);
-      return result;
-    }
-
-    player.run.target = null;
-    player.run.nextTarget = next;
-    result.logs.push('다음 웨이브는 [공격] 버튼을 눌러 매칭하세요.');
-    return result;
+  // 끝까지 가면 다시 0
+  if (player.run.waveIndex >= dungeon.waves.length) {
+    player.run.waveIndex = 0;
+    result.logs.push('🔁 모든 웨이브 클리어! 다시 처음부터 시작합니다!');
   }
 
-  enemyAttack(player, target, result.logs);
+  const next = getWaveMonster(dungeonKey, player.run.waveIndex);
+
+  player.run.target = null;
+  player.run.nextTarget = next;
+
+  if(next){
+    result.logs.push(`✨ 다음 몬스터 매칭 예정: ${next.name}`);
+  } else {
+    result.logs.push('❌ 몬스터 생성 실패, 전투 종료');
+    endBattle(player);
+  }
+
   return result;
 }
 
+
+// 일반 던전 웨이브 (🔥 여기도 무한 루프 적용)
+player.run.waveIndex += 1;
+
+// 끝까지 가면 다시 0
+if (player.run.waveIndex >= dungeon.waves.length) {
+  player.run.waveIndex = 0;
+  result.logs.push(`🔁 ${DISPLAY_NAMES[dungeonKey]} 전 구간 클리어! 다시 시작합니다!`);
+}
+
+const next = getWaveMonster(dungeonKey, player.run.waveIndex);
+
+player.run.target = null;
+player.run.nextTarget = next;
+
+if(next){
+  result.logs.push(`✨ 다음 몬스터 매칭 예정: ${next.name}`);
+} else {
+  result.logs.push('❌ 몬스터 생성 실패, 전투 종료');
+  endBattle(player);
+}
+
+return result;
 
 
 
