@@ -2586,7 +2586,7 @@ function createRingStats(recipeId) {
   }
 
   // 🔥 디아불반지
-  if (isDiablo) {
+  if (isdiablo) {
     pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
     countMin = 3;
     countMax = 4;
