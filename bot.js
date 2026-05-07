@@ -1796,7 +1796,8 @@ const CRAFTS = [
 { id:'lightning_armor', label:'천상의 갑주', type:'armor',  gold:100000, materials:{ '천상의 조각':30, '천상석' :30 }, base:{atk:30,def:105} },
 
 { id:'one_sword', label:'태초의 종말', type:'weapon', gold:500000,  materials:{ '태초의조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50  },  base:{atk:300,def:150} },
-{ id:'one_armor', label:'태초의 수호', type:'armor',  gold:500000, materials:{ '태초의조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'세계석' : 50 }, base:{atk:150,def:300} },
+{ id:'one_armor', label:'태초의 수호', type:'armor',  gold:500000, materials:{ '태초의조각':10, '천상석' :50, '천상의 조각' :50, '오염된세계석조각':50,'
+' : 50 }, base:{atk:150,def:300} },
 { id:'one_ring', label:'태초반지', type:'ring',  gold:500000, materials:{ '태초의조각':30, '천상석' :10, '천상의 조각' :10, '오염된세계석조각':10,'세계석' : 30 }, base:{atk:0,def:0} },
 
 {
@@ -1855,6 +1856,29 @@ const CRAFTS = [
   },
   result: {
     '세계석': 1
+  }
+},
+{
+  id: 'make_bless_stone_10',
+  label: '축성석 x10',
+  type: 'material',
+  materials: {
+    '세계석조각': 50
+  },
+  result: {
+    '축성석': 10
+  }
+},
+
+{
+  id: 'world_stone_10',
+  label: '세계석 x10',
+  type: 'material',
+  materials: {
+    '세계석조각': 100
+  },
+  result: {
+    '세계석': 10
   }
 }
 
