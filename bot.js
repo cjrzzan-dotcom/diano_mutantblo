@@ -2561,7 +2561,7 @@ function rollRarity(){
 function createRingStats(recipeId) {
   const isLilith = recipeId === 'lilith_ring';
   const isDiablo = recipeId === 'diablo_ring';
-  const isPrimordial = recipeId === 'one_ring'; // ⭐ 태초 추가
+  const isPrimordial = recipeId === 'one_ring';
 
   let pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
   let countMin = 1;
@@ -2577,7 +2577,6 @@ function createRingStats(recipeId) {
     defBonus: 0
   };
 
-  // 🔥 릴리트 반지
   if (isLilith) {
     countMin = 2;
     countMax = 3;
@@ -2585,8 +2584,7 @@ function createRingStats(recipeId) {
     valueMax = 3;
   }
 
-  // 🔥 디아불반지
-  if (isdiablo) {
+  if (isDiablo) {
     pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
     countMin = 3;
     countMax = 4;
@@ -2597,15 +2595,13 @@ function createRingStats(recipeId) {
     out.defBonus += rand(15, 20);
   }
 
-  // 🔥 태초반지 (불반지 상위, 구조 동일)
-  if (isone) {
+  if (isPrimordial) {
     pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
     countMin = 3;
     countMax = 5;
     valueMin = 5;
     valueMax = 8;
 
-    // ⭐ 공/방만 강화
     out.atkBonus += rand(30, 45);
     out.defBonus += rand(30, 45);
   }
@@ -2614,7 +2610,7 @@ function createRingStats(recipeId) {
 
   const picked = [];
   while (picked.length < count) {
-    const k = pick(pool); // ✅ 수정됨
+    const k = pick(pool);
     if (!picked.includes(k)) picked.push(k);
   }
 
