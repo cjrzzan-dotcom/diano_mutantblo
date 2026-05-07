@@ -2598,7 +2598,7 @@ function createRingStats(recipeId) {
   }
 
   // 🔥 태초반지 (불반지 상위, 구조 동일)
-  if (isPrimordial) {
+  if (isone) {
     pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
     countMin = 3;
     countMax = 5;
