@@ -2585,7 +2585,7 @@ function createRingStats(recipeId) {
     valueMax = 3;
   }
 
-  // 🔥 디아불 반지
+  // 🔥 디아불반지
   if (isDiablo) {
     pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
     countMin = 3;
@@ -2597,7 +2597,7 @@ function createRingStats(recipeId) {
     out.defBonus += rand(15, 20);
   }
 
-  // 🔥 태초 반지 (불반지 상위, 구조 동일)
+  // 🔥 태초반지 (불반지 상위, 구조 동일)
   if (isPrimordial) {
     pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus', 'atkBonus', 'defBonus'];
     countMin = 3;
@@ -2961,15 +2961,16 @@ if (hellThroneSet.has(monsterName)) {
 
 
 function giveXp(player, amount){
-  const ringXpBonus = player.equipment?.ring?.blessing?.bonusXp || 0;
-  const finalAmount = amount + ringXpBonus;
+  const ringXpPercent = player.equipment?.ring?.blessing?.bonusXp || 0;
+  const bonusXp = Math.floor(amount * (ringXpPercent / 100));
+  const finalAmount = amount + bonusXp;
 
   player.xp += finalAmount;
 
   const msgs = [];
 
-  if (ringXpBonus > 0) {
-    msgs.push(`💍 반지 축성 효과! 경험치 +${ringXpBonus}`);
+  if (ringXpPercent > 0) {
+    msgs.push(`💍 반지 축성 효과! 경험치 +${ringXpPercent}% (+${bonusXp})`);
   }
 
   while(player.xp >= player.nextXp){
@@ -3835,29 +3836,34 @@ function doRebirth(player, keepIndex, refundIndex, lastIndex, lastChoice) {
   logs.push('━━━━━━━━━━');
   logs.push('장비 처리 완료');
 
-// 🎒 인벤토리 장비 전부 환급
-if (player.inventory && player.inventory.length > 0) {
-  logs.push('━━━━━━━━━━');
-  logs.push('🎒 인벤토리 장비 환급');
+  // 🎒 인벤토리 장비 전부 환급
+  if (player.inventory && player.inventory.length > 0) {
+    logs.push('━━━━━━━━━━');
+    logs.push('🎒 인벤토리 장비 환급');
 
-  const newInventory = [];
+    const newInventory = [];
 
-  for (const item of player.inventory) {
-    if (item && ['weapon', 'armor', 'ring'].includes(item.type)) {
-      logs.push(`📦 ${item.name} 환급`);
-      logs.push(...refundRebirthItem(player, item));
-    } else {
-      newInventory.push(item); // 장비 아닌 건 유지
+    for (const item of player.inventory) {
+      if (item && ['weapon', 'armor', 'ring'].includes(item.type)) {
+        logs.push(`📦 ${item.name} 환급`);
+        logs.push(...refundRebirthItem(player, item));
+      } else {
+        newInventory.push(item);
+      }
     }
-  }
 
-  player.inventory = newInventory;
-}
+    player.inventory = newInventory;
+  }
 
   // 🔥 환생 스탯
   player.rebirth = (player.rebirth || 0) + 1;
 
-  player.rebirthBonus = player.rebirthBonus || { atk:0, def:0, hp:0 };
+  player.rebirthBonus = player.rebirthBonus || {
+    atk: 0,
+    def: 0,
+    hp: 0
+  };
+
   player.rebirthBonus.atk += 10;
   player.rebirthBonus.def += 5;
   player.rebirthBonus.hp += 30;
@@ -3872,13 +3878,30 @@ if (player.inventory && player.inventory.length > 0) {
 
   logs.push(`🔷 최대 마나 ${player.maxMana}`);
 
-  // 🔥 초기화
+  // ================== 🔥 초기화 ==================
+
   player.level = 1;
   player.xp = 0;
   player.nextXp = 100;
 
-  player.maxHp = 100 + (player.rebirthBonus?.hp || 0);
+  // ✅ 환생 보너스 포함 기본 스탯 재설정
+  player.baseAtk = 10 + player.rebirthBonus.atk;
+  player.baseDef = 5 + player.rebirthBonus.def;
+
+  player.maxHp = 100 + player.rebirthBonus.hp;
   player.hp = player.maxHp;
+
+  // ✅ 실제 스탯 초기화
+  player.atk = player.baseAtk;
+  player.def = player.baseDef;
+
+  // ✅ stats 구조 쓰는 경우 대응
+  player.stats = {
+    ...(player.stats || {}),
+    atk: player.baseAtk,
+    def: player.baseDef,
+    hp: player.maxHp
+  };
 
   logs.push('📉 레벨 1로 초기화');
 
