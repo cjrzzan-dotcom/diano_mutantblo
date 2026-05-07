@@ -2561,7 +2561,7 @@ function rollRarity(){
 function createRingStats(recipeId) {
   const isLilith = recipeId === 'lilith_ring';
   const isDiablo = recipeId === 'diablo_ring';
-  const isPrimordial = recipeId === 'primordial_ring'; // ⭐ 태초 추가
+  const isPrimordial = recipeId === 'one_ring'; // ⭐ 태초 추가
 
   let pool = ['critChanceBonus', 'critDamageBonus', 'dodgeBonus'];
   let countMin = 1;
